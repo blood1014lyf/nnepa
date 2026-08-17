@@ -1,0 +1,116 @@
+[
+  {
+    "id": "w1",
+    "name": "Ankara Wrap Gown",
+    "category": "women",
+    "subcategory": "Gown",
+    "price": 2850,
+    "rating": 5,
+    "imageUrl": "/uploads/whatsapp_image_2026_06_01_at_3_22_43_pm__2__1780431135119.jpeg",
+    "badge": "Bestseller",
+    "inStock": true,
+    "description": "Ankara Wrap Gown - Handcrafted luxury piece tailored from pristine Gown material. Directly sourced with trade equity. Designed for timeless elegance.",
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL"
+    ]
+  },
+  {
+    "id": "w2",
+    "name": "Kente Luxury Set",
+    "category": "women",
+    "subcategory": "Two-Piece",
+    "price": 3400,
+    "rating": 5,
+    "imageUrl": "/uploads/whatsapp_image_2026_06_01_at_3_22_43_pm__1__1780431150768.jpeg",
+    "badge": "New",
+    "inStock": true,
+    "description": "Kente Luxury Set - Handcrafted luxury piece tailored from pristine Two-Piece material. Directly sourced with trade equity. Designed for timeless elegance.",
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL"
+    ]
+  },
+  {
+    "id": "w3",
+    "name": "Vibrant Ankara Flare",
+    "category": "women",
+    "subcategory": "Flare Dress",
+    "price": 1950,
+    "originalPrice": 2600,
+    "rating": 4,
+    "imageUrl": "/uploads/whatsapp_image_2026_06_01_at_3_22_43_pm__3__1780431167189.jpeg",
+    "badge": "Sale",
+    "inStock": false,
+    "description": "Vibrant Ankara Flare - Handcrafted luxury piece tailored from pristine Flare Dress material. Directly sourced with trade equity. Designed for timeless elegance.",
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL"
+    ]
+  },
+  {
+    "id": "w4",
+    "name": "Serene Aso-oke Gown",
+    "category": "women",
+    "subcategory": "Evening",
+    "price": 4200,
+    "rating": 5,
+    "imageUrl": "/uploads/whatsapp_image_2026_06_01_at_3_00_11_pm_1780431211175.jpeg",
+    "badge": "Exclusive",
+    "inStock": true,
+    "description": "Serene Aso-oke Gown - Handcrafted luxury piece tailored from pristine Evening material. Directly sourced with trade equity. Designed for timeless elegance.",
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL"
+    ]
+  },
+  {
+    "id": "m1",
+    "name": "Royal Agbada Set",
+    "category": "men",
+    "subcategory": "Agbada",
+    "price": 5200,
+    "rating": 5,
+    "imageUrl": "/uploads/whatsapp_image_2026_06_01_at_3_22_43_pm__4__1780431221283.jpeg",
+    "badge": "Bestseller",
+    "inStock": true,
+    "description": "Royal Agbada Set - Handcrafted luxury piece tailored from pristine Agbada material. Directly sourced with trade equity. Designed for timeless elegance.",
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL"
+    ]
+  },
+  {
+    "id": "prod_1781703960898",
+    "name": "gggg",
+    "category": "women",
+    "subcategory": "fddeedee",
+    "price": 500,
+    "rating": 5,
+    "imageUrl": "/uploads/garment_upload_1ee60ebc9c4f115b0084a6b348f38f27.jpeg",
+    "badge": "New",
+    "inStock": true,
+    "description": "Elegant designer apparel tailored custom to emphasize royal stature and status.",
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ]
+  }
+]
