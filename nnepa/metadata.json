@@ -1,0 +1,6 @@
+{
+  "name": "Nnepa Foriwaa",
+  "description": "Luxury African Fashion - Handcrafted bespoke garments combining heritage and modern elegance.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
