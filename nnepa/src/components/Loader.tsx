@@ -7,14 +7,25 @@ import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 
 export default function Loader() {
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(() => {
+    try {
+      // Only show full splash on first arrival in the session
+      return !sessionStorage.getItem('nnepa_loader_shown');
+    } catch {
+      return true;
+    }
+  });
 
   useEffect(() => {
+    if (!visible) return;
     const timer = setTimeout(() => {
       setVisible(false);
-    }, 900);
+      try {
+        sessionStorage.setItem('nnepa_loader_shown', 'true');
+      } catch {}
+    }, 450); // Snappy luxury reveal (450ms vs 900ms)
     return () => clearTimeout(timer);
-  }, []);
+  }, [visible]);
 
   return (
     <AnimatePresence>

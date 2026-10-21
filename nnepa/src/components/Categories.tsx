@@ -5,10 +5,9 @@
 
 import womenCollectionImage from '../assets/images/regenerated_image_1780427248975.jpeg';
 import menEleganceImage from '../assets/images/men_elegance_category_1781702880164.jpg';
-import kidsRoyalsImage from '../assets/images/kids_royals_category_1781702897100.jpg';
 
 interface CategoriesProps {
-  onCategorySelect: (category: 'all' | 'women' | 'men' | 'kids') => void;
+  onCategorySelect: (category: 'all' | 'women' | 'men' | 'bags') => void;
 }
 
 export default function Categories({ onCategorySelect }: CategoriesProps) {
@@ -28,11 +27,11 @@ export default function Categories({ onCategorySelect }: CategoriesProps) {
       imageUrl: menEleganceImage,
     },
     {
-      id: 'kids',
-      title: 'Little Royals',
-      label: 'Little Royals',
-      count: '12 adorable pieces',
-      imageUrl: kidsRoyalsImage,
+      id: 'bags',
+      title: "Bags & Accessories",
+      label: "Bags",
+      count: '12 artisanal pieces',
+      imageUrl: 'https://images.pexels.com/photos/1152077/pexels-photo-1152077.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=900&w=640',
     },
   ];
 
@@ -49,15 +48,15 @@ export default function Categories({ onCategorySelect }: CategoriesProps) {
           </h2>
         </div>
         <p className="text-sm font-light text-text-muted leading-relaxed max-w-[480px]">
-          From regal agbadas to vibrant ankara gowns and adorable children's pieces — every garment tells a story of African heritage.
+          From regal agbadas and tailored suits to vibrant ankara gowns, luxury couture, and handcrafted bags — every piece tells a story of African heritage.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
         {categories.map((cat) => (
           <div
             key={cat.id}
-            onClick={() => onCategorySelect(cat.id as 'women' | 'men' | 'kids')}
+            onClick={() => onCategorySelect(cat.id as 'women' | 'men' | 'bags')}
             className="group relative rounded-lg overflow-hidden aspect-[3/4] cursor-pointer transition-all duration-300 shadow-md hover:shadow-xl"
             id={`category-card-${cat.id}`}
           >
@@ -88,8 +87,8 @@ export default function Categories({ onCategorySelect }: CategoriesProps) {
                 {cat.count}
               </div>
 
-              {/* Reveal button on hover */}
-              <div className="inline-flex items-center gap-2 mt-5 px-4.5 py-2.5 rounded-full bg-plum-dark/50 backdrop-blur-md border border-solid border-lilac/35 text-[0.58rem] font-bold tracking-[0.2em] uppercase text-lilac opacity-0 transform translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-350">
+              {/* Reveal button on hover (always visible on touch / mobile) */}
+              <div className="inline-flex items-center gap-2 mt-5 px-4.5 py-2.5 rounded-full bg-plum-dark/50 backdrop-blur-md border border-solid border-lilac/35 text-[0.58rem] font-bold tracking-[0.2em] uppercase text-lilac opacity-100 md:opacity-0 md:transform md:translate-y-2 md:group-hover:opacity-100 md:group-hover:translate-y-0 transition-all duration-350">
                 Browse →
               </div>
             </div>

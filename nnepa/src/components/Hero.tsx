@@ -8,11 +8,11 @@ import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { HERO_SLIDES } from '../data.ts';
 
 interface HeroProps {
-  onExplore: () => void;
-  onViewLookbook: () => void;
+  onExplore?: () => void;
+  onContact?: () => void;
 }
 
-export default function Hero({ onExplore, onViewLookbook }: HeroProps) {
+export default function Hero({ onExplore, onContact }: HeroProps) {
   const [current, setCurrent] = useState(0);
   const [progress, setProgress] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -22,7 +22,7 @@ export default function Hero({ onExplore, onViewLookbook }: HeroProps) {
   const touchEndX = useRef<number | null>(null);
 
   const total = HERO_SLIDES.length;
-  const slideInterval = 4800; // ms
+  const slideInterval = 5000; // ms
 
   const startSlideTimer = () => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -87,9 +87,9 @@ export default function Hero({ onExplore, onViewLookbook }: HeroProps) {
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
-      className="relative h-svh min-h-[600px] overflow-hidden bg-plum-dark select-none"
+      className="relative min-h-[640px] h-[100svh] overflow-hidden bg-plum-dark select-none flex items-center"
     >
-      {/* Slides Track */}
+      {/* Slides Background Track */}
       <div className="absolute inset-0">
         {HERO_SLIDES.map((slide, idx) => {
           const isActive = idx === current;
@@ -100,94 +100,96 @@ export default function Hero({ onExplore, onViewLookbook }: HeroProps) {
                 isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
               }`}
             >
-              {/* Ken burns animated background */}
+              {/* Ken burns imagery */}
               <div
-                className={`absolute inset-[-6%] bg-cover bg-center transition-all duration-1000 ${
+                className={`absolute inset-[-4%] bg-cover bg-center transition-all duration-1000 ${
                   isActive ? 'animate-kenburns' : ''
                 }`}
                 style={{ backgroundImage: `url('${slide.imageUrl}')` }}
               />
-              {/* Luxury Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-br from-plum/72 via-plum-dark/48 to-lavender/18" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#1e0a30]/60 via-transparent to-transparent" />
+
+              {/* Clean Cinematic Gradient Overlay (Pure, non-muddy, natural contrast) */}
+              <div className="absolute inset-0 bg-gradient-to-t from-plum-dark/90 via-plum-dark/40 to-black/25 sm:bg-gradient-to-r sm:from-plum-dark/85 sm:via-plum-dark/40 sm:to-black/15" />
             </div>
           );
         })}
       </div>
 
-      {/* Hero Overlain Content */}
-      <div className="relative z-20 h-full flex flex-col justify-center pt-24 sm:pt-28 md:pt-0 pb-12 md:pb-0 px-6 sm:px-12 md:px-16 max-w-[860px]">
-        <div className="flex items-center gap-3 sm:gap-4 text-[0.6rem] md:text-xs font-semibold tracking-[0.3em] sm:tracking-[0.4em] uppercase text-lilac animate-fade-in mt-2 sm:mt-0">
-          <span className="w-7 sm:w-9 h-[1px] bg-gradient-to-r from-lilac to-transparent" />
-          New Collection 2025
-        </div>
+      {/* Hero Typography & Content Container */}
+      <div className="relative z-20 w-full max-w-7xl mx-auto px-6 sm:px-10 md:px-16 pt-32 xs:pt-36 sm:pt-14 md:pt-16 pb-12 sm:pb-0">
+        <div className="max-w-[720px] flex flex-col justify-center">
+          
+          {/* Eyebrow */}
+          <div className="flex items-center gap-3 text-[0.65rem] sm:text-xs font-semibold tracking-[0.32em] sm:tracking-[0.4em] uppercase text-lilac-light animate-fade-in">
+            <span className="w-7 sm:w-9 h-[1.5px] bg-gradient-to-r from-lilac to-transparent" />
+            New Collection 2026
+          </div>
 
-        <h1 className="mt-3 sm:mt-5 text-3xl sm:text-6xl md:text-7xl lg:text-8xl font-serif font-light text-pearl leading-[1.08] sm:leading-[1.06] tracking-tight">
-          Wear Your <br className="hidden sm:inline" />
-          <em className="font-serif italic text-lilac">Heritage</em> <br />
-          With Grace
-        </h1>
+          {/* Headline */}
+          <h1 className="mt-3 sm:mt-5 text-4xl xs:text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-serif font-light text-white leading-[1.06] tracking-tight">
+            Wear Your <br className="hidden sm:inline" />
+            <em className="font-serif italic text-lilac-light font-normal">Heritage</em> <br />
+            With Grace
+          </h1>
 
-        <p className="mt-4 sm:mt-6 text-xs sm:text-sm md:text-base font-light tracking-[0.05em] sm:tracking-[0.06em] leading-relaxed text-pearl-2/70 max-w-[430px]">
-          Ready-to-wear & custom-made luxury African fashion for men, women & children — handcrafted with ancestral artistry and contemporary elegance.
-        </p>
+          {/* Description Paragraph (Clean text, no translucent box or border) */}
+          <p className="mt-4 sm:mt-6 text-sm sm:text-base md:text-lg font-light tracking-wide leading-relaxed text-pearl/90 max-w-[520px]">
+            Ready-to-wear and custom luxury made-to-fit clothing, handcrafted with quality African fabrics for the Afrocentric.
+          </p>
 
-        <div className="flex flex-wrap gap-4 mt-8 md:mt-11">
-          <button
-            onClick={onExplore}
-            className="px-8 sm:px-10 py-3.5 sm:py-4 bg-gradient-to-br from-lavender to-mauve-deep text-white text-[0.68rem] font-semibold tracking-[0.25em] uppercase border-none cursor-pointer rounded-[2px] shadow-[0_8px_32px_rgba(155,132,204,0.35)] hover:-translate-y-[3px] hover:shadow-[0_16px_40px_rgba(155,132,204,0.45)] transition-all flex items-center gap-2"
-          >
-            Explore Collection
-            <ArrowRight className="w-[14px] h-[14px]" />
-          </button>
-          <button
-            onClick={onViewLookbook}
-            className="px-8 sm:px-9 py-3.5 sm:py-4 bg-transparent text-pearl text-[0.68rem] font-semibold tracking-[0.25em] uppercase border border-solid border-lilac/45 hover:border-lilac hover:bg-lilac/10 hover:-translate-y-[3px] cursor-pointer rounded-[2px] transition-all"
-          >
-            View Lookbook
-          </button>
+          {/* Action CTA */}
+          <div className="flex flex-col gap-3 sm:gap-3.5 mt-8 xs:mt-10 sm:mt-8 md:mt-10 w-full sm:w-auto items-start">
+            {onExplore && (
+              <button
+                onClick={onExplore}
+                className="w-full sm:w-auto sm:min-w-[210px] justify-center px-7 sm:px-9 py-3.5 sm:py-4 bg-gradient-to-br from-lavender via-mauve to-mauve-deep text-white text-[0.7rem] sm:text-xs font-semibold tracking-[0.25em] uppercase border-none cursor-pointer rounded-[2px] shadow-[0_8px_32px_rgba(155,132,204,0.35)] hover:-translate-y-[2px] hover:shadow-[0_12px_36px_rgba(155,132,204,0.45)] transition-all flex items-center gap-2.5 active:scale-[0.98]"
+              >
+                Shop Now
+                <ArrowRight className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+              </button>
+            )}
+          </div>
+
         </div>
       </div>
 
-      {/* Desktop Side Navigation Arrows */}
+      {/* Desktop Navigation Arrows */}
       <button
         onClick={handlePrev}
-        className="hidden md:flex absolute top-1/2 left-8 -translate-y-1/2 z-30 w-12 h-12 rounded-full border border-solid border-lilac/35 bg-white/7 backdrop-blur-md text-lilac items-center justify-center cursor-pointer hover:bg-lilac/20 hover:border-lilac active:scale-95 transition-all"
+        className="hidden md:flex absolute top-1/2 left-8 -translate-y-1/2 z-30 w-12 h-12 rounded-full border border-solid border-white/20 bg-black/20 hover:bg-black/40 backdrop-blur-xs text-white items-center justify-center cursor-pointer transition-all hover:scale-105 active:scale-95"
         aria-label="Previous Slide"
       >
-        <ArrowLeft className="w-[18px] h-[18px]" />
+        <ArrowLeft className="w-5 h-5" />
       </button>
       <button
         onClick={handleNext}
-        className="hidden md:flex absolute top-1/2 right-8 -translate-y-1/2 z-30 w-12 h-12 rounded-full border border-solid border-lilac/35 bg-white/7 backdrop-blur-md text-lilac items-center justify-center cursor-pointer hover:bg-lilac/20 hover:border-lilac active:scale-95 transition-all"
+        className="hidden md:flex absolute top-1/2 right-8 -translate-y-1/2 z-30 w-12 h-12 rounded-full border border-solid border-white/20 bg-black/20 hover:bg-black/40 backdrop-blur-xs text-white items-center justify-center cursor-pointer transition-all hover:scale-105 active:scale-95"
         aria-label="Next Slide"
       >
-        <ArrowRight className="w-[18px] h-[18px]" />
+        <ArrowRight className="w-5 h-5" />
       </button>
 
-
-
-      {/* Desktop Bullet Dots */}
-      <div className="hidden md:flex absolute bottom-10 left-1/2 -translate-x-1/2 z-30 gap-2 items-center">
+      {/* Slide Bullet Indicators */}
+      <div className="flex absolute bottom-6 sm:bottom-10 left-1/2 -translate-x-1/2 z-30 gap-2 items-center">
         {HERO_SLIDES.map((_, idx) => (
           <button
             key={idx}
             onClick={() => setCurrent(idx)}
-            className={`cursor-pointer transition-all duration-350 border-none ${
-              idx === current ? 'bg-lilac w-7 h-1.5 rounded-[3px]' : 'bg-lilac/40 w-1.5 h-1.5 rounded-full'
+            className={`cursor-pointer transition-all duration-300 border-none p-0 ${
+              idx === current ? 'bg-lilac w-6 sm:w-7 h-1.5 rounded-[3px]' : 'bg-white/40 hover:bg-white/70 w-1.5 h-1.5 rounded-full'
             }`}
             aria-label={`Go to slide ${idx + 1}`}
           />
         ))}
       </div>
 
-      {/* Desktop Slide Index Meter Counter */}
-      <div className="hidden md:block absolute right-12 bottom-10 z-30 font-serif text-[0.75rem] text-lilac/55 tracking-[0.22em] selection:bg-transparent">
-        <strong className="text-lilac text-lg">{currentFormatted}</strong> / {totalFormatted}
+      {/* Slide Counter */}
+      <div className="absolute right-6 sm:right-12 bottom-5 sm:bottom-10 z-30 font-serif text-[0.75rem] text-lilac/70 tracking-[0.2em] selection:bg-transparent">
+        <strong className="text-white text-base sm:text-lg">{currentFormatted}</strong> / {totalFormatted}
       </div>
 
       {/* Slide Auto Timer Linear Accent Progress Bar */}
-      <div className="absolute bottom-0 left-0 right-0 z-30 h-[2px] bg-lilac/15">
+      <div className="absolute bottom-0 left-0 right-0 z-30 h-[2px] bg-white/10">
         <div
           className="h-full bg-gradient-to-r from-lavender to-lilac transition-all"
           style={{ width: `${progress}%`, transitionDuration: progress === 0 ? '0ms' : '30ms' }}

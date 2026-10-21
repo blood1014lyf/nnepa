@@ -57,7 +57,7 @@ export default function Heritage() {
       </div>
 
       {/* Narrative Section */}
-      <div className="bg-gradient-to-br from-pearl-2 to-pearl px-8 py-16 sm:p-20 flex flex-col justify-center">
+      <div className="bg-gradient-to-br from-pearl-2 to-pearl px-6 py-14 sm:px-12 sm:py-16 lg:p-20 flex flex-col justify-center">
         <div className="text-[0.6rem] font-bold tracking-[0.4em] uppercase text-mauve-deep flex items-center gap-3.5 mb-2.5">
           <span className="w-6.5 h-[1px] bg-gradient-to-r from-lavender to-mauve" />
           Our Heritage

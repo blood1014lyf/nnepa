@@ -52,6 +52,9 @@ export default function ProductCard({
       <div className="relative overflow-hidden aspect-[3/4]">
         <img
           src={product.imageUrl}
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = 'https://images.pexels.com/photos/20799228/pexels-photo-20799228.jpeg';
+          }}
           alt={product.name}
           className="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-105"
           loading="lazy"
@@ -81,12 +84,23 @@ export default function ProductCard({
           </span>
         </div>
 
-        {/* Quick view icon on hover */}
-        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
-          <div className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-xs text-plum-dark flex items-center justify-center shadow-md">
-            <Eye className="w-4 h-4 text-plum" />
-          </div>
-        </div>
+        {/* Wishlist Button: directly accessible on mobile touch screens and on desktop hover */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleWishlist(product);
+          }}
+          className={`absolute top-3 right-3 z-10 w-8 h-8 rounded-full border border-solid transition-all flex items-center justify-center cursor-pointer shadow-sm ${
+            isWished
+              ? 'bg-mauve-deep text-white border-mauve-deep opacity-100'
+              : 'bg-white/85 hover:bg-white text-plum-dark border-lilac/20 opacity-90 sm:opacity-0 sm:group-hover:opacity-100'
+          }`}
+          title={isWished ? 'Remove from Wishlist' : 'Add to Wishlist'}
+          aria-label={isWished ? 'Remove from Wishlist' : 'Add to Wishlist'}
+        >
+          <Heart className={`w-3.5 h-3.5 ${isWished ? 'fill-white text-white' : 'text-plum-dark'}`} />
+        </button>
 
         {/* Action slide-up panel on hover */}
         <div className="absolute bottom-0 left-0 right-0 p-4 flex flex-col gap-2.5 bg-black/40 backdrop-blur-md translate-y-full group-hover:translate-y-0 transition-transform duration-350 z-20">
@@ -151,12 +165,12 @@ export default function ProductCard({
         </div>
       </div>
 
-      <div className="p-5 flex-1 flex flex-col justify-between">
+      <div className="p-3.5 sm:p-5 flex-1 flex flex-col justify-between">
         <div>
-          <div className="text-[0.58rem] tracking-[0.2em] uppercase text-text-light mb-1.5 selection:bg-transparent">
+          <div className="text-[0.55rem] sm:text-[0.58rem] tracking-[0.2em] uppercase text-text-light mb-1.5 selection:bg-transparent">
             {product.category} · {product.subcategory}
           </div>
-          <h4 className="font-serif text-[1rem] font-semibold text-plum-dark leading-snug group-hover:text-lavender transition-colors">
+          <h4 className="font-serif text-sm sm:text-base font-semibold text-plum-dark leading-snug group-hover:text-lavender transition-colors line-clamp-2">
             {product.name}
           </h4>
         </div>

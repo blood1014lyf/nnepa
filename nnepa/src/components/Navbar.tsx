@@ -44,10 +44,6 @@ export default function Navbar({
     { label: 'Shop', page: 'shop' },
     { label: 'About Brand', page: 'about' },
     { label: 'Contact', page: 'contact' },
-    {
-      label: adminToken ? 'Dashboard' : 'Login',
-      page: adminToken ? 'admin-dashboard' : 'admin-login'
-    },
   ];
 
   const showScrolledStyle = scrolled || currentPage !== 'home';
@@ -107,7 +103,7 @@ export default function Navbar({
         {wishlistCount > 0 && (
           <button
             onClick={() => {
-              onPageChange('shop');
+              onPageChange('wishlist');
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
             className={`w-10 h-10 flex items-center justify-center border-none bg-transparent cursor-pointer rounded-full transition-all relative ${
@@ -144,6 +140,7 @@ export default function Navbar({
             showScrolledStyle ? 'text-plum-dark' : 'text-white'
           }`}
           id="btn-hamburger"
+          aria-label="Open mobile navigation menu"
         >
           <Menu className="w-5 h-5" />
         </button>

@@ -70,7 +70,7 @@ export default function Stats() {
   const stats = [
     { target: 200, label: 'Happy Clients', suffix: '+' },
     { target: 30, label: 'Pieces Available', suffix: '' },
-    { target: 8, label: 'Years of Craft', suffix: '' },
+    { target: 10, label: 'Years of Craft', suffix: '+' },
   ];
 
   return (

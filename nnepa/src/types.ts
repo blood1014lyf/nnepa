@@ -6,7 +6,7 @@
 export interface Product {
   id: string;
   name: string;
-  category: 'women' | 'men' | 'kids';
+  category: 'women' | 'men' | 'bags';
   subcategory: string;
   price: number;
   originalPrice?: number;
@@ -46,4 +46,29 @@ export interface Testimonial {
   rating: number;
   imageUrl?: string;
   tag?: string;
+}
+
+export type PaymentMethod = 'momo' | 'card' | 'cod' | 'whatsapp';
+
+export interface OrderCustomerInfo {
+  fullName: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  region: string;
+  deliveryNotes?: string;
+}
+
+export interface Order {
+  id: string;
+  createdAt: string;
+  items: CartItem[];
+  subtotal: number;
+  deliveryFee: number;
+  total: number;
+  customer: OrderCustomerInfo;
+  paymentMethod: PaymentMethod;
+  paymentStatus: 'pending' | 'confirmed';
+  deliveryStatus: 'order_received' | 'tailoring' | 'dispatched' | 'delivered';
 }

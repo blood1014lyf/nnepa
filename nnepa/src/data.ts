@@ -29,58 +29,135 @@ export const HERO_SLIDES: HeroSlide[] = [
 ];
 
 export const PRODUCTS: Product[] = [
-  // WOMEN'S
   {
-    id: 'w1',
-    name: 'Ankara Wrap Gown',
+    id: 'prod_1789572165350',
+    name: 'Royal Gold Kente Boubou',
     category: 'women',
-    subcategory: 'Gown',
-    price: 285,
+    subcategory: 'Couture Boubou',
+    price: 480,
     rating: 5,
-    imageUrl: 'https://images.pexels.com/photos/32290810/pexels-photo-32290810.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=600',
-    badge: 'Bestseller'
+    imageUrl: 'https://images.pexels.com/photos/20799228/pexels-photo-20799228.jpeg',
+    badge: 'Exclusive',
+    inStock: true,
+    description: 'Elegant designer apparel tailored custom to emphasize royal stature and status. Handcrafted in Accra with authentic Kente strip inlays.',
+    sizes: ['S', 'M', 'L', 'XL']
   },
   {
-    id: 'w2',
-    name: 'Kente Luxury Set',
+    id: 'prod_1789572165351',
+    name: 'Queen Mother Royal Kente Gown',
     category: 'women',
-    subcategory: 'Two-Piece',
+    subcategory: 'Couture Evening Wear',
+    price: 2850,
+    rating: 5,
+    imageUrl: 'https://images.pexels.com/photos/34993753/pexels-photo-34993753.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=900',
+    badge: 'Bestseller',
+    inStock: true,
+    description: 'Handcrafted luxury silhouette sculpted from authentic Ghanaian handwoven silk Kente and regal brocade. Designed for high occasions, weddings, and royal galas with signature precision darting.',
+    sizes: ['S', 'M', 'L', 'XL', 'XXL']
+  },
+  {
+    id: 'prod_1789572165352',
+    name: 'Ankara Royal Peplum Ensemble',
+    category: 'women',
+    subcategory: 'Tailored Two-Piece',
+    price: 650,
+    rating: 5,
+    imageUrl: 'https://images.pexels.com/photos/14484948/pexels-photo-14484948.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=900&w=640',
+    badge: 'New',
+    inStock: true,
+    description: 'Vibrant custom wax print peplum top tailored with matching pencil silhouette. Engineered for exceptional contour and ease of movement.',
+    sizes: ['S', 'M', 'L', 'XL']
+  },
+  {
+    id: 'prod_1789572165353',
+    name: 'Staircase Dream Couture Dress',
+    category: 'women',
+    subcategory: 'Evening Couture',
+    price: 980,
+    rating: 5,
+    imageUrl: 'https://images.pexels.com/photos/28387051/pexels-photo-28387051.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=900&w=640',
+    badge: 'Exclusive',
+    inStock: true,
+    description: 'Dramatic flared silhouette woven with shimmering silk threads and micro-pleated accents. A head-turning showpiece.',
+    sizes: ['S', 'M', 'L', 'XL']
+  },
+  {
+    id: 'prod_1789572165354',
+    name: 'The Patriarch Brocade Agbada',
+    category: 'men',
+    subcategory: 'Grand Agbada Suite',
+    price: 1200,
+    rating: 5,
+    imageUrl: 'https://images.pexels.com/photos/31762081/pexels-photo-31762081.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=900&w=640',
+    badge: 'Bestseller',
+    inStock: true,
+    description: 'Three-piece imperial Agbada tailored from heavyweight damask brocade with hand-embroidered neckline and matching trousers.',
+    sizes: ['M', 'L', 'XL', 'XXL']
+  },
+  {
+    id: 'prod_1789572165355',
+    name: 'Emperor Handwoven Kente Kaftan',
+    category: 'men',
+    subcategory: 'Bespoke Kaftan',
+    price: 750,
+    rating: 5,
+    imageUrl: 'https://images.pexels.com/photos/34608857/pexels-photo-34608857.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=900&w=640',
+    badge: 'New',
+    inStock: true,
+    description: 'Crisp structured linen kaftan highlighted with geometric Asante Kente shoulder yoke and hidden hand-stitched pockets.',
+    sizes: ['S', 'M', 'L', 'XL', 'XXL']
+  },
+  {
+    id: 'prod_1789572165356',
+    name: 'Northern Fugu Royal Smock',
+    category: 'men',
+    subcategory: 'Traditional Smock',
+    price: 580,
+    rating: 5,
+    imageUrl: 'https://images.pexels.com/photos/14577493/pexels-photo-14577493.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=900',
+    badge: 'Exclusive',
+    inStock: true,
+    description: 'Authentic Northern Ghanaian hand-spun striped cotton smock featuring traditional flared hemline and intricate chest embroidery.',
+    sizes: ['M', 'L', 'XL']
+  },
+  {
+    id: 'prod_1789572165357',
+    name: 'Artisanal Bolga Woven Leather Tote',
+    category: 'bags',
+    subcategory: 'Artisanal Tote',
     price: 340,
     rating: 5,
-    imageUrl: 'https://images.pexels.com/photos/29857668/pexels-photo-29857668.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=600',
-    badge: 'New'
+    imageUrl: 'https://images.pexels.com/photos/1152077/pexels-photo-1152077.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=900&w=640',
+    badge: 'Bestseller',
+    inStock: true,
+    description: 'Handwoven elephant grass tote crafted by master weavers in Bolgatanga, reinforced with supple dyed Ghanaian leather handles.',
+    sizes: ['One Size']
   },
   {
-    id: 'w3',
-    name: 'Vibrant Ankara Flare',
-    category: 'women',
-    subcategory: 'Flare Dress',
-    price: 195,
-    originalPrice: 260,
-    rating: 4,
-    imageUrl: 'https://images.pexels.com/photos/33561263/pexels-photo-33561263.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=600',
-    badge: 'Sale'
+    id: 'prod_1789572165358',
+    name: 'Asante Gold Adinkra Clutch',
+    category: 'bags',
+    subcategory: 'Luxury Clutch',
+    price: 260,
+    rating: 5,
+    imageUrl: 'https://images.pexels.com/photos/904350/pexels-photo-904350.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=900&w=640',
+    badge: 'New',
+    inStock: true,
+    description: 'Velvet evening clutch embossed with brass Adinkra symbol accents and detachable gold-tone chain strap.',
+    sizes: ['One Size']
   },
   {
-    id: 'w4',
-    name: 'Serene Aso-oke Gown',
-    category: 'women',
-    subcategory: 'Evening',
+    id: 'prod_1789572165359',
+    name: 'Kente Velvet Luxury Minaudière',
+    category: 'bags',
+    subcategory: 'Box Minaudière',
     price: 420,
     rating: 5,
-    imageUrl: 'https://images.pexels.com/photos/20799228/pexels-photo-20799228.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=600',
-    badge: 'Exclusive'
-  },
-  // MEN'S
-  {
-    id: 'm1',
-    name: 'Royal Agbada Set',
-    category: 'men',
-    subcategory: 'Agbada',
-    price: 520,
-    rating: 5,
-    imageUrl: 'https://images.pexels.com/photos/29488868/pexels-photo-29488868.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=600',
-    badge: 'Bestseller'
+    imageUrl: 'https://images.pexels.com/photos/1183266/pexels-photo-1183266.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=900&w=640',
+    badge: 'Exclusive',
+    inStock: true,
+    description: 'Hard-shell evening minaudière enveloped in genuine silk Kente cloth with plush satin lining and magnetic clasp closure.',
+    sizes: ['One Size']
   }
 ];
 
@@ -124,8 +201,8 @@ export const LOOKS: Look[] = [
     id: 'l6',
     number: '06',
     imageUrl: 'https://images.pexels.com/photos/34608857/pexels-photo-34608857.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=900&w=640',
-    category: 'Kids · Look 06',
-    title: 'Little Chief'
+    category: 'Men · Look 06',
+    title: 'The Young Noble'
   }
 ];
 

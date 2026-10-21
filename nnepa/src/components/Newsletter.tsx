@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 
 interface NewsletterProps {
-  onSubscribe: (email: string) => void;
+  onSubscribe?: (email: string) => void;
 }
 
 export default function Newsletter({ onSubscribe }: NewsletterProps) {
@@ -14,10 +14,6 @@ export default function Newsletter({ onSubscribe }: NewsletterProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email.trim()) {
-      onSubscribe(email);
-      setEmail('');
-    }
   };
 
   return (
@@ -34,21 +30,23 @@ export default function Newsletter({ onSubscribe }: NewsletterProps) {
           Join the <em className="font-serif italic text-lavender">Inner Circle</em>
         </h2>
         <p className="text-xs sm:text-sm text-text-muted leading-relaxed max-w-[440px] mb-6 font-normal">
-          Be the first to discover new collections, editorial lookbooks, and private previews. Subscribe to get notified as soon as our newsletter launches.
+          Be the first to discover new collections, exclusive previews, and bespoke runway designs. Subscriptions opening soon.
         </p>
 
-        <form onSubmit={handleSubmit} className="w-full max-w-[460px] flex flex-col sm:flex-row rounded-md overflow-hidden shadow-[0_8px_40px_rgba(92,61,110,0.14)]">
+        <form onSubmit={handleSubmit} className="w-full max-w-[460px] flex flex-col sm:flex-row rounded-md overflow-hidden shadow-[0_8px_40px_rgba(92,61,110,0.14)] opacity-85">
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Your email address"
-            required
-            className="flex-1 px-6 py-4.5 bg-white text-plum-dark text-sm outline-none border-none font-sans placeholder:text-text-light font-medium"
+            placeholder="Your email address (Coming soon)"
+            disabled
+            className="flex-1 px-6 py-4.5 bg-white text-plum-dark text-sm outline-none border-none font-sans placeholder:text-text-light font-medium cursor-not-allowed select-none"
           />
           <button
-            type="submit"
-            className="px-8 py-4.5 bg-gradient-to-br from-lavender to-mauve-deep text-white border-none cursor-pointer font-semibold text-xs tracking-[0.2em] uppercase hover:opacity-90 transition-opacity whitespace-nowrap"
+            type="button"
+            disabled
+            className="px-8 py-4.5 bg-gradient-to-br from-lavender/60 to-mauve-deep/60 text-white/80 border-none cursor-not-allowed pointer-events-none font-semibold text-xs tracking-[0.2em] uppercase whitespace-nowrap select-none"
+            aria-disabled="true"
           >
             Subscribe
           </button>

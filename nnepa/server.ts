@@ -15,11 +15,20 @@ import { PRODUCTS as INITIAL_PRODUCTS } from './src/data.ts';
 import { Product } from './src/types.ts';
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
-// Set up large JSON body parsers for base64 image uploads
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+// Security Headers Middleware
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  next();
+});
+
+// Set up JSON body parsers (restricted to standard limit, large limit only for uploads)
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Ensure upload folders exist
 const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
@@ -47,40 +56,44 @@ const TMP_DB_FILE = path.join('/tmp', 'database.json');
 
 function loadProducts(): Product[] {
   try {
-    if (fs.existsSync(TMP_DB_FILE)) {
-      const contents = fs.readFileSync(TMP_DB_FILE, 'utf-8');
-      return JSON.parse(contents);
-    }
     if (fs.existsSync(ROOT_DB_FILE)) {
       const contents = fs.readFileSync(ROOT_DB_FILE, 'utf-8');
-      return JSON.parse(contents);
+      const parsed = JSON.parse(contents);
+      if (Array.isArray(parsed)) return parsed;
     }
   } catch (err) {
-    console.error('Failed reading database file, falling back to memory defaults', err);
+    console.error('Failed reading ROOT_DB_FILE, attempting tmp fallback...', err);
   }
 
-  // Pre-populate with our initial Cedis currency products
-  const formattedDefaultProducts: Product[] = INITIAL_PRODUCTS.map((prod) => ({
-    ...prod,
-    price: Math.round(prod.price * 10), // Convert to GHS Ghanaian cedis (e.g. 2850 GHS)
-    originalPrice: prod.originalPrice ? Math.round(prod.originalPrice * 10) : undefined,
-    inStock: prod.id !== 'w3' && prod.id !== 'k3', // Mark a couple items out of stock for presentation
-    description: prod.description || `${prod.name} - Handcrafted luxury piece tailored from pristine ${prod.subcategory || 'Ankara'} material. Directly sourced with trade equity. Designed for timeless elegance.`,
-    sizes: prod.sizes || ['S', 'M', 'L', 'XL', 'XXL']
-  }));
+  try {
+    if (fs.existsSync(TMP_DB_FILE)) {
+      const contents = fs.readFileSync(TMP_DB_FILE, 'utf-8');
+      const parsed = JSON.parse(contents);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (err) {
+    console.error('Failed reading TMP_DB_FILE database file', err);
+  }
 
-  saveProducts(formattedDefaultProducts);
-  return formattedDefaultProducts;
+  return INITIAL_PRODUCTS;
 }
 
 function saveProducts(products: Product[]): void {
+  const jsonContent = JSON.stringify(products, null, 2);
+  let saved = false;
+
   try {
-    fs.writeFileSync(ROOT_DB_FILE, JSON.stringify(products, null, 2), 'utf-8');
+    fs.writeFileSync(ROOT_DB_FILE, jsonContent, 'utf-8');
+    saved = true;
   } catch (err) {
-    // Read-only filesystem fallback for Vercel
-    try {
-      fs.writeFileSync(TMP_DB_FILE, JSON.stringify(products, null, 2), 'utf-8');
-    } catch (e) {
+    console.error('Failed writing to ROOT_DB_FILE, writing to /tmp', err);
+  }
+
+  try {
+    fs.writeFileSync(TMP_DB_FILE, jsonContent, 'utf-8');
+    saved = true;
+  } catch (e) {
+    if (!saved) {
       console.error('Failed writing to /tmp as well', e);
     }
   }
@@ -90,12 +103,124 @@ function saveProducts(products: Product[]): void {
 // SECURITY & AUTHORIZATION MIDDLEWARE
 // ────────────────────────────────────────────────────────
 
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
+if (!ADMIN_PASSWORD) {
+  console.warn('[SECURITY WARNING] ADMIN_PASSWORD environment variable is not set. Please set ADMIN_PASSWORD in your .env file.');
+}
+
+// In-Memory Rate Limiter for Login Attempts
+interface LoginRateLimit {
+  attempts: number;
+  blockedUntil: number;
+}
+const loginRateLimits = new Map<string, LoginRateLimit>();
+
+function checkLoginRateLimit(ip: string): { allowed: boolean; retryAfterMs: number } {
+  const now = Date.now();
+  const entry = loginRateLimits.get(ip);
+  if (!entry) return { allowed: true, retryAfterMs: 0 };
+
+  if (entry.blockedUntil > now) {
+    return { allowed: false, retryAfterMs: entry.blockedUntil - now };
+  }
+
+  if (entry.blockedUntil > 0 && entry.blockedUntil <= now) {
+    loginRateLimits.delete(ip);
+    return { allowed: true, retryAfterMs: 0 };
+  }
+
+  return { allowed: true, retryAfterMs: 0 };
+}
+
+function recordFailedLogin(ip: string): void {
+  const now = Date.now();
+  const entry = loginRateLimits.get(ip) || { attempts: 0, blockedUntil: 0 };
+  entry.attempts += 1;
+
+  if (entry.attempts >= 5) {
+    entry.blockedUntil = now + 15 * 60 * 1000; // 15 minutes lockout
+    console.warn(`[SECURITY ALERT] IP ${ip} exceeded maximum login attempts and is blocked for 15 minutes.`);
+  }
+
+  loginRateLimits.set(ip, entry);
+}
+
+function clearLoginAttempts(ip: string): void {
+  loginRateLimits.delete(ip);
+}
+
+// Persistent session store for active cryptographically secure session tokens
+interface AdminSession {
+  username: string;
+  createdAt: number;
+}
+
+const SESSIONS_FILE = path.join(process.cwd(), 'sessions.json');
+
+function loadSessions(): Map<string, AdminSession> {
+  const map = new Map<string, AdminSession>();
+  try {
+    if (fs.existsSync(SESSIONS_FILE)) {
+      const raw = fs.readFileSync(SESSIONS_FILE, 'utf-8');
+      const obj = JSON.parse(raw);
+      if (obj && typeof obj === 'object') {
+        for (const [key, val] of Object.entries(obj)) {
+          if (val && typeof val === 'object' && 'username' in (val as any)) {
+            map.set(key, val as AdminSession);
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Notice: initialized new session store.', err);
+  }
+  return map;
+}
+
+const activeSessions = loadSessions();
+
+function saveSessions(): void {
+  try {
+    const obj: Record<string, AdminSession> = {};
+    for (const [key, val] of activeSessions.entries()) {
+      obj[key] = val;
+    }
+    fs.writeFileSync(SESSIONS_FILE, JSON.stringify(obj, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Failed saving sessions.json file', err);
+  }
+}
+
+// Sessions expire after 7 days
+const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+function isValidSession(token: string): boolean {
+  if (!token) return false;
+  const session = activeSessions.get(token);
+  if (!session) return false;
+  if (Date.now() - session.createdAt > SESSION_TTL_MS) {
+    activeSessions.delete(token);
+    saveSessions();
+    return false;
+  }
+  return true;
+}
+
 function requireAdmin(req: express.Request, res: express.Response, next: express.NextFunction) {
   const authHeader = req.headers.authorization;
-  if (!authHeader || authHeader !== 'Bearer nnepa_foriwaa_luxury_token_2025') {
-    res.status(403).json({ error: 'Forbidden: Valid curator authorization is required.' });
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    res.status(401).json({ error: 'Unauthorized: Authentication token is required.' });
     return;
   }
+
+  const token = authHeader.slice(7).trim();
+  if (!isValidSession(token)) {
+    res.status(401).json({ error: 'Unauthorized: Invalid or expired session. Please log in again.' });
+    return;
+  }
+
   next();
 }
 
@@ -189,7 +314,7 @@ app.post('/api/products', requireAdmin, (req, res) => {
     imageUrl: imageUrl || 'https://images.pexels.com/photos/20799228/pexels-photo-20799228.jpeg',
     badge: badge || undefined,
     inStock: inStock !== false,
-    description: description || 'Elegant designer apparel tailored custom to emphasize royal stature and status.',
+    description: description || 'Handcrafted African designer apparel tailored with premium fabrics.',
     sizes: sizes && Array.isArray(sizes) ? sizes : ['S', 'M', 'L', 'XL']
   };
 
@@ -301,17 +426,76 @@ app.post('/api/upload', requireAdmin, (req, res) => {
   }
 });
 
-// 6. Admin Secure Login (Zero External DB reliance, simple single-user cPanel design)
+// 6. Admin Login (Secure server-side credential verification with rate limiting)
 app.post('/api/login', (req, res) => {
-  const { username, password } = req.body;
-  const adminUsername = process.env.ADMIN_USERNAME || 'admin';
-  const adminPassword = process.env.ADMIN_PASSWORD || 'supersecretpassword';
+  const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+  const { allowed, retryAfterMs } = checkLoginRateLimit(clientIp);
 
-  if (username === adminUsername && password === adminPassword) {
-    res.json({ success: true, token: 'nnepa_foriwaa_luxury_token_2025' });
-  } else {
-    res.status(401).json({ error: 'Invalid admin credentials. Please try again.' });
+  if (!allowed) {
+    const minutesLeft = Math.ceil(retryAfterMs / 60000);
+    res.status(429).json({
+      error: `Security alert: Too many failed login attempts. Please wait ${minutesLeft} minute(s) before trying again.`,
+    });
+    return;
   }
+
+  const { username, password } = req.body || {};
+
+  if (!username || !password) {
+    res.status(400).json({ error: 'Username and password are required.' });
+    return;
+  }
+
+  const cleanUsername = String(username).trim();
+  const cleanPassword = String(password);
+
+  const effectivePassword = ADMIN_PASSWORD || 'supersecretpassword';
+  const isMatch = cleanUsername === ADMIN_USERNAME && cleanPassword === effectivePassword;
+
+  if (!isMatch) {
+    recordFailedLogin(clientIp);
+    res.status(401).json({ error: 'Invalid admin credentials. Please check your username and password.' });
+    return;
+  }
+
+  // Clear failed attempt tracking on successful authentication
+  clearLoginAttempts(clientIp);
+
+  // Generate a cryptographically secure random session token
+  const token = crypto.randomBytes(32).toString('hex');
+  activeSessions.set(token, {
+    username: cleanUsername,
+    createdAt: Date.now(),
+  });
+  saveSessions();
+
+  res.json({
+    success: true,
+    token,
+    message: 'Admin session established successfully.',
+  });
+});
+
+// Admin Session Verification
+app.get('/api/auth/verify', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    res.json({ authenticated: false });
+    return;
+  }
+  const token = authHeader.slice(7).trim();
+  res.json({ authenticated: isValidSession(token) });
+});
+
+// Admin Logout
+app.post('/api/logout', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.slice(7).trim();
+    activeSessions.delete(token);
+    saveSessions();
+  }
+  res.json({ success: true, message: 'Logged out successfully.' });
 });
 
 // ────────────────────────────────────────────────────────
@@ -334,9 +518,21 @@ const startServer = async () => {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[Nnepa Foriwaa] Express Server listening on http://localhost:${PORT}`);
-  });
+  const startListening = (port: number) => {
+    const server = app.listen(port, '0.0.0.0', () => {
+      console.log(`[Nnepa Foriwaa] Express Server listening on http://localhost:${port}`);
+    });
+    server.on('error', (err: any) => {
+      if (err.code === 'EADDRINUSE') {
+        console.warn(`[Nnepa Foriwaa] Port ${port} is in use, trying ${port + 1}...`);
+        startListening(port + 1);
+      } else {
+        console.error(err);
+      }
+    });
+  };
+
+  startListening(PORT);
 };
 
 startServer();

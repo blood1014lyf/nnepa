@@ -12,32 +12,42 @@ import { Product } from '../src/types.ts';
 
 const app = express();
 
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  next();
+});
 
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+const ROOT_DB_FILE = path.join(process.cwd(), 'database.json');
 const TMP_DB_FILE = path.join('/tmp', 'database.json');
 
 function loadProducts(): Product[] {
   try {
     if (fs.existsSync(TMP_DB_FILE)) {
       const contents = fs.readFileSync(TMP_DB_FILE, 'utf-8');
-      return JSON.parse(contents);
+      const parsed = JSON.parse(contents);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     }
   } catch (err) {
-    console.error('Failed reading database file in serverless environment', err);
+    console.error('Failed reading TMP_DB_FILE', err);
   }
 
-  const formattedDefaultProducts: Product[] = INITIAL_PRODUCTS.map((prod) => ({
-    ...prod,
-    price: Math.round(prod.price * 10),
-    originalPrice: prod.originalPrice ? Math.round(prod.originalPrice * 10) : undefined,
-    inStock: prod.id !== 'w3' && prod.id !== 'k3',
-    description: prod.description || `${prod.name} - Handcrafted luxury piece tailored from pristine ${prod.subcategory || 'Ankara'} material. Directly sourced with trade equity. Designed for timeless elegance.`,
-    sizes: prod.sizes || ['S', 'M', 'L', 'XL', 'XXL']
-  }));
+  try {
+    if (fs.existsSync(ROOT_DB_FILE)) {
+      const contents = fs.readFileSync(ROOT_DB_FILE, 'utf-8');
+      const parsed = JSON.parse(contents);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (err) {
+    console.error('Failed reading ROOT_DB_FILE', err);
+  }
 
-  saveProducts(formattedDefaultProducts);
-  return formattedDefaultProducts;
+  return INITIAL_PRODUCTS;
 }
 
 function saveProducts(products: Product[]): void {
@@ -48,10 +58,25 @@ function saveProducts(products: Product[]): void {
   }
 }
 
+// Admin Auth Configuration
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const SESSIONS = new Set<string>();
+
+function isValidSession(token: string): boolean {
+  if (!token) return false;
+  return SESSIONS.has(token);
+}
+
 function requireAdmin(req: express.Request, res: express.Response, next: express.NextFunction) {
   const authHeader = req.headers.authorization;
-  if (!authHeader || authHeader !== 'Bearer nnepa_foriwaa_luxury_token_2025') {
-    res.status(403).json({ error: 'Forbidden: Valid curator authorization is required.' });
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    res.status(401).json({ error: 'Unauthorized: Authentication token is required.' });
+    return;
+  }
+  const token = authHeader.slice(7).trim();
+  if (!isValidSession(token)) {
+    res.status(401).json({ error: 'Unauthorized: Invalid or expired session. Please log in again.' });
     return;
   }
   next();
@@ -120,7 +145,7 @@ app.post('/api/products', requireAdmin, (req, res) => {
     imageUrl: imageUrl || 'https://images.pexels.com/photos/20799228/pexels-photo-20799228.jpeg',
     badge: badge || undefined,
     inStock: inStock !== false,
-    description: description || 'Elegant designer apparel tailored custom to emphasize royal stature and status.',
+    description: description || 'Handcrafted African designer apparel tailored with premium fabrics.',
     sizes: sizes && Array.isArray(sizes) ? sizes : ['S', 'M', 'L', 'XL']
   };
   products.push(newProduct);
@@ -195,16 +220,54 @@ app.post('/api/upload', requireAdmin, (req, res) => {
   }
 });
 
-// 6. Login endpoint
+// 6. Login endpoint (Secure credential verification)
 app.post('/api/login', (req, res) => {
-  const { username, password } = req.body;
-  const adminUsername = process.env.ADMIN_USERNAME || 'admin';
-  const adminPassword = process.env.ADMIN_PASSWORD || 'supersecretpassword';
-  if (username === adminUsername && password === adminPassword) {
-    res.json({ success: true, token: 'nnepa_foriwaa_luxury_token_2025' });
-  } else {
-    res.status(401).json({ error: 'Invalid admin credentials.' });
+  const { username, password } = req.body || {};
+  if (!username || !password) {
+    res.status(400).json({ error: 'Username and password are required.' });
+    return;
   }
+
+  const cleanUsername = String(username).trim();
+  const cleanPassword = String(password);
+
+  const effectivePassword = ADMIN_PASSWORD || 'supersecretpassword';
+  const isMatch = cleanUsername === ADMIN_USERNAME && cleanPassword === effectivePassword;
+
+  if (!isMatch) {
+    res.status(401).json({ error: 'Invalid admin credentials. Please check your username and password.' });
+    return;
+  }
+
+  const token = crypto.randomBytes(32).toString('hex');
+  SESSIONS.add(token);
+
+  res.json({
+    success: true,
+    token,
+    message: 'Admin session established successfully.',
+  });
+});
+
+// 7. Verify session
+app.get('/api/auth/verify', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    res.json({ authenticated: false });
+    return;
+  }
+  const token = authHeader.slice(7).trim();
+  res.json({ authenticated: isValidSession(token) });
+});
+
+// 8. Logout
+app.post('/api/logout', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.slice(7).trim();
+    SESSIONS.delete(token);
+  }
+  res.json({ success: true, message: 'Logged out successfully.' });
 });
 
 export default app;

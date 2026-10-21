@@ -15,6 +15,7 @@ interface CartDrawerProps {
   onUpdateQty: (productId: string, size: string | undefined, delta: number) => void;
   onRemoveItem: (productId: string, size: string | undefined) => void;
   onCheckout: () => void;
+  onStartShopping?: () => void;
 }
 
 export default function CartDrawer({
@@ -24,6 +25,7 @@ export default function CartDrawer({
   onUpdateQty,
   onRemoveItem,
   onCheckout,
+  onStartShopping,
 }: CartDrawerProps) {
   const isCartEmpty = cartItems.length === 0;
   const subtotal = cartItems.reduce(
@@ -76,7 +78,13 @@ export default function CartDrawer({
                     Your cart is beautifully empty
                   </div>
                   <button
-                    onClick={onClose}
+                    onClick={() => {
+                      if (onStartShopping) {
+                        onStartShopping();
+                      } else {
+                        onClose();
+                      }
+                    }}
                     className="mt-2 py-3 px-6 bg-gradient-to-br from-lavender to-mauve-deep text-white text-[0.62rem] font-semibold tracking-[0.22em] uppercase border-none cursor-pointer rounded-[4px] shadow-md active:scale-95 duration-200"
                   >
                     Start Shopping
@@ -144,6 +152,23 @@ export default function CartDrawer({
             {/* Subtotal & Checkout button footer */}
             {!isCartEmpty && (
               <div className="p-8 border-t border-solid border-lilac/25 bg-white/70">
+                {/* Free Delivery Goal Progress */}
+                <div className="mb-4 bg-lavender/10 p-3 rounded-[3px] border border-lilac/20">
+                  <div className="flex justify-between items-center text-[0.6rem] font-bold uppercase tracking-wider text-plum-dark mb-1.5">
+                    <span>Complimentary Accra Delivery</span>
+                    <span>{subtotal >= 1000 ? 'Unlocked 🎉' : `GH₵ ${(1000 - subtotal).toLocaleString()} away`}</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-lilac/20 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-lavender to-mauve-deep transition-all duration-300"
+                      style={{ width: `${Math.min(100, (subtotal / 1000) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="text-[0.62rem] text-mauve-deep bg-pearl px-3 py-2 rounded mb-4 font-medium flex items-center gap-1.5 border border-lilac/10">
+                  <span>⏱️ 3–7 working days for bespoke handcrafted tailoring.</span>
+                </div>
                 <div className="flex justify-between items-center mb-6">
                   <span className="text-[0.62rem] font-bold tracking-[0.2em] uppercase text-text-muted">
                     Subtotal
@@ -161,7 +186,7 @@ export default function CartDrawer({
                     Proceed to Checkout →
                   </button>
                   <a
-                    href={`https://wa.me/233246811210?text=${encodeURIComponent(
+                    href={`https://wa.me/233538795669?text=${encodeURIComponent(
                       `Hello Nnepa Foriwaa! I would like to place an order for the following cart items:\n\n${cartItems
                         .map(
                           (item) =>

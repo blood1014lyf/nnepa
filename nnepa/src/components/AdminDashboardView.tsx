@@ -31,7 +31,7 @@ export default function AdminDashboardView({ adminToken, onLogout, showToast, on
   // New product form state
   const [newProduct, setNewProduct] = useState({
     name: '',
-    category: 'women' as 'women' | 'men' | 'kids',
+    category: 'women' as 'women' | 'men' | 'bags',
     subcategory: '',
     price: '',
     originalPrice: '',
@@ -53,6 +53,11 @@ export default function AdminDashboardView({ adminToken, onLogout, showToast, on
   const [editUploadPreview, setEditUploadPreview] = useState<ImagePreviewState | null>(null);
   const [editUploadingImage, setEditUploadingImage] = useState(false);
   const editFileInputRef = useRef<HTMLInputElement | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  const getEffectiveToken = () => {
+    return adminToken || localStorage.getItem('nnepa_foriwaa_token') || '';
+  };
 
   useEffect(() => {
     fetchProducts();
@@ -60,23 +65,43 @@ export default function AdminDashboardView({ adminToken, onLogout, showToast, on
 
   const fetchProducts = async () => {
     setLoading(true);
+    let cachedList: Product[] = [];
+    try {
+      const cached = localStorage.getItem('nnepa_foriwaa_products');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed)) {
+          cachedList = parsed;
+        }
+      }
+    } catch {}
+
     try {
       const response = await fetch('/api/products');
       if (response.ok) {
         const data = await response.json();
-        const productList = data.products || [];
-        setProducts(productList);
+        const serverList: Product[] = data.products || [];
+        
+        // Find any local items missing from the server
+        const missingOnServer = cachedList.filter(
+          (c) => !serverList.some((s) => s.id === c.id)
+        );
+
+        const merged = [...missingOnServer, ...serverList];
+        setProducts(merged);
         try {
-          localStorage.setItem('nnepa_foriwaa_products', JSON.stringify(productList));
+          localStorage.setItem('nnepa_foriwaa_products', JSON.stringify(merged));
         } catch {}
         onRefreshProducts?.();
       } else {
-        // Fallback to local storage
-        loadFromLocalStorage();
+        if (cachedList.length > 0) {
+          setProducts(cachedList);
+        }
       }
     } catch {
-      // Backend offline or static Vercel host
-      loadFromLocalStorage();
+      if (cachedList.length > 0) {
+        setProducts(cachedList);
+      }
     } finally {
       setLoading(false);
     }
@@ -142,12 +167,13 @@ export default function AdminDashboardView({ adminToken, onLogout, showToast, on
 
   const uploadImageToServerOrDataUrl = async (fileToUpload: File, fallbackDataUrl?: string): Promise<string> => {
     const payloadUrl = fallbackDataUrl || (await processImageSelection(fileToUpload)).url;
+    const effectiveToken = getEffectiveToken();
     try {
       const res = await fetch('/api/upload', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminToken}`
+          'Authorization': `Bearer ${effectiveToken}`
         },
         body: JSON.stringify({
           filename: fileToUpload.name,
@@ -199,13 +225,14 @@ export default function AdminDashboardView({ adminToken, onLogout, showToast, on
         sizes: newProduct.sizes && newProduct.sizes.length > 0 ? newProduct.sizes : ['S', 'M', 'L', 'XL']
       };
 
-      // Attempt server sync
+      // Server sync using effective token
+      const effectiveToken = getEffectiveToken();
       try {
         const res = await fetch('/api/products', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${adminToken}`
+            'Authorization': `Bearer ${effectiveToken}`
           },
           body: JSON.stringify(newProdItem)
         });
@@ -215,9 +242,11 @@ export default function AdminDashboardView({ adminToken, onLogout, showToast, on
             newProdItem.id = data.product.id;
           }
         }
-      } catch {}
+      } catch (saveErr) {
+        console.warn('Network notice saving product to server:', saveErr);
+      }
 
-      // Resilient local update
+      // Resilient local update: ensure new garment is in state and localStorage
       const updatedList = [newProdItem, ...products.filter((p) => p.id !== newProdItem.id)];
       setProducts(updatedList);
       try {
@@ -250,12 +279,13 @@ export default function AdminDashboardView({ adminToken, onLogout, showToast, on
 
   const handleToggleStock = async (product: Product) => {
     const updatedStock = !product.inStock;
+    const effectiveToken = getEffectiveToken();
     try {
       await fetch(`/api/products/${product.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminToken}`
+          'Authorization': `Bearer ${effectiveToken}`
         },
         body: JSON.stringify({ inStock: updatedStock })
       });
@@ -271,15 +301,12 @@ export default function AdminDashboardView({ adminToken, onLogout, showToast, on
   };
 
   const handleDeleteProduct = async (productId: string) => {
-    if (!window.confirm('Are you sure you want to delete this garment from the catalogue?')) {
-      return;
-    }
-
+    const effectiveToken = getEffectiveToken();
     try {
       await fetch(`/api/products/${productId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${adminToken}`
+          'Authorization': `Bearer ${effectiveToken}`
         }
       });
     } catch {}
@@ -289,6 +316,7 @@ export default function AdminDashboardView({ adminToken, onLogout, showToast, on
     try {
       localStorage.setItem('nnepa_foriwaa_products', JSON.stringify(updatedList));
     } catch {}
+    setConfirmDeleteId(null);
     onRefreshProducts?.();
     showToast('🗑 Product removed from catalogue');
   };
@@ -316,12 +344,13 @@ export default function AdminDashboardView({ adminToken, onLogout, showToast, on
         badge: editingProduct.badge === 'None' ? undefined : editingProduct.badge
       };
 
+      const effectiveToken = getEffectiveToken();
       try {
         await fetch(`/api/products/${editingProduct.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${adminToken}`
+            'Authorization': `Bearer ${effectiveToken}`
           },
           body: JSON.stringify(updatedProd)
         });
@@ -353,7 +382,7 @@ export default function AdminDashboardView({ adminToken, onLogout, showToast, on
         <div className="bg-gradient-to-r from-plum-dark via-mauve-deep to-plum-dark p-6 sm:p-8 md:p-10 rounded-md text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-md mb-8">
           <div>
             <span className="text-[0.58rem] font-bold tracking-[0.3em] uppercase text-lilac block mb-1">
-              Curator Management Console
+              Store Management Console
             </span>
             <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl font-light">
               Brand Control <em className="font-serif italic text-lilac">Dashboard</em>
@@ -410,7 +439,7 @@ export default function AdminDashboardView({ adminToken, onLogout, showToast, on
               <div className="flex justify-between items-center border-b border-zinc-100 pb-4 mb-6">
                 <div>
                   <span className="text-[0.55rem] font-bold tracking-[0.25em] uppercase text-mauve-deep block">
-                    Bespoke Inventory Entry
+                    Custom Inventory Entry
                   </span>
                   <h3 className="font-serif text-xl font-bold text-plum-dark">
                     Create New Garment Design
@@ -454,7 +483,7 @@ export default function AdminDashboardView({ adminToken, onLogout, showToast, on
                     >
                       <option value="women">Women Collection</option>
                       <option value="men">Men Collection</option>
-                      <option value="kids">Kids Heritage</option>
+                      <option value="bags">Bags & Accessories</option>
                     </select>
                   </div>
                   <div className="flex flex-col gap-1.5">
@@ -905,7 +934,7 @@ export default function AdminDashboardView({ adminToken, onLogout, showToast, on
                           )}
                         </td>
                         <td className="p-4 sm:p-5 pr-5 sm:pr-7 text-right">
-                          <div className="flex justify-end gap-1.5">
+                          <div className="flex justify-end gap-1.5 items-center">
                             <button
                               onClick={() => setEditingProduct(p)}
                               className="w-8 h-8 rounded bg-zinc-100 hover:bg-lavender/15 text-text-light hover:text-lavender border-none cursor-pointer flex items-center justify-center transition-all"
@@ -913,13 +942,23 @@ export default function AdminDashboardView({ adminToken, onLogout, showToast, on
                             >
                               <Edit className="w-3.5 h-3.5" />
                             </button>
-                            <button
-                              onClick={() => handleDeleteProduct(p.id)}
-                              className="w-8 h-8 rounded bg-zinc-100 hover:bg-rose-50 text-text-light hover:text-rose-600 border-none cursor-pointer flex items-center justify-center transition-all"
-                              title="Delete Product"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                            {confirmDeleteId === p.id ? (
+                              <button
+                                onClick={() => handleDeleteProduct(p.id)}
+                                className="px-2.5 py-1 text-[0.62rem] rounded bg-rose-600 hover:bg-rose-700 text-white font-semibold border-none cursor-pointer flex items-center gap-1 transition-all"
+                                title="Click to permanently confirm deletion"
+                              >
+                                <span>Delete?</span>
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => setConfirmDeleteId(p.id)}
+                                className="w-8 h-8 rounded bg-zinc-100 hover:bg-rose-50 text-text-light hover:text-rose-600 border-none cursor-pointer flex items-center justify-center transition-all"
+                                title="Delete Product"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>

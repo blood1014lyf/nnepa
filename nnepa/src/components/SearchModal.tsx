@@ -41,8 +41,12 @@ export default function SearchModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[900] flex items-start justify-center pt-24 px-4 bg-black/60 backdrop-blur-xs">
+        <div
+          onClick={onClose}
+          className="fixed inset-0 z-[900] flex items-start justify-center pt-14 sm:pt-24 px-3 sm:px-4 bg-black/60 backdrop-blur-xs overflow-y-auto"
+        >
           <motion.div
+            onClick={(e) => e.stopPropagation()}
             initial={{ opacity: 0, scale: 0.95, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
@@ -55,6 +59,7 @@ export default function SearchModal({
                 type="text"
                 autoFocus
                 placeholder="Search collection (e.g. Ankara, Kente, Gown, Agbada...)"
+                aria-label="Search collection by keyword"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 className="flex-1 bg-transparent border-none text-plum-dark text-base outline-none tracking-wide"
