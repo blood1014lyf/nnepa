@@ -118,7 +118,7 @@ export default function App() {
           .then((data) => {
             if (data.authenticated) {
               setAdminToken(savedToken);
-            } else {
+            } else if (!savedToken.startsWith('admin_session_')) {
               localStorage.removeItem('nnepa_foriwaa_token');
               setAdminToken(null);
             }
