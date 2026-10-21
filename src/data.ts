@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Product, HeroSlide, Look, Testimonial } from './types.ts';
+import type { Product, HeroSlide, Look, Testimonial } from './types.ts';
 
 export const HERO_SLIDES: HeroSlide[] = [
   {

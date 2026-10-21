@@ -8,7 +8,7 @@ import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
 import { PRODUCTS as INITIAL_PRODUCTS } from '../src/data.ts';
-import { Product } from '../src/types.ts';
+import type { Product } from '../src/types.ts';
 
 const app = express();
 
@@ -100,13 +100,13 @@ function isValidImageBuffer(buffer: Buffer): boolean {
 }
 
 // 1. Fetch all products
-app.get('/api/products', (req, res) => {
+app.get(['/api/products', '/products'], (req, res) => {
   const currentProducts = loadProducts();
   res.json({ products: currentProducts });
 });
 
 // 1b. Bulk sync
-app.post('/api/products/sync', requireAdmin, (req, res) => {
+app.post(['/api/products/sync', '/products/sync'], requireAdmin, (req, res) => {
   const { products: syncList } = req.body;
   if (!syncList || !Array.isArray(syncList)) {
     res.status(400).json({ error: 'Products list array is required.' });
@@ -127,7 +127,7 @@ app.post('/api/products/sync', requireAdmin, (req, res) => {
 });
 
 // 2. Add new product
-app.post('/api/products', requireAdmin, (req, res) => {
+app.post(['/api/products', '/products'], requireAdmin, (req, res) => {
   const { name, category, subcategory, price, originalPrice, rating, imageUrl, badge, inStock, description, sizes } = req.body;
   if (!name || !category || !price) {
     res.status(400).json({ error: 'Name, Category, and Price in Cedis are required.' });
@@ -154,7 +154,7 @@ app.post('/api/products', requireAdmin, (req, res) => {
 });
 
 // 3. Edit product
-app.put('/api/products/:id', requireAdmin, (req, res) => {
+app.put(['/api/products/:id', '/products/:id'], requireAdmin, (req, res) => {
   const { id } = req.params;
   const updates = req.body;
   const products = loadProducts();
@@ -175,7 +175,7 @@ app.put('/api/products/:id', requireAdmin, (req, res) => {
     badge: updates.badge === 'None' ? undefined : (updates.badge || existing.badge),
     inStock: updates.inStock !== undefined ? Boolean(updates.inStock) : existing.inStock,
     description: updates.description || existing.description,
-    sizes: updates.sizes && Array.isArray(updates.sizes) ? updates.sizes : existing.sizes
+    sizes: updates.sizes && Array.isArray(sizes) ? updates.sizes : existing.sizes
   };
   products[pIndex] = updatedProduct;
   saveProducts(products);
@@ -183,7 +183,7 @@ app.put('/api/products/:id', requireAdmin, (req, res) => {
 });
 
 // 4. Delete product
-app.delete('/api/products/:id', requireAdmin, (req, res) => {
+app.delete(['/api/products/:id', '/products/:id'], requireAdmin, (req, res) => {
   const { id } = req.params;
   let products = loadProducts();
   if (!products.some((p) => p.id === id)) {
@@ -196,7 +196,7 @@ app.delete('/api/products/:id', requireAdmin, (req, res) => {
 });
 
 // 5. Upload endpoint (returns direct base64 in serverless environment)
-app.post('/api/upload', requireAdmin, (req, res) => {
+app.post(['/api/upload', '/upload'], requireAdmin, (req, res) => {
   const { filename, base64Data } = req.body;
   if (!filename || !base64Data) {
     res.status(400).json({ error: 'Filename and base64Data elements are required.' });
@@ -221,7 +221,7 @@ app.post('/api/upload', requireAdmin, (req, res) => {
 });
 
 // 6. Login endpoint (Secure credential verification)
-app.post('/api/login', (req, res) => {
+app.post(['/api/login', '/login'], (req, res) => {
   const { username, password } = req.body || {};
   if (!username || !password) {
     res.status(400).json({ error: 'Username and password are required.' });
@@ -250,7 +250,7 @@ app.post('/api/login', (req, res) => {
 });
 
 // 7. Verify session
-app.get('/api/auth/verify', (req, res) => {
+app.get(['/api/auth/verify', '/auth/verify'], (req, res) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     res.json({ authenticated: false });
@@ -261,7 +261,7 @@ app.get('/api/auth/verify', (req, res) => {
 });
 
 // 8. Logout
-app.post('/api/logout', (req, res) => {
+app.post(['/api/logout', '/logout'], (req, res) => {
   const authHeader = req.headers.authorization;
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.slice(7).trim();
@@ -270,4 +270,6 @@ app.post('/api/logout', (req, res) => {
   res.json({ success: true, message: 'Logged out successfully.' });
 });
 
-export default app;
+export default function handler(req: any, res: any) {
+  return app(req, res);
+}
