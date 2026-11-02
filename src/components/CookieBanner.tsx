@@ -116,10 +116,10 @@ export default function CookieBanner({
             </div>
             <div>
               <span className="text-[0.62rem] font-bold uppercase tracking-[0.2em] text-lavender block">
-                Nnepa Foriwaa • Discretion & Privacy
+                Cookie Policy
               </span>
               <h2 className="font-serif text-base font-semibold text-plum-dark m-0 leading-tight">
-                {isCustomizeOpen ? 'Tailor Your Privacy Preferences' : 'Your Privacy & Cookie Choices'}
+                {isCustomizeOpen ? 'Cookie Preferences' : 'Cookie Policy'}
               </h2>
             </div>
           </div>
@@ -130,7 +130,7 @@ export default function CookieBanner({
             }}
             className="text-text-muted hover:text-plum-dark p-1 rounded-md transition-colors bg-transparent border-none cursor-pointer"
             aria-label="Dismiss and keep essential cookies only"
-            title="Essential cookies only"
+            title="Reject non-essential cookies"
           >
             <X className="w-4 h-4" />
           </button>
@@ -140,7 +140,7 @@ export default function CookieBanner({
         {!isCustomizeOpen ? (
           <div>
             <p className="text-text-light/90 leading-relaxed mb-4 text-[0.76rem]">
-              We use essential storage to keep your shopping bag, wishlist, and currency preferences active. We never sell your personal information or track you across third-party websites.
+              We use cookies to improve your browsing experience, remember your preferences, and maintain your shopping bag.
             </p>
 
             {/* Quick Actions */}
@@ -150,7 +150,7 @@ export default function CookieBanner({
                 onClick={handleAcceptAll}
                 className="px-4 py-2.5 bg-gradient-to-r from-lavender via-mauve to-mauve-deep text-white font-medium text-[0.72rem] tracking-wider uppercase rounded-[3px] border-none cursor-pointer hover:opacity-95 transition-all text-center shadow-xs"
               >
-                Accept All
+                Accept
               </button>
 
               <button
@@ -158,7 +158,7 @@ export default function CookieBanner({
                 onClick={handleEssentialOnly}
                 className="px-3.5 py-2.5 bg-pearl-2/60 hover:bg-pearl-2 text-plum-dark font-medium text-[0.72rem] tracking-wider uppercase rounded-[3px] border border-lilac/30 cursor-pointer transition-colors text-center"
               >
-                Essential Only
+                Reject
               </button>
 
               <button
@@ -167,12 +167,11 @@ export default function CookieBanner({
                 className="px-2 py-2 text-lavender hover:text-mauve-deep text-[0.72rem] font-medium tracking-wide border-none bg-transparent cursor-pointer transition-colors text-center inline-flex items-center justify-center gap-1"
               >
                 <Settings className="w-3.5 h-3.5" />
-                Customize
+                Preferences
               </button>
             </div>
 
-            <div className="mt-3 pt-2.5 border-t border-zinc-100 flex items-center justify-between text-[0.68rem] text-text-muted">
-              <span>GDPR & Ghana Data Protection Compliant</span>
+            <div className="mt-3 pt-2.5 border-t border-zinc-100 flex items-center justify-end text-[0.68rem] text-text-muted">
               <button
                 type="button"
                 onClick={() => {
