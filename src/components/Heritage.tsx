@@ -27,10 +27,24 @@ export default function Heritage() {
   ];
 
   return (
-    <section id="heritage" className="p-0 grid grid-cols-1 lg:grid-cols-2">
-      {/* Mosaic Images */}
-      <div className="grid grid-cols-2 grid-rows-2 gap-[4px] min-h-[380px] sm:min-h-[500px] lg:min-h-[680px]">
-        <div className="row-span-2 overflow-hidden relative group">
+    <section id="heritage" className="py-20 px-6 sm:px-12 md:px-16 max-w-7xl mx-auto">
+      {/* Narrative Section: The Art of African Craft */}
+      <div className="max-w-3xl mb-12">
+        <div className="text-[0.6rem] font-bold tracking-[0.4em] uppercase text-mauve-deep flex items-center gap-3.5 mb-2.5">
+          <span className="w-6.5 h-[1px] bg-gradient-to-r from-lavender to-mauve" />
+          Our Heritage
+        </div>
+        <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-light text-plum-dark leading-tight mb-4">
+          The Art of <em className="font-serif italic">African Craft</em>
+        </h2>
+        <p className="text-sm sm:text-base font-light text-text-muted leading-relaxed max-w-[620px]">
+          Every piece from Nnepa Foriwaa is a labour of love — sourced from the finest artisans across West Africa and tailored to perfection for modern African elegance.
+        </p>
+      </div>
+
+      {/* Collage of Photos directly under The Art of African Craft */}
+      <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 h-[440px] sm:h-[480px] lg:h-[540px] mb-12">
+        <div className="sm:col-span-6 overflow-hidden relative group rounded-[2px] h-full">
           <img
             src={fabricDetailImg}
             alt="Handcrafted fabric detail close up"
@@ -38,7 +52,7 @@ export default function Heritage() {
             loading="lazy"
           />
         </div>
-        <div className="overflow-hidden relative group">
+        <div className="sm:col-span-3 overflow-hidden relative group rounded-[2px] h-full">
           <img
             src={traditionalLoomImg}
             alt="Traditional African Looming"
@@ -46,7 +60,7 @@ export default function Heritage() {
             loading="lazy"
           />
         </div>
-        <div className="overflow-hidden relative group">
+        <div className="sm:col-span-3 overflow-hidden relative group rounded-[2px] h-full">
           <img
             src={embroiderySewingImg}
             alt="Golden embroidery sewing"
@@ -56,36 +70,23 @@ export default function Heritage() {
         </div>
       </div>
 
-      {/* Narrative Section */}
-      <div className="bg-gradient-to-br from-pearl-2 to-pearl px-6 py-14 sm:px-12 sm:py-16 lg:p-20 flex flex-col justify-center">
-        <div className="text-[0.6rem] font-bold tracking-[0.4em] uppercase text-mauve-deep flex items-center gap-3.5 mb-2.5">
-          <span className="w-6.5 h-[1px] bg-gradient-to-r from-lavender to-mauve" />
-          Our Heritage
-        </div>
-        <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-light text-plum-dark leading-tight mb-4">
-          The Art of <em className="font-serif italic">African Craft</em>
-        </h2>
-        <p className="text-sm font-light text-text-muted leading-relaxed max-w-[480px]">
-          Every piece from Nnepa Foriwaa is a labour of love — sourced from the finest artisans across West Africa and tailored to perfection for modern African elegance.
-        </p>
-
-        <div className="mt-12 flex flex-col gap-7.5">
-          {steps.map((step, idx) => (
-            <div key={idx} className="flex gap-6 items-start pb-7.5 border-b border-solid border-mauve/10 last:pb-0 last:border-b-0">
-              <div className="w-12 h-12 flex-shrink-0 rounded-full bg-gradient-to-br from-lavender/15 to-mauve/15 border border-solid border-lilac/25 flex items-center justify-center text-lg text-lavender">
-                {step.symbol}
-              </div>
-              <div>
-                <h4 className="font-serif text-xl font-medium text-plum-dark mb-1">
-                  {step.title}
-                </h4>
-                <p className="text-xs text-text-muted leading-relaxed">
-                  {step.desc}
-                </p>
-              </div>
+      {/* Craft Steps */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 pt-8 border-t border-mauve/15">
+        {steps.map((step, idx) => (
+          <div key={idx} className="flex gap-4 items-start">
+            <div className="w-11 h-11 flex-shrink-0 rounded-full bg-gradient-to-br from-lavender/15 to-mauve/15 border border-solid border-lilac/25 flex items-center justify-center text-base text-lavender">
+              {step.symbol}
             </div>
-          ))}
-        </div>
+            <div>
+              <h4 className="font-serif text-lg font-medium text-plum-dark mb-1">
+                {step.title}
+              </h4>
+              <p className="text-xs text-text-muted leading-relaxed">
+                {step.desc}
+              </p>
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   );
