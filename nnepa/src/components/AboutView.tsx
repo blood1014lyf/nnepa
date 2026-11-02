@@ -13,11 +13,11 @@ export default function AboutView() {
       <section className="px-6 md:px-12 max-w-4xl mx-auto">
         {/* Slogan & Title */}
         <div className="mb-8">
-          <span className="text-[0.62rem] font-bold tracking-[0.4em] uppercase text-mauve-deep mb-3.5 inline-block">
+          <span className="text-[0.62rem] font-bold tracking-[0.4em] uppercase text-mauve-deep mb-3.5 inline-block animate-eyebrow-tracking">
             About Nnepa Foriwaa
           </span>
           <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl text-plum-dark font-light mb-4 leading-[1.08]">
-            Rooted. Refined. <em className="font-serif italic">Regal.</em>
+            Rooted. Refined. <em className="font-serif italic animate-italic-pulse">Regal.</em>
           </h1>
           <div className="w-16 h-[2px] bg-gradient-to-r from-lavender to-mauve mb-6" />
         </div>

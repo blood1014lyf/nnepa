@@ -497,7 +497,7 @@ export default function CollectionShopView({
           ref={gridTopRef}
           className="pb-0 pt-6 px-5 md:py-6 md:px-10"
         >
-          <h1 className="font-serif text-[2.1rem] md:text-[2.75rem] font-light tracking-[-0.01em] text-plum-dark leading-[1.08]">
+          <h1 className="font-serif text-[2.1rem] md:text-[2.75rem] font-light tracking-[-0.01em] text-plum-dark leading-[1.08] animate-text-reveal">
             {activeHeading}
           </h1>
         </div>

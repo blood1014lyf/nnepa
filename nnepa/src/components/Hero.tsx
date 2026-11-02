@@ -79,8 +79,7 @@ export default function Hero() {
         className="absolute inset-0 w-full h-full object-cover"
       />
 
-      {/* Subtle top & bottom scrim for navbar legibility and button contrast */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-transparent to-black/30 pointer-events-none" />
+      {/* Zero overlay over the video to preserve pure fidelity */}
 
       {/* Prettily styled luxury Shop Now button that animates and fades in when hero video plays */}
       <div
