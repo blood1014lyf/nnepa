@@ -13,9 +13,10 @@ interface FooterProps {
   onNavigate: (page: string, category?: 'all' | 'women' | 'men' | 'bags') => void;
   onScrollToSection: (sectionId: string) => void;
   adminToken?: string | null;
+  onOpenCookieSettings?: () => void;
 }
 
-export default function Footer({ currentPage, onNavigate, onScrollToSection, adminToken }: FooterProps) {
+export default function Footer({ currentPage, onNavigate, onScrollToSection, adminToken, onOpenCookieSettings }: FooterProps) {
   const socialLinks = [
     { title: 'Instagram (@nnepaforiwaa)', icon: <Instagram className="w-3.5 h-3.5" />, href: 'https://www.instagram.com/nnepaforiwaa' },
     { title: 'TikTok (@nnepa.foriwaa)', icon: <TikTokIcon className="w-3.5 h-3.5 fill-current" />, href: 'https://www.tiktok.com/@nnepa.foriwaa' },
@@ -196,6 +197,16 @@ export default function Footer({ currentPage, onNavigate, onScrollToSection, adm
                     Privacy Policy
                   </button>
                 </li>
+                {onOpenCookieSettings && (
+                  <li>
+                    <button
+                      onClick={onOpenCookieSettings}
+                      className="bg-transparent border-none p-0 text-[0.65rem] sm:text-xs text-pearl-2/50 hover:text-lilac cursor-pointer font-light transition-colors text-left block"
+                    >
+                      Cookie Preferences
+                    </button>
+                  </li>
+                )}
                 {currentPage && currentPage !== 'home' && (
                   <li>
                     <button
@@ -246,6 +257,17 @@ export default function Footer({ currentPage, onNavigate, onScrollToSection, adm
             >
               Privacy Policy
             </button>
+            {onOpenCookieSettings && (
+              <>
+                <span>•</span>
+                <button
+                  onClick={onOpenCookieSettings}
+                  className="bg-transparent border-none p-0 text-lilac/40 hover:text-lilac cursor-pointer transition-colors"
+                >
+                  Cookie Settings
+                </button>
+              </>
+            )}
             <span>•</span>
             <button
               onClick={() => onNavigate(adminToken ? 'admin-dashboard' : 'admin-login')}

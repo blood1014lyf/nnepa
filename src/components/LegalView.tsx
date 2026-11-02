@@ -201,13 +201,33 @@ export default function LegalView({ initialTab = 'terms', onNavigateToContact }:
                 </p>
               </div>
 
-              <div>
+              <div className="border-b border-zinc-100 pb-6">
                 <h2 className="font-serif text-xl text-plum-dark font-medium mb-2">
                   4. Data Security & Storage
                 </h2>
                 <p>
                   Client measurements and order histories are stored securely. You may request to review, update, or remove your contact coordinates from our active client roster at any time by contacting us directly.
                 </p>
+              </div>
+
+              <div>
+                <h2 className="font-serif text-xl text-plum-dark font-medium mb-2">
+                  5. Cookies & Local Storage Policy
+                </h2>
+                <p className="mb-2">
+                  Nnepa Foriwaa uses minimal browser storage solely to provide a smooth, reliable digital atelier experience:
+                </p>
+                <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm text-text-light">
+                  <li>
+                    <strong>Essential Functional Storage:</strong> We store your active shopping bag items, curated wishlist, offline product catalog cache, and administrative authentication tokens securely on your local device.
+                  </li>
+                  <li>
+                    <strong>No Third-Party Cross-Site Tracking:</strong> We do not deploy third-party advertising cookies, cross-site trackers, or data-broker scripts.
+                  </li>
+                  <li>
+                    <strong>Consent & Control:</strong> You can review or modify your cookie and local storage preferences at any time using the "Cookie Preferences" link located in the footer of any page.
+                  </li>
+                </ul>
               </div>
 
             </div>

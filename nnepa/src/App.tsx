@@ -19,6 +19,7 @@ import Footer from './components/Footer.tsx';
 import CartDrawer from './components/CartDrawer.tsx';
 import SearchModal from './components/SearchModal.tsx';
 import Toast from './components/Toast.tsx';
+import CookieBanner from './components/CookieBanner.tsx';
 
 // Code-split auxiliary multi-page views with React.lazy
 const AboutView = React.lazy(() => import('./components/AboutView.tsx'));
@@ -81,6 +82,7 @@ export default function App() {
   }, [wishlist]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isCookieSettingsOpen, setIsCookieSettingsOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Dynamic Full-Stack Product and Admin Token States
@@ -744,6 +746,7 @@ export default function App() {
         }}
         onScrollToSection={handleScrollToSection}
         adminToken={adminToken}
+        onOpenCookieSettings={() => setIsCookieSettingsOpen(true)}
       />
 
       {/* ═══ UTILITY CART SHOPPING BAG DRAWER ═══ */}
@@ -767,6 +770,16 @@ export default function App() {
         products={products}
         onSelectProduct={(p) => handleViewDetails(p)}
         onAddToCart={handleAddToCart}
+      />
+
+      {/* ═══ BESPOKE COOKIE & PRIVACY CONSENT BANNER ═══ */}
+      <CookieBanner
+        isOpenExternally={isCookieSettingsOpen}
+        onCloseExternal={() => setIsCookieSettingsOpen(false)}
+        onOpenPrivacyPolicy={() => {
+          setPageWithHash('privacy');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
       />
 
       {/* ═══ TOAST FEEDBACK PANE ═══ */}
