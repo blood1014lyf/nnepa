@@ -71,13 +71,20 @@ export default function FeaturedOutfit({ outfit, onViewDetails }: FeaturedOutfit
       onClick={() => onViewDetails(outfit)}
       className="relative w-full min-h-[580px] lg:min-h-[720px] h-[75vh] overflow-hidden bg-plum-dark select-none group cursor-pointer"
     >
+      {/* Top Bestseller Badge on top of the video */}
+      <div className="absolute top-6 left-6 sm:top-8 sm:left-12 z-20 pointer-events-none">
+        <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/95 backdrop-blur-md text-[11px] font-semibold tracking-[0.2em] uppercase text-black shadow-md border border-white/20">
+          <span className="w-1.5 h-1.5 rounded-full bg-black" />
+          Our Bestseller
+        </span>
+      </div>
+
       <video
         ref={videoRef}
         src={featuredVideo}
         width={576}
         height={1024}
         autoPlay
-        loop
         muted
         playsInline
         preload="auto"
@@ -92,7 +99,7 @@ export default function FeaturedOutfit({ outfit, onViewDetails }: FeaturedOutfit
         <div className="w-full max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-end justify-between gap-6 pointer-events-auto">
           <div>
             <span className="text-[0.62rem] font-bold tracking-[0.3em] uppercase text-white/75 block mb-2">
-              Featured Outfit {outfit.subcategory ? `• ${outfit.subcategory}` : ''}
+              Our Bestseller {outfit.subcategory ? `• ${outfit.subcategory}` : ''}
             </span>
             <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-light text-white leading-tight">
               {outfit.name}

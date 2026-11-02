@@ -675,6 +675,13 @@ export default function CollectionShopView({
                 const isWished = wishlist.includes(product.id);
                 const isAboveFold = idx < 8;
                 const isPriorityLcp = idx < 2;
+                // Subtle organic motion on selected catalog looks
+                const hasSubtleMotion = idx % 2 === 0;
+                const motionClass = hasSubtleMotion
+                  ? idx % 4 === 0
+                    ? 'animate-subtle-drift'
+                    : 'animate-subtle-drift-alt'
+                  : '';
                 const sizes =
                   product.sizes && product.sizes.length > 0 ? product.sizes : ['S', 'M', 'L', 'XL'];
 
@@ -698,7 +705,7 @@ export default function CollectionShopView({
                           onViewDetails(product);
                         }}
                         aria-label={product.name}
-                        className="block relative w-full aspect-[2/3] no-underline"
+                        className="block relative w-full aspect-[2/3] no-underline overflow-hidden"
                       >
                         <img
                           src={product.imageUrl}
@@ -706,7 +713,7 @@ export default function CollectionShopView({
                           loading={isPriorityLcp ? undefined : 'lazy'}
                           fetchPriority={isPriorityLcp ? 'high' : undefined}
                           referrerPolicy="no-referrer"
-                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover/image:scale-[1.015]"
+                          className={`absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover/image:scale-[1.025] ${motionClass}`}
                         />
 
                         {product.hoverImageUrl && (

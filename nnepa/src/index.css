@@ -53,6 +53,41 @@ html {
   animation: kenBurnsZoom 9s ease-out forwards;
 }
 
+/* Subtle organic drifting motion for curated catalog lookbook imagery */
+@keyframes subtleDrift {
+  0% {
+    transform: scale(1) translateY(0);
+  }
+  50% {
+    transform: scale(1.032) translateY(-4px);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-subtle-drift {
+  animation: subtleDrift 7.5s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes subtleDriftAlt {
+  0% {
+    transform: scale(1) translateY(0);
+  }
+  50% {
+    transform: scale(1.035) translateY(3px);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-subtle-drift-alt {
+  animation: subtleDriftAlt 9s ease-in-out infinite;
+  will-change: transform;
+}
+
 /* Respect accessibility prefers-reduced-motion standard */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -64,7 +99,9 @@ html {
     scroll-behavior: auto !important;
   }
   .animate-marquee,
-  .animate-kenburns {
+  .animate-kenburns,
+  .animate-subtle-drift,
+  .animate-subtle-drift-alt {
     animation: none !important;
   }
 }

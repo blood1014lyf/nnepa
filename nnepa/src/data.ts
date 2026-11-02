@@ -5,26 +5,35 @@
 
 import type { Product, HeroSlide, Look, Testimonial } from './types.ts';
 
+const lookbook01 = '/assets/images/lookbook_01_gold_boubou.jpg';
+const lookbook02 = '/assets/images/lookbook_02_plum_emerald_gown.jpg';
+const lookbook03 = '/assets/images/lookbook_03_ivory_wrap_ensemble.jpg';
+const lookbook04 = '/assets/images/lookbook_04_burgundy_corset_cape.jpg';
+const lookbook05 = '/assets/images/lookbook_05_ankara_peplum_suit.jpg';
+const lookbook06 = '/assets/images/lookbook_06_organza_puff_dress.jpg';
+const lookbook07 = '/assets/images/lookbook_07_mens_ivory_gold_agbada.jpg';
+const lookbook08 = '/assets/images/lookbook_08_mens_indigo_kente_kaftan.jpg';
+
 export const HERO_SLIDES: HeroSlide[] = [
   {
     id: 1,
-    imageUrl: 'https://images.pexels.com/photos/34993753/pexels-photo-34993753.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=1800'
+    imageUrl: lookbook01
   },
   {
     id: 2,
-    imageUrl: 'https://images.pexels.com/photos/30326132/pexels-photo-30326132.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=1800'
+    imageUrl: lookbook04
   },
   {
     id: 3,
-    imageUrl: 'https://images.pexels.com/photos/14577493/pexels-photo-14577493.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=1800'
+    imageUrl: lookbook02
   },
   {
     id: 4,
-    imageUrl: 'https://images.pexels.com/photos/34993754/pexels-photo-34993754.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=1800'
+    imageUrl: lookbook05
   },
   {
     id: 5,
-    imageUrl: 'https://images.pexels.com/photos/6192447/pexels-photo-6192447.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=1800'
+    imageUrl: lookbook03
   }
 ];
 
@@ -36,8 +45,8 @@ export const PRODUCTS: Product[] = [
     subcategory: 'Dresses & Gowns',
     price: 480,
     rating: 5,
-    imageUrl: 'https://images.pexels.com/photos/20799228/pexels-photo-20799228.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800',
-    hoverImageUrl: 'https://images.pexels.com/photos/34993754/pexels-photo-34993754.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800',
+    imageUrl: lookbook01,
+    hoverImageUrl: lookbook03,
     color: 'Gold & Ochre',
     colorCount: 2,
     badge: 'Exclusive',
@@ -52,8 +61,8 @@ export const PRODUCTS: Product[] = [
     subcategory: 'Dresses & Gowns',
     price: 2850,
     rating: 5,
-    imageUrl: 'https://images.pexels.com/photos/34993753/pexels-photo-34993753.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800',
-    hoverImageUrl: 'https://images.pexels.com/photos/28387051/pexels-photo-28387051.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800',
+    imageUrl: lookbook02,
+    hoverImageUrl: lookbook06,
     color: 'Plum & Violet',
     colorCount: 3,
     badge: 'Bestseller',
@@ -68,8 +77,8 @@ export const PRODUCTS: Product[] = [
     subcategory: 'Tops & Sets',
     price: 650,
     rating: 5,
-    imageUrl: 'https://images.pexels.com/photos/14484948/pexels-photo-14484948.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800',
-    hoverImageUrl: 'https://images.pexels.com/photos/33662802/pexels-photo-33662802.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800',
+    imageUrl: lookbook05,
+    hoverImageUrl: lookbook04,
     color: 'Crimson & Blush',
     colorCount: 2,
     badge: 'New',
@@ -84,8 +93,8 @@ export const PRODUCTS: Product[] = [
     subcategory: 'Dresses & Gowns',
     price: 980,
     rating: 5,
-    imageUrl: 'https://images.pexels.com/photos/28387051/pexels-photo-28387051.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800',
-    hoverImageUrl: 'https://images.pexels.com/photos/29077024/pexels-photo-29077024.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800',
+    imageUrl: lookbook06,
+    hoverImageUrl: lookbook02,
     color: 'Emerald & Sage',
     colorCount: 2,
     badge: 'Exclusive',
@@ -100,8 +109,8 @@ export const PRODUCTS: Product[] = [
     subcategory: 'Kaftans & Agbada',
     price: 1200,
     rating: 5,
-    imageUrl: 'https://images.pexels.com/photos/31762081/pexels-photo-31762081.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800',
-    hoverImageUrl: 'https://images.pexels.com/photos/34608857/pexels-photo-34608857.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800',
+    imageUrl: lookbook07,
+    hoverImageUrl: lookbook08,
     color: 'Ivory & Pearl',
     colorCount: 3,
     badge: 'Bestseller',
@@ -116,8 +125,8 @@ export const PRODUCTS: Product[] = [
     subcategory: 'Kaftans & Agbada',
     price: 750,
     rating: 5,
-    imageUrl: 'https://images.pexels.com/photos/34608857/pexels-photo-34608857.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800',
-    hoverImageUrl: 'https://images.pexels.com/photos/14577493/pexels-photo-14577493.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800',
+    imageUrl: lookbook08,
+    hoverImageUrl: lookbook07,
     color: 'Gold & Ochre',
     colorCount: 2,
     badge: 'New',
@@ -132,8 +141,8 @@ export const PRODUCTS: Product[] = [
     subcategory: 'Outerwear & Smocks',
     price: 580,
     rating: 5,
-    imageUrl: 'https://images.pexels.com/photos/14577493/pexels-photo-14577493.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800',
-    hoverImageUrl: 'https://images.pexels.com/photos/31762081/pexels-photo-31762081.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800',
+    imageUrl: lookbook08,
+    hoverImageUrl: lookbook07,
     color: 'Indigo & Navy',
     colorCount: 2,
     badge: 'Exclusive',
@@ -148,8 +157,8 @@ export const PRODUCTS: Product[] = [
     subcategory: 'Bags & Accessories',
     price: 340,
     rating: 5,
-    imageUrl: 'https://images.pexels.com/photos/1152077/pexels-photo-1152077.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800',
-    hoverImageUrl: 'https://images.pexels.com/photos/904350/pexels-photo-904350.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800',
+    imageUrl: lookbook01,
+    hoverImageUrl: lookbook03,
     color: 'Gold & Ochre',
     colorCount: 3,
     badge: 'Bestseller',
@@ -164,8 +173,8 @@ export const PRODUCTS: Product[] = [
     subcategory: 'Bags & Accessories',
     price: 260,
     rating: 5,
-    imageUrl: 'https://images.pexels.com/photos/904350/pexels-photo-904350.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800',
-    hoverImageUrl: 'https://images.pexels.com/photos/1183266/pexels-photo-1183266.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800',
+    imageUrl: lookbook03,
+    hoverImageUrl: lookbook04,
     color: 'Ebony & Charcoal',
     colorCount: 2,
     badge: 'New',
@@ -180,8 +189,8 @@ export const PRODUCTS: Product[] = [
     subcategory: 'Bags & Accessories',
     price: 420,
     rating: 5,
-    imageUrl: 'https://images.pexels.com/photos/1183266/pexels-photo-1183266.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800',
-    hoverImageUrl: 'https://images.pexels.com/photos/1152077/pexels-photo-1152077.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800',
+    imageUrl: lookbook02,
+    hoverImageUrl: lookbook01,
     color: 'Plum & Violet',
     colorCount: 2,
     badge: 'Exclusive',
@@ -196,8 +205,8 @@ export const PRODUCTS: Product[] = [
     subcategory: 'Dresses & Gowns',
     price: 890,
     rating: 5,
-    imageUrl: 'https://images.pexels.com/photos/33662802/pexels-photo-33662802.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800',
-    hoverImageUrl: 'https://images.pexels.com/photos/34993753/pexels-photo-34993753.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800',
+    imageUrl: lookbook04,
+    hoverImageUrl: lookbook06,
     color: 'Plum & Violet',
     colorCount: 2,
     badge: 'New',
@@ -212,8 +221,8 @@ export const PRODUCTS: Product[] = [
     subcategory: 'Tops & Sets',
     price: 760,
     rating: 5,
-    imageUrl: 'https://images.pexels.com/photos/29077024/pexels-photo-29077024.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800',
-    hoverImageUrl: 'https://images.pexels.com/photos/14484948/pexels-photo-14484948.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800',
+    imageUrl: lookbook03,
+    hoverImageUrl: lookbook05,
     color: 'Ivory & Pearl',
     colorCount: 3,
     inStock: true,
@@ -228,8 +237,8 @@ export const PRODUCTS: Product[] = [
     price: 1350,
     originalPrice: 1550,
     rating: 5,
-    imageUrl: 'https://images.pexels.com/photos/30326132/pexels-photo-30326132.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800',
-    hoverImageUrl: 'https://images.pexels.com/photos/20799228/pexels-photo-20799228.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800',
+    imageUrl: lookbook02,
+    hoverImageUrl: lookbook01,
     color: 'Crimson & Blush',
     colorCount: 2,
     badge: 'Sale',
@@ -244,8 +253,8 @@ export const PRODUCTS: Product[] = [
     subcategory: 'Tops & Sets',
     price: 840,
     rating: 5,
-    imageUrl: 'https://images.pexels.com/photos/6192447/pexels-photo-6192447.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800',
-    hoverImageUrl: 'https://images.pexels.com/photos/31762081/pexels-photo-31762081.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800',
+    imageUrl: lookbook07,
+    hoverImageUrl: lookbook08,
     color: 'Ebony & Charcoal',
     colorCount: 2,
     badge: 'Bestseller',
@@ -260,8 +269,8 @@ export const PRODUCTS: Product[] = [
     subcategory: 'Outerwear & Smocks',
     price: 920,
     rating: 5,
-    imageUrl: 'https://images.pexels.com/photos/34993754/pexels-photo-34993754.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800',
-    hoverImageUrl: 'https://images.pexels.com/photos/30326132/pexels-photo-30326132.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800',
+    imageUrl: lookbook05,
+    hoverImageUrl: lookbook04,
     color: 'Emerald & Sage',
     colorCount: 2,
     badge: 'New',
@@ -276,8 +285,8 @@ export const PRODUCTS: Product[] = [
     subcategory: 'Bags & Accessories',
     price: 390,
     rating: 5,
-    imageUrl: 'https://images.pexels.com/photos/1152077/pexels-photo-1152077.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1000&w=700',
-    hoverImageUrl: 'https://images.pexels.com/photos/1183266/pexels-photo-1183266.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1000&w=700',
+    imageUrl: lookbook04,
+    hoverImageUrl: lookbook03,
     color: 'Ivory & Pearl',
     colorCount: 2,
     inStock: false,
@@ -290,42 +299,42 @@ export const LOOKS: Look[] = [
   {
     id: 'l1',
     number: '01',
-    imageUrl: 'https://images.pexels.com/photos/33662802/pexels-photo-33662802.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=900&w=640',
+    imageUrl: lookbook05,
     category: 'Women · Look 01',
     title: 'Heritage Bloom'
   },
   {
     id: 'l2',
     number: '02',
-    imageUrl: 'https://images.pexels.com/photos/31762081/pexels-photo-31762081.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=900&w=640',
+    imageUrl: lookbook07,
     category: 'Men · Look 02',
     title: 'The Patriarch'
   },
   {
     id: 'l3',
     number: '03',
-    imageUrl: 'https://images.pexels.com/photos/29077024/pexels-photo-29077024.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=900&w=640',
+    imageUrl: lookbook03,
     category: 'Women · Look 03',
     title: 'Twin Radiance'
   },
   {
     id: 'l4',
     number: '04',
-    imageUrl: 'https://images.pexels.com/photos/14484948/pexels-photo-14484948.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=900&w=640',
+    imageUrl: lookbook01,
     category: 'Women · Look 04',
     title: 'Flora Royale'
   },
   {
     id: 'l5',
     number: '05',
-    imageUrl: 'https://images.pexels.com/photos/28387051/pexels-photo-28387051.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=900&w=640',
+    imageUrl: lookbook02,
     category: 'Women · Look 05',
     title: 'Evening Pleats'
   },
   {
     id: 'l6',
     number: '06',
-    imageUrl: 'https://images.pexels.com/photos/34608857/pexels-photo-34608857.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=900&w=640',
+    imageUrl: lookbook08,
     category: 'Men · Look 06',
     title: 'The Young Noble'
   }

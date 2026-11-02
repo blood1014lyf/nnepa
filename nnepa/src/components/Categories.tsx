@@ -31,7 +31,7 @@ export default function Categories(_props: CategoriesProps) {
       title: "Bags & Accessories",
       label: "Bags",
       count: '12 artisanal pieces',
-      imageUrl: 'https://images.pexels.com/photos/1152077/pexels-photo-1152077.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=900&w=640',
+      imageUrl: '/assets/images/lookbook_03_ivory_wrap_ensemble.jpg',
     },
   ];
 

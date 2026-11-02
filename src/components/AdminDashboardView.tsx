@@ -200,7 +200,7 @@ export default function AdminDashboardView({ adminToken, onLogout, showToast, on
     }
 
     setLoading(true);
-    let finalImageUrl = newProduct.imageUrl || 'https://images.pexels.com/photos/20799228/pexels-photo-20799228.jpeg';
+    let finalImageUrl = newProduct.imageUrl || '/assets/images/lookbook_01_gold_boubou.jpg';
 
     try {
       if (uploadFile) {

@@ -39,11 +39,14 @@ function enrichCatalogWithDefaults(source: Product[]): Product[] {
   const enriched = source.map((item) => {
     const def = defaultsById.get(item.id);
     if (!def) return item;
+    const isPexels = typeof item.imageUrl === 'string' && item.imageUrl.includes('pexels.com');
+    const isHoverPexels = typeof item.hoverImageUrl === 'string' && item.hoverImageUrl.includes('pexels.com');
     return {
       ...def,
       ...item,
+      imageUrl: isPexels ? def.imageUrl : (item.imageUrl || def.imageUrl),
+      hoverImageUrl: isHoverPexels ? def.hoverImageUrl : (item.hoverImageUrl || def.hoverImageUrl),
       subcategory: def.subcategory || item.subcategory,
-      hoverImageUrl: item.hoverImageUrl || def.hoverImageUrl,
       color: item.color || def.color,
       colorCount: item.colorCount ?? def.colorCount,
     };
@@ -63,7 +66,7 @@ const DEFAULT_TOP_OUTFIT: Product = {
   subcategory: 'Couture Evening Wear',
   price: 2850,
   rating: 5,
-  imageUrl: 'https://images.pexels.com/photos/34993753/pexels-photo-34993753.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=900',
+  imageUrl: DEFAULT_PRODUCTS[1]?.imageUrl || '/assets/images/lookbook_02_plum_emerald_gown.jpg',
   badge: 'Exclusive',
   inStock: true,
   description: 'Handcrafted luxury silhouette sculpted from authentic Ghanaian handwoven silk Kente and regal brocade. Designed for high occasions, weddings, and royal galas with signature precision darting.',

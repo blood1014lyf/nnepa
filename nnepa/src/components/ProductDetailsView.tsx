@@ -73,7 +73,7 @@ Please advise on custom measurements configuration and delivery times.`;
               <img
                 src={product.imageUrl}
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = 'https://images.pexels.com/photos/20799228/pexels-photo-20799228.jpeg';
+                  (e.target as HTMLImageElement).src = '/assets/images/lookbook_01_gold_boubou.jpg';
                 }}
                 alt={product.name}
                 className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
