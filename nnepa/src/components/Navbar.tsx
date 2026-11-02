@@ -51,7 +51,7 @@ export default function Navbar({
   return (
     <nav
       id="nav"
-      className={`fixed top-0 left-0 right-0 z-[800] h-[78px] flex items-center justify-between px-6 md:px-12 transition-all duration-500 ${
+      className={`fixed top-0 left-0 right-0 z-[800] h-[78px] flex items-center justify-between px-3.5 sm:px-6 md:px-12 transition-all duration-500 ${
         showScrolledStyle
           ? 'bg-pearl/90 backdrop-blur-md shadow-[0_1px_0_rgba(155,132,204,0.18)] text-plum-dark'
           : 'bg-transparent text-white'
@@ -62,7 +62,7 @@ export default function Navbar({
           onPageChange('home');
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
-        className="font-serif text-xl md:text-[1.35rem] font-semibold tracking-[0.28em] no-underline whitespace-nowrap bg-transparent border-none cursor-pointer text-left"
+        className="font-serif text-base xs:text-lg sm:text-xl md:text-[1.35rem] font-semibold tracking-[0.16em] sm:tracking-[0.28em] no-underline whitespace-nowrap bg-transparent border-none cursor-pointer text-left shrink min-w-0"
       >
         NNEPA FORIWAA
       </button>
@@ -102,10 +102,10 @@ export default function Navbar({
       </ul>
 
       {/* Action Buttons */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2 shrink-0">
         <button
           onClick={onOpenSearch}
-          className={`w-10 h-10 flex items-center justify-center border-none bg-transparent cursor-pointer rounded-full transition-all ${
+          className={`w-9 h-9 sm:w-10 sm:h-10 flex shrink-0 items-center justify-center border-none bg-transparent cursor-pointer rounded-full transition-all ${
             showScrolledStyle ? 'hover:bg-plum-dark/5 text-plum-dark' : 'hover:bg-white/10 text-white'
           }`}
           title="Search Inventory"
@@ -120,13 +120,13 @@ export default function Navbar({
               href="#/shop?saved=1"
               target="_blank"
               rel="noopener noreferrer"
-              className={`w-10 h-10 flex items-center justify-center no-underline cursor-pointer rounded-full transition-all relative ${
+              className={`w-9 h-9 sm:w-10 sm:h-10 flex shrink-0 items-center justify-center no-underline cursor-pointer rounded-full transition-all relative ${
                 showScrolledStyle ? 'hover:bg-plum-dark/5 text-plum-dark' : 'hover:bg-white/10 text-white'
               }`}
               title="Wishlist"
             >
               <Heart className="w-[18px] h-[18px] text-mauve fill-mauve" />
-              <span className="absolute top-[6px] right-[6px] min-w-3.5 h-3.5 px-1 rounded-full bg-gradient-to-br from-lavender to-mauve text-[0.55rem] font-bold text-white flex items-center justify-center">
+              <span className="absolute top-[5px] right-[5px] min-w-3.5 h-3.5 px-1 rounded-full bg-gradient-to-br from-lavender to-mauve text-[0.55rem] font-bold text-white flex items-center justify-center">
                 {wishlistCount}
               </span>
             </a>
@@ -136,13 +136,13 @@ export default function Navbar({
                 onPageChange('wishlist');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className={`w-10 h-10 flex items-center justify-center border-none bg-transparent cursor-pointer rounded-full transition-all relative ${
+              className={`w-9 h-9 sm:w-10 sm:h-10 flex shrink-0 items-center justify-center border-none bg-transparent cursor-pointer rounded-full transition-all relative ${
                 showScrolledStyle ? 'hover:bg-plum-dark/5 text-plum-dark' : 'hover:bg-white/10 text-white'
               }`}
               title="Wishlist"
             >
               <Heart className="w-[18px] h-[18px] text-mauve fill-mauve" />
-              <span className="absolute top-[6px] right-[6px] min-w-3.5 h-3.5 px-1 rounded-full bg-gradient-to-br from-lavender to-mauve text-[0.55rem] font-bold text-white flex items-center justify-center">
+              <span className="absolute top-[5px] right-[5px] min-w-3.5 h-3.5 px-1 rounded-full bg-gradient-to-br from-lavender to-mauve text-[0.55rem] font-bold text-white flex items-center justify-center">
                 {wishlistCount}
               </span>
             </button>
@@ -151,7 +151,7 @@ export default function Navbar({
 
         <button
           onClick={onOpenCart}
-          className={`w-10 h-10 flex items-center justify-center border-none bg-transparent cursor-pointer rounded-full transition-all relative ${
+          className={`w-9 h-9 sm:w-10 sm:h-10 flex shrink-0 items-center justify-center border-none bg-transparent cursor-pointer rounded-full transition-all relative ${
             showScrolledStyle ? 'hover:bg-plum-dark/5 text-plum-dark' : 'hover:bg-white/10 text-white'
           }`}
           title="View Cart"
@@ -159,7 +159,7 @@ export default function Navbar({
         >
           <ShoppingBag className="w-[18px] h-[18px]" />
           {cartCount > 0 ? (
-            <span className="absolute top-[6px] right-[6px] min-w-4 h-4 px-1 rounded-full bg-gradient-to-br from-lavender to-mauve text-[0.55rem] font-bold text-white flex items-center justify-center">
+            <span className="absolute top-[5px] right-[5px] min-w-4 h-4 px-1 rounded-full bg-gradient-to-br from-lavender to-mauve text-[0.55rem] font-bold text-white flex items-center justify-center">
               {cartCount}
             </span>
           ) : null}
@@ -167,7 +167,7 @@ export default function Navbar({
 
         <button
           onClick={onOpenMobileMenu}
-          className={`md:hidden w-10 h-10 flex items-center justify-center border-none bg-transparent cursor-pointer rounded-full ${
+          className={`md:hidden w-10 h-10 flex shrink-0 items-center justify-center border-none bg-transparent cursor-pointer rounded-full ${
             showScrolledStyle ? 'text-plum-dark' : 'text-white'
           }`}
           id="btn-hamburger"
