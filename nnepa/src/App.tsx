@@ -545,7 +545,7 @@ export default function App() {
           <div className="min-h-[70vh] flex flex-col items-center justify-center bg-pearl text-center px-4">
             <div className="w-10 h-10 border-2 border-lavender border-t-transparent rounded-full animate-spin mb-4" />
             <span className="text-[0.62rem] font-bold tracking-[0.25em] uppercase text-mauve-deep">
-              Loading Atelier Experience...
+              Loading...
             </span>
           </div>
         }

@@ -104,23 +104,6 @@ export default function ProductCard({
 
         {/* Action slide-up panel on hover */}
         <div className="absolute bottom-0 left-0 right-0 p-4 flex flex-col gap-2.5 bg-black/40 backdrop-blur-md translate-y-full group-hover:translate-y-0 transition-transform duration-350 z-20">
-          {product.inStock && product.sizes && product.sizes.length > 0 && (
-            <div className="flex justify-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-              {product.sizes.map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setSelectedSize(s)}
-                  className={`w-7 h-7 text-[0.62rem] font-bold rounded-[2px] transition-all border border-solid cursor-pointer ${
-                    selectedSize === s
-                      ? 'bg-lavender text-white border-lavender'
-                      : 'bg-white/10 text-white hover:bg-white/20 border-white/20'
-                  }`}
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          )}
           <div className="flex gap-2.5 w-full">
             <button
               onClick={(e) => {

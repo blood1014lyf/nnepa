@@ -734,41 +734,6 @@ export default function CollectionShopView({
                           </span>
                         )}
                       </a>
-
-                      {/* Discreet Quick-Add Size Bar on Hover / Focus */}
-                      <div className="absolute inset-x-0 bottom-0 z-10 flex items-center justify-center gap-1.5 bg-pearl/92 backdrop-blur-xs px-3 py-2.5 opacity-0 translate-y-1 group-hover/image:opacity-100 group-hover/image:translate-y-0 focus-within:opacity-100 focus-within:translate-y-0 transition-all duration-200 border-t border-plum-dark/8">
-                        {product.inStock === false ? (
-                          <button
-                            type="button"
-                            onClick={() => onViewDetails(product)}
-                            className="cb-text-body text-[12px] text-plum-dark hover:underline bg-transparent border-none cursor-pointer py-0.5 px-2"
-                          >
-                            Custom order
-                          </button>
-                        ) : sizes.length === 1 && sizes[0] === 'One Size' ? (
-                          <button
-                            type="button"
-                            onClick={() => onAddToCart(product, 'One Size')}
-                            className="cb-text-body text-[12px] text-plum-dark hover:underline bg-transparent border-none cursor-pointer py-0.5 px-2 font-medium"
-                          >
-                            + Add
-                          </button>
-                        ) : (
-                          <div className="flex flex-wrap items-center justify-center gap-x-3.5 gap-y-1">
-                            {sizes.map((sz) => (
-                              <button
-                                key={sz}
-                                type="button"
-                                onClick={() => onAddToCart(product, sz)}
-                                aria-label={`Add ${product.name} size ${sz} to bag`}
-                                className="text-[12px] font-sans text-plum-dark/85 hover:text-plum-dark hover:underline bg-transparent border-none cursor-pointer p-0.5 transition-colors"
-                              >
-                                {sz}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
                     </div>
 
                     {/* Product Info Row (Title, Price, Wishlist Icon) */}

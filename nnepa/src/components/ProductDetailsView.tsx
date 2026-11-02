@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { ShoppingBag, Heart, ArrowLeft, Star, MessageSquare, Shield, Scissors, Compass, Ruler, X, Info } from 'lucide-react';
+import { ShoppingBag, Heart, ArrowLeft, Star, MessageSquare, Shield, Scissors, Ruler, X, Info } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Product } from '../types.ts';
 import SizeChart from './SizeChart.tsx';
@@ -85,21 +85,13 @@ Please advise on custom measurements configuration and delivery times.`;
                 </span>
               )}
             </div>
-
-            {/* Custom fit stamp */}
-            <div className="bg-lavender/5 p-4 rounded-md border border-lilac/5 text-center flex items-center justify-center gap-3.5 select-none">
-              <Compass className="w-4 h-4 text-lavender" />
-              <span className="text-[0.6rem] font-bold tracking-[0.25em] uppercase text-mauve-deep">
-                Accra Master Tailor Certified Piece
-              </span>
-            </div>
           </div>
 
           {/* Right Block: Configuration Control Hub (Count = 6 cols) */}
           <div className="lg:col-span-6 flex flex-col gap-6">
             <div>
               <span className="text-[0.58rem] font-bold tracking-[0.3em] uppercase text-text-light inline-block mb-2">
-                Curated Collection · {product.category} · {product.subcategory}
+                {product.category} · {product.subcategory}
               </span>
               <h1 className="font-serif text-3xl md:text-4xl text-plum-dark font-light leading-snug">
                 {product.name}

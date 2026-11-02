@@ -62,22 +62,19 @@ export default function FeaturedOutfit({ outfit, onViewDetails }: FeaturedOutfit
   }, []);
 
   return (
-    <section id="featured-outfit" className="w-full bg-pearl pt-14 pb-14 sm:pt-20 sm:pb-20 select-none">
-      {/* "View Our Bestseller" section header fading in under the hero on the page */}
-      <div className="max-w-7xl mx-auto px-6 sm:px-12 md:px-16 mb-8 sm:mb-10 text-center animate-fade-in">
-        <span className="text-[0.62rem] font-bold tracking-[0.35em] uppercase text-mauve-deep block mb-2 animate-eyebrow-tracking">
-          Curated Atelier Highlight
-        </span>
-        <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-light text-plum-dark leading-tight animate-text-reveal">
-          View Our Bestseller
+    <section id="featured-outfit" className="w-full bg-pearl pt-12 pb-14 sm:pt-16 sm:pb-20 select-none">
+      {/* Section header on the page */}
+      <div className="max-w-7xl mx-auto px-6 sm:px-12 md:px-16 mb-6 sm:mb-8 text-center animate-fade-in">
+        <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-light text-plum-dark leading-tight">
+          Our Bestseller
         </h2>
       </div>
 
-      {/* Video Container — Zero overlay, completely uncropped natural portrait aspect ratio */}
-      <div className="max-w-md sm:max-w-lg md:max-w-xl mx-auto px-4 sm:px-0">
+      {/* Full width bestseller video — zero overlays, completely unobstructed */}
+      <div className="w-full">
         <div
           onClick={() => onViewDetails(outfit)}
-          className="relative w-full overflow-hidden bg-black rounded-[2px] shadow-[0_16px_50px_rgba(58,34,72,0.14)] cursor-pointer group"
+          className="relative w-full overflow-hidden bg-black cursor-pointer group"
         >
           <video
             ref={videoRef}
@@ -88,12 +85,12 @@ export default function FeaturedOutfit({ outfit, onViewDetails }: FeaturedOutfit
             muted
             playsInline
             preload="auto"
-            className="w-full h-auto max-h-[82vh] object-contain mx-auto block transition-transform duration-700 ease-out group-hover:scale-[1.015]"
+            className="w-full h-auto max-h-[85vh] object-cover object-center block transition-transform duration-700 ease-out group-hover:scale-[1.01]"
           />
         </div>
 
-        {/* ONLY View Details button situated outside/under the video — video remains 100% unobstructed with zero overlay */}
-        <div className="mt-7 sm:mt-9 flex justify-center items-center">
+        {/* View Details button under the full-width video */}
+        <div className="mt-8 flex justify-center items-center px-4">
           <button
             type="button"
             id="btn-featured-view-details"

@@ -72,7 +72,7 @@ export default function CheckoutView({
       showToast('🎉 10% Royal Heritage discount applied!');
     } else if (clean === 'FIRST20') {
       setDiscountPercent(20);
-      showToast('🎉 20% First Atelier Order discount applied!');
+      showToast('🎉 20% First Order discount applied!');
     } else {
       showToast('Invalid promo code. Try "ROYAL10"');
     }
@@ -160,7 +160,7 @@ export default function CheckoutView({
               Medasi! Your Royal Commission is Placed
             </h1>
             <p className="text-sm text-text-muted mt-3 max-w-md mx-auto leading-relaxed">
-              Order <strong className="text-plum-dark font-mono font-semibold">{completedOrder.id}</strong> has been assigned to our master ateliers in Accra.
+              Order <strong className="text-plum-dark font-mono font-semibold">{completedOrder.id}</strong> has been assigned to our team in Accra.
             </p>
 
             {/* Receipt Summary Card */}
@@ -202,7 +202,7 @@ export default function CheckoutView({
                 className="inline-flex items-center justify-center gap-2.5 px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-[3px] text-xs font-bold tracking-[0.2em] uppercase transition-all shadow-md"
               >
                 <WhatsAppIcon className="w-4 h-4 fill-white" />
-                Notify Atelier via WhatsApp
+                Notify via WhatsApp
               </a>
               <button
                 type="button"
@@ -511,7 +511,7 @@ export default function CheckoutView({
                     <div>
                       <div className="text-xs font-bold text-plum-dark flex items-center gap-2">
                         <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
-                        Direct Atelier Concierge
+                        Direct WhatsApp Concierge
                       </div>
                       <div className="text-[0.65rem] text-text-muted mt-0.5">
                         Manual bank wire or custom order review
@@ -700,7 +700,7 @@ export default function CheckoutView({
             <div className="bg-white/80 p-5 rounded-lg border border-lilac/20 space-y-3 text-[0.68rem] text-text-muted">
               <div className="flex items-center gap-2.5">
                 <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Complimentary alterations at Accra atelier on all orders.</span>
+                <span>Complimentary alterations in Accra on all orders.</span>
               </div>
               <div className="flex items-center gap-2.5">
                 <Truck className="w-4 h-4 text-lavender shrink-0" />

@@ -189,7 +189,7 @@ export default function CookieBanner({
           /* Granular Customization View */
           <div className="space-y-3 pt-1">
             <p className="text-[0.72rem] text-text-light leading-snug">
-              Choose which categories of local storage and cookies you wish to enable. Essential storage is strictly required for atelier operations.
+              Choose which categories of local storage and cookies you wish to enable. Essential storage is strictly required for website operations.
             </p>
 
             {/* Category 1: Essential */}
@@ -230,7 +230,7 @@ export default function CookieBanner({
             <label className="p-2.5 rounded bg-white border border-lilac/20 flex items-center justify-between gap-3 cursor-pointer hover:border-lavender/50 transition-colors">
               <div>
                 <div className="font-medium text-[0.75rem] text-plum-dark">
-                  Atelier Updates & Previews
+                  Product Updates & Previews
                 </div>
                 <div className="text-[0.66rem] text-text-muted">
                   Remember custom size measurements and seasonal lookbook preferences.

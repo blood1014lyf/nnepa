@@ -215,11 +215,11 @@ export default function LegalView({ initialTab = 'terms', onNavigateToContact }:
                   5. Cookies & Local Storage Policy
                 </h2>
                 <p className="mb-2">
-                  Nnepa Foriwaa uses minimal browser storage solely to provide a smooth, reliable digital atelier experience:
+                  Nnepa Foriwaa uses minimal browser storage solely to provide a smooth, reliable shopping experience:
                 </p>
                 <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm text-text-light">
                   <li>
-                    <strong>Essential Functional Storage:</strong> We store your active shopping bag items, curated wishlist, offline product catalog cache, and administrative authentication tokens securely on your local device.
+                    <strong>Essential Functional Storage:</strong> We store your active shopping bag items, saved wishlist, offline product catalog cache, and administrative authentication tokens securely on your local device.
                   </li>
                   <li>
                     <strong>No Third-Party Cross-Site Tracking:</strong> We do not deploy third-party advertising cookies, cross-site trackers, or data-broker scripts.
