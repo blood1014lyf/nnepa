@@ -41,6 +41,17 @@ export default function Hero() {
 
     playVideo();
 
+    // Fallback on first user interaction if browser policy blocked unmuted/autoplay
+    const handleUserInteraction = () => {
+      playVideo();
+      window.removeEventListener('touchstart', handleUserInteraction);
+      window.removeEventListener('click', handleUserInteraction);
+      window.removeEventListener('scroll', handleUserInteraction);
+    };
+    window.addEventListener('touchstart', handleUserInteraction, { passive: true });
+    window.addEventListener('click', handleUserInteraction, { passive: true });
+    window.addEventListener('scroll', handleUserInteraction, { passive: true });
+
     const syncPlayback = (prefersReducedMotion: boolean) => {
       if (prefersReducedMotion) {
         video.pause();
@@ -56,6 +67,9 @@ export default function Hero() {
       video.removeEventListener('play', handlePlayState);
       video.removeEventListener('playing', handlePlayState);
       reducedMotionQuery.removeEventListener('change', onChange);
+      window.removeEventListener('touchstart', handleUserInteraction);
+      window.removeEventListener('click', handleUserInteraction);
+      window.removeEventListener('scroll', handleUserInteraction);
     };
   }, []);
 

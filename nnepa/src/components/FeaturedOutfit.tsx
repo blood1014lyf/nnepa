@@ -24,24 +24,43 @@ export default function FeaturedOutfit({ outfit, onViewDetails }: FeaturedOutfit
     video.muted = true;
     video.playsInline = true;
 
+    const playVideo = () => {
+      video.play().catch(() => {});
+    };
+
+    // Immediate attempt to play
+    playVideo();
+
     const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting && !reducedMotionQuery.matches) {
-            video.play().catch(() => {});
-          } else {
-            video.pause();
+            playVideo();
           }
         });
       },
-      { threshold: 0.15 }
+      { threshold: 0.1 }
     );
     observer.observe(video);
 
+    // Fallback on first user interaction if browser policy blocked unmuted/autoplay
+    const handleUserInteraction = () => {
+      playVideo();
+      window.removeEventListener('touchstart', handleUserInteraction);
+      window.removeEventListener('click', handleUserInteraction);
+      window.removeEventListener('scroll', handleUserInteraction);
+    };
+    window.addEventListener('touchstart', handleUserInteraction, { passive: true });
+    window.addEventListener('click', handleUserInteraction, { passive: true });
+    window.addEventListener('scroll', handleUserInteraction, { passive: true });
+
     return () => {
       observer.disconnect();
+      window.removeEventListener('touchstart', handleUserInteraction);
+      window.removeEventListener('click', handleUserInteraction);
+      window.removeEventListener('scroll', handleUserInteraction);
     };
   }, []);
 
@@ -69,7 +88,7 @@ export default function FeaturedOutfit({ outfit, onViewDetails }: FeaturedOutfit
             loop
             muted
             playsInline
-            preload="none"
+            preload="auto"
             className="w-full h-auto block"
           />
         </div>
