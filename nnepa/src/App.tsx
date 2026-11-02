@@ -20,6 +20,7 @@ import CartDrawer from './components/CartDrawer.tsx';
 import SearchModal from './components/SearchModal.tsx';
 import Toast from './components/Toast.tsx';
 import CookieBanner from './components/CookieBanner.tsx';
+import RunwayShopView from './components/RunwayShopView.tsx';
 
 // Code-split auxiliary multi-page views with React.lazy
 const AboutView = React.lazy(() => import('./components/AboutView.tsx'));
@@ -32,6 +33,10 @@ const SizeChartView = React.lazy(() => import('./components/SizeChartView.tsx'))
 const CheckoutView = React.lazy(() => import('./components/CheckoutView.tsx'));
 
 import { PRODUCTS as DEFAULT_PRODUCTS } from './data.ts';
+import {
+  getRunwayProductsWithThumbnails,
+  preloadRunwaySheets,
+} from './utils/runwaySprites.ts';
 import { Product, CartItem, Order } from './types.ts';
 
 const DEFAULT_TOP_OUTFIT: Product = {
@@ -51,6 +56,8 @@ const DEFAULT_TOP_OUTFIT: Product = {
 export default function App() {
   // Virtual State-Based Routing
   const [page, setPage] = useState<string>('home');
+  const [shopMode, setShopMode] = useState<'runway' | 'archive'>('runway');
+  const [, setRunwayTick] = useState<number>(0);
   const [activeCategory, setActiveCategory] = useState<'all' | 'women' | 'men' | 'bags'>('all');
   const [sortBy, setSortBy] = useState<'featured' | 'price-asc' | 'price-desc' | 'rating' | 'newest'>('featured');
   const [inStockOnly, setInStockOnly] = useState<boolean>(false);
@@ -130,6 +137,11 @@ export default function App() {
           });
       }
     } catch {}
+    // Warm up runway sprite sheets & slice product thumbnails quietly in background
+    const warmTimer = setTimeout(() => {
+      preloadRunwaySheets().then(() => setRunwayTick((t) => t + 1));
+    }, 600);
+    return () => clearTimeout(warmTimer);
   }, []);
 
   // Synchronize route with window.location.hash for deep linking & history navigation
@@ -143,8 +155,10 @@ export default function App() {
 
       if (hash.startsWith('product/')) {
         const prodId = hash.replace('product/', '');
-        const list = products.length > 0 ? products : DEFAULT_PRODUCTS;
-        const found = list.find((p) => p.id === prodId);
+        const baseList = products.length > 0 ? products : DEFAULT_PRODUCTS;
+        const runwayList = getRunwayProductsWithThumbnails();
+        const combined = [...runwayList, ...baseList];
+        const found = combined.find((p) => p.id === prodId);
         if (found) {
           setActiveProduct(found);
           setPage('details');
@@ -368,8 +382,37 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleShopTheLook = (pieces: Product[], lookNumber: number) => {
+    if (!pieces.length) return;
+    setCartItems((prev) => {
+      let next = [...prev];
+      for (const piece of pieces) {
+        const defaultSize = piece.sizes?.[0] || 'M';
+        const matchIdx = next.findIndex(
+          (item) => item.product.id === piece.id && item.size === defaultSize
+        );
+        if (matchIdx >= 0) {
+          next[matchIdx] = { ...next[matchIdx], quantity: next[matchIdx].quantity + 1 };
+        } else {
+          next.push({ product: piece, quantity: 1, size: defaultSize });
+        }
+      }
+      return next;
+    });
+    showToast(`✨ Added Look ${lookNumber} (${pieces.length} pieces) to cart`);
+    setIsCartOpen(true);
+  };
+
+  // Merge Runway pieces with dynamic Heritage catalog
+  const runwayProducts = getRunwayProductsWithThumbnails();
+  const baseCatalog = products.length > 0 ? products : DEFAULT_PRODUCTS;
+  const allCatalogProducts: Product[] = [
+    ...baseCatalog,
+    ...runwayProducts.filter((rp) => !baseCatalog.some((bp) => bp.id === rp.id)),
+  ];
+
   // Filter dynamic catalogue list
-  let filteredProducts = products.filter((p) => {
+  let filteredProducts = allCatalogProducts.filter((p) => {
     if (showWishlistOnly && !wishlist.includes(p.id)) return false;
     if (activeCategory !== 'all' && p.category !== activeCategory) return false;
     if (inStockOnly && !p.inStock) return false;
@@ -385,9 +428,24 @@ export default function App() {
   });
 
   const totalCartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const isFullViewportRunway = page === 'shop' && shopMode === 'runway';
+
+  useEffect(() => {
+    if (isFullViewportRunway) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [isFullViewportRunway]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-pearl font-sans text-plum-dark overflow-x-hidden antialiased select-none scroll-smooth">
+    <div
+      className={`min-h-screen flex flex-col bg-pearl font-sans text-plum-dark overflow-x-hidden antialiased select-none scroll-smooth${
+        isFullViewportRunway ? ' h-[100svh] overflow-hidden' : ''
+      }`}
+    >
       {/* ═══ LOADER ═══ */}
       <Loader />
 
@@ -403,9 +461,13 @@ export default function App() {
         onPageChange={(p) => {
           if (p === 'wishlist') {
             setShowWishlistOnly(true);
+            setShopMode('archive');
             setPageWithHash('shop');
           } else {
-            if (p === 'shop') setShowWishlistOnly(false);
+            if (p === 'shop') {
+              setShowWishlistOnly(false);
+              setShopMode('runway');
+            }
             if (p === 'admin-dashboard' && !adminToken) {
               setPageWithHash('admin-login');
             } else {
@@ -424,9 +486,13 @@ export default function App() {
         onPageChange={(p) => {
           if (p === 'wishlist') {
             setShowWishlistOnly(true);
+            setShopMode('archive');
             setPageWithHash('shop');
           } else {
-            if (p === 'shop') setShowWishlistOnly(false);
+            if (p === 'shop') {
+              setShowWishlistOnly(false);
+              setShopMode('runway');
+            }
             if (p === 'admin-dashboard' && !adminToken) {
               setPageWithHash('admin-login');
             } else {
@@ -438,13 +504,17 @@ export default function App() {
       />
 
       {/* ═══ MAIN CONTENT WRAPPER ═══ */}
-      <main className="flex-1 flex flex-col w-full">
+      <main className="flex-1 flex flex-col w-full min-h-0">
         {/* ═══ ROUTED VIEWS SWITCH ═══ */}
       {page === 'home' && (
         <div className="animate-fade-in">
           {/* ═══ HERO PRESENTATION SLIDESHOW ═══ */}
           <Hero
-            onExplore={() => handleScrollToSection('categories')}
+            onExplore={() => {
+              setShowWishlistOnly(false);
+              setShopMode('runway');
+              setPageWithHash('shop');
+            }}
           />
 
           {/* ═══ ROLLING INFOBAND ACCENT TAPE ═══ */}
@@ -479,7 +549,9 @@ export default function App() {
           <Categories
             onCategorySelect={(cat) => {
               setActiveCategory(cat);
-              setPage('shop');
+              setShowWishlistOnly(false);
+              setShopMode(cat === 'all' ? 'runway' : 'archive');
+              setPageWithHash('shop');
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
           />
@@ -497,14 +569,47 @@ export default function App() {
         </div>
       )}
 
-      {/* ═══ SHOPPING GALLERY VIEW ═══ */}
-      {page === 'shop' && (
+      {/* ═══ RUNWAY DEPTH LOOKBOOK SHOP VIEW (PRIMARY SHOP EXPERIENCE) ═══ */}
+      {page === 'shop' && shopMode === 'runway' && (
+        <RunwayShopView
+          wishlist={wishlist}
+          onToggleWishlist={handleToggleWishlist}
+          onAddToCart={handleAddToCart}
+          onShopTheLook={handleShopTheLook}
+          onViewDetails={handleViewDetails}
+          onOpenArchiveGrid={(cat = 'all', savedOnly = false) => {
+            setActiveCategory(cat);
+            setShowWishlistOnly(savedOnly);
+            setShopMode('archive');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onOpenSizeGuide={() => {
+            setPageWithHash('size-chart');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onThumbnailsReady={() => setRunwayTick((t) => t + 1)}
+        />
+      )}
+
+      {/* ═══ ARCHIVE CATALOG GRID VIEW (SECONDARY DEPARTMENT FILTER VIEW) ═══ */}
+      {page === 'shop' && shopMode === 'archive' && (
         <div className="pt-28 pb-20 bg-pearl min-h-[85vh] animate-fade-in">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-12">
             {/* Filter and Sorting Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-6 border-b border-lilac/15">
-              {/* Category Pills & Wishlist Tab */}
+              {/* Back to Runway + Category Pills & Wishlist Tab */}
               <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowWishlistOnly(false);
+                    setShopMode('runway');
+                  }}
+                  className="px-4 py-2 text-[0.62rem] font-bold tracking-[0.18em] uppercase rounded-[3px] bg-plum-dark hover:bg-plum text-white border-none cursor-pointer transition-all shadow-xs"
+                >
+                  ← Runway Lookbook
+                </button>
+
                 <div className="flex border border-solid border-lilac/25 rounded-[3px] overflow-hidden w-fit bg-white/60 shadow-xs">
                   {(['all', 'women', 'men', 'bags'] as const).map((cat) => (
                     <button
@@ -535,7 +640,7 @@ export default function App() {
                         : 'bg-white/70 hover:bg-white text-plum-dark border-lilac/25'
                     }`}
                   >
-                    <span>❤️</span>
+                    <span>♥</span>
                     Saved ({wishlist.length})
                   </button>
                 )}
@@ -574,7 +679,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => {
-                    setPage('size-chart');
+                    setPageWithHash('size-chart');
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
                   className="hidden sm:inline-block px-3.5 py-2 bg-white/70 hover:bg-white text-plum-dark text-[0.62rem] font-bold tracking-[0.16em] uppercase rounded-[3px] border border-lilac/25 transition-all cursor-pointer shadow-2xs"
@@ -596,7 +701,7 @@ export default function App() {
                 <div className="flex gap-3">
                   <button
                     onClick={() => {
-                      setPage('contact');
+                      setPageWithHash('contact');
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
                     className="px-6 py-3 bg-plum-dark hover:bg-plum text-white text-xs font-bold tracking-[0.2em] uppercase rounded-[2px] transition-all cursor-pointer"
@@ -605,7 +710,7 @@ export default function App() {
                   </button>
                   <button
                     onClick={() => {
-                      setPage(adminToken ? 'admin-dashboard' : 'admin-login');
+                      setPageWithHash(adminToken ? 'admin-dashboard' : 'admin-login');
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
                     className="px-5 py-3 bg-transparent border border-lilac/40 text-mauve-deep hover:bg-lilac/10 text-xs font-bold tracking-[0.18em] uppercase rounded-[2px] transition-all cursor-pointer"
@@ -726,28 +831,34 @@ export default function App() {
         )}
       </Suspense>
 
-      {/* ═══ NEWSLETTER INK (Hiding inside admin screens) ═══ */}
-      {page !== 'admin-dashboard' && page !== 'admin-login' && (
+      {/* ═══ NEWSLETTER INK (Hiding inside admin screens & full-viewport runway) ═══ */}
+      {page !== 'admin-dashboard' && page !== 'admin-login' && !isFullViewportRunway && (
         <Newsletter onSubscribe={handleSubscribe} />
       )}
       </main>
 
       {/* ═══ COMPREHENSIVE COMPACT FOOTER BAR ═══ */}
-      <Footer
-        currentPage={page}
-        onNavigate={(targetPage, category) => {
-          if (category) setActiveCategory(category);
-          if (targetPage === 'admin-dashboard' && !adminToken) {
-            setPageWithHash('admin-login');
-          } else {
-            setPageWithHash(targetPage);
-          }
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }}
-        onScrollToSection={handleScrollToSection}
-        adminToken={adminToken}
-        onOpenCookieSettings={() => setIsCookieSettingsOpen(true)}
-      />
+      {!isFullViewportRunway && (
+        <Footer
+          currentPage={page}
+          onNavigate={(targetPage, category) => {
+            if (category) setActiveCategory(category);
+            if (targetPage === 'shop') {
+              setShowWishlistOnly(false);
+              setShopMode(category && category !== 'all' ? 'archive' : 'runway');
+            }
+            if (targetPage === 'admin-dashboard' && !adminToken) {
+              setPageWithHash('admin-login');
+            } else {
+              setPageWithHash(targetPage);
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onScrollToSection={handleScrollToSection}
+          adminToken={adminToken}
+          onOpenCookieSettings={() => setIsCookieSettingsOpen(true)}
+        />
+      )}
 
       {/* ═══ UTILITY CART SHOPPING BAG DRAWER ═══ */}
       <CartDrawer
@@ -759,7 +870,9 @@ export default function App() {
         onCheckout={handleCheckout}
         onStartShopping={() => {
           setIsCartOpen(false);
-          handleScrollToSection('categories');
+          setShowWishlistOnly(false);
+          setShopMode('runway');
+          setPageWithHash('shop');
         }}
       />
 
@@ -767,7 +880,7 @@ export default function App() {
       <SearchModal
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
-        products={products}
+        products={allCatalogProducts}
         onSelectProduct={(p) => handleViewDetails(p)}
         onAddToCart={handleAddToCart}
       />

@@ -68,3 +68,534 @@ html {
     animation: none !important;
   }
 }
+
+/* ═══ NNEPA FORIWAA — RUNWAY DEPTH LOOKBOOK STAGE ═══ */
+.nf-runway-root {
+  --u: min(calc(100vw / 1600), calc(100vh / 900));
+  height: 100svh;
+  min-height: 560px;
+  padding-top: 78px;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  background: #ffffff;
+  color: #3a2248;
+  position: relative;
+  overflow: hidden;
+}
+
+.nf-r2-bar {
+  position: relative;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(24 * var(--u));
+  padding: calc(11 * var(--u)) calc(46 * var(--u));
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(201, 184, 232, 0.3);
+}
+
+.nf-r2-links {
+  display: flex;
+  align-items: center;
+  gap: calc(44 * var(--u));
+  font-family: var(--font-sans);
+  font-size: calc(10 * var(--u));
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #8a6478;
+  white-space: nowrap;
+}
+
+.nf-r2-btn {
+  position: relative;
+  padding: calc(3 * var(--u)) 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+  transition: color 0.22s ease;
+}
+
+.nf-r2-btn:hover,
+.nf-r2-btn.on {
+  color: #3a2248;
+}
+
+.nf-r2-btn.on::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 1.5px;
+  background: linear-gradient(90deg, #9b84cc, #b08a9e);
+}
+
+.nf-r2-meta {
+  display: flex;
+  align-items: center;
+  gap: calc(18 * var(--u));
+  font-family: var(--font-sans);
+  font-size: calc(9.5 * var(--u));
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #9b84cc;
+  white-space: nowrap;
+}
+
+.nf-main {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr calc(372 * var(--u));
+  min-height: 0;
+}
+
+.nf-stage {
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+  isolation: isolate;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: none;
+  background:
+    linear-gradient(transparent 60%, rgba(255, 255, 255, 0.76) 100%),
+    linear-gradient(90deg, #eae1f4 0%, #efe8f8 38%, #f6f2fa 62%, #fcfafe 100%);
+}
+
+.nf-stage:focus-visible {
+  outline: 2px solid #9b84cc;
+  outline-offset: -2px;
+}
+
+.nf-line {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  isolation: isolate;
+}
+
+.nf-m {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  will-change: transform, filter;
+  cursor: none;
+}
+
+.nf-m svg {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.nf-m::before {
+  content: "";
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: -1.6%;
+  height: 3.6%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(58, 34, 72, 0.24), transparent);
+}
+
+.nf-intro {
+  position: absolute;
+  z-index: 2;
+  left: calc(46 * var(--u));
+  top: calc(34 * var(--u));
+  width: calc(400 * var(--u));
+  pointer-events: none;
+}
+
+.nf-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: calc(10 * var(--u));
+  font-family: var(--font-sans);
+  font-size: calc(9.5 * var(--u));
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #9b84cc;
+  margin-bottom: calc(8 * var(--u));
+}
+
+.nf-eyebrow-line {
+  width: calc(24 * var(--u));
+  height: 1px;
+  background: linear-gradient(90deg, #9b84cc, transparent);
+}
+
+.nf-intro h2 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: calc(30 * var(--u));
+  line-height: 1.14;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #3a2248;
+  white-space: nowrap;
+}
+
+.nf-intro p {
+  margin-top: calc(14 * var(--u));
+  font-family: var(--font-sans);
+  font-weight: 300;
+  font-size: calc(13.5 * var(--u));
+  line-height: 1.62;
+  letter-spacing: 0.015em;
+  color: #6b5278;
+}
+
+.nf-tag {
+  position: absolute;
+  z-index: 3;
+  left: calc(46 * var(--u));
+  bottom: calc(42 * var(--u));
+}
+
+.nf-look {
+  display: flex;
+  align-items: center;
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: calc(33 * var(--u));
+  line-height: calc(38 * var(--u));
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #3a2248;
+  gap: 0.42em;
+  pointer-events: none;
+}
+
+.nf-win {
+  height: calc(38 * var(--u));
+  overflow: hidden;
+  display: inline-block;
+}
+
+.nf-roll {
+  display: block;
+  will-change: transform;
+}
+
+.nf-roll b {
+  display: block;
+  font-weight: 500;
+  height: calc(38 * var(--u));
+  line-height: calc(38 * var(--u));
+}
+
+.nf-shop-btn {
+  display: inline-block;
+  margin-top: calc(12 * var(--u));
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: calc(9.8 * var(--u));
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #3a2248;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid #8a6478;
+  padding: 0 0 calc(4 * var(--u)) 0;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.nf-shop-btn:hover {
+  color: #9b84cc;
+  border-color: #9b84cc;
+}
+
+.nf-ring {
+  position: absolute;
+  z-index: 5;
+  left: 0;
+  top: 0;
+  width: calc(46 * var(--u));
+  height: calc(46 * var(--u));
+  margin: calc(-23 * var(--u)) 0 0 calc(-23 * var(--u));
+  border: calc(2.2 * var(--u)) solid #3a2248;
+  border-radius: 99px;
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    width 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+    height 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+    margin 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+    background-color 0.22s ease,
+    opacity 0.2s ease;
+}
+
+.nf-ring.show {
+  opacity: 1;
+}
+
+.nf-ring.drag {
+  width: calc(84 * var(--u));
+  height: calc(34 * var(--u));
+  margin: calc(-17 * var(--u)) 0 0 calc(-42 * var(--u));
+  background-color: rgba(58, 34, 72, 0.06);
+}
+
+.nf-rail {
+  position: relative;
+  z-index: 3;
+  overflow: hidden;
+  background: #f4effa;
+  border-left: 1px solid rgba(201, 184, 232, 0.3);
+  min-height: 0;
+}
+
+.nf-card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: calc(18 * var(--u)) calc(24 * var(--u));
+  will-change: transform;
+  background: #f4effa;
+  border-bottom: 1px solid rgba(201, 184, 232, 0.18);
+}
+
+.nf-card.alt {
+  background: #ffffff;
+}
+
+.nf-fav {
+  position: absolute;
+  left: calc(22 * var(--u));
+  top: calc(18 * var(--u));
+  width: calc(22 * var(--u));
+  height: calc(22 * var(--u));
+  z-index: 2;
+  color: #3a2248;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.nf-fav svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  transition: fill 0.2s ease, stroke 0.2s ease, transform 0.2s ease;
+}
+
+.nf-fav:hover svg {
+  transform: scale(1.08);
+  stroke: #9b84cc;
+}
+
+.nf-fav[aria-pressed="true"] svg {
+  fill: #b08a9e;
+  stroke: #8a6478;
+}
+
+.nf-shot {
+  flex: 1;
+  min-height: 0;
+  display: block;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+  width: 100%;
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.nf-shot:hover {
+  transform: scale(1.03);
+}
+
+.nf-shot svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.nf-meta {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  margin-top: calc(8 * var(--u));
+}
+
+.nf-meta-title {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: calc(9.5 * var(--u));
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #3a2248;
+  text-align: left;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.nf-meta-title:hover {
+  color: #9b84cc;
+}
+
+.nf-meta-price {
+  display: block;
+  grid-column: 1;
+  margin-top: calc(5 * var(--u));
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: calc(14 * var(--u));
+  color: #8a6478;
+  letter-spacing: 0.03em;
+}
+
+.nf-add {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  width: calc(26 * var(--u));
+  height: calc(26 * var(--u));
+  position: relative;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.nf-add::before,
+.nf-add::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(15 * var(--u));
+  height: 1.5px;
+  margin: -0.75px 0 0 calc(-7.5 * var(--u));
+  background: #3a2248;
+  transition: background 0.2s ease;
+}
+
+.nf-add::after {
+  transform: rotate(90deg);
+}
+
+.nf-add:hover {
+  transform: rotate(90deg);
+}
+
+.nf-add:hover::before,
+.nf-add:hover::after {
+  background: #9b84cc;
+}
+
+.nf-wait {
+  position: absolute;
+  inset: 78px 0 0 0;
+  z-index: 20;
+  background: #f7f3fa;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.nf-wait.gone {
+  opacity: 0;
+}
+
+.nf-runway-root button:focus-visible {
+  outline: 2px solid #3a2248;
+  outline-offset: 3px;
+}
+
+@media (max-width: 820px) {
+  .nf-runway-root {
+    --u: 1px;
+  }
+  .nf-r2-bar {
+    padding: 9px 16px;
+    overflow-x: auto;
+    justify-content: flex-start;
+    gap: 18px;
+  }
+  .nf-r2-links {
+    gap: 20px;
+    font-size: 9.5px;
+  }
+  .nf-r2-meta {
+    display: none;
+  }
+  .nf-main {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 190px;
+  }
+  .nf-rail {
+    border-left: 0;
+    border-top: 1px solid rgba(201, 184, 232, 0.3);
+  }
+  .nf-stage,
+  .nf-m {
+    cursor: auto;
+  }
+  .nf-ring {
+    display: none;
+  }
+  .nf-intro {
+    left: 16px;
+    top: 16px;
+    width: calc(100% - 32px);
+  }
+  .nf-intro h2 {
+    font-size: 20px;
+  }
+  .nf-intro p {
+    display: none;
+  }
+  .nf-tag {
+    left: 16px;
+    bottom: 16px;
+  }
+  .nf-look {
+    font-size: 24px;
+    line-height: 30px;
+  }
+  .nf-win,
+  .nf-roll b {
+    height: 30px;
+    line-height: 30px;
+  }
+  .nf-card {
+    width: 160px;
+    height: 100%;
+    padding: 12px;
+    border-bottom: 0;
+    border-right: 1px solid rgba(201, 184, 232, 0.18);
+  }
+  .nf-fav {
+    left: 10px;
+    top: 10px;
+  }
+}
