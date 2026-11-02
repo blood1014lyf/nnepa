@@ -152,14 +152,6 @@ Please advise on custom measurements configuration and delivery times.`;
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-[0.58rem] font-bold tracking-[0.2em] uppercase text-plum-dark">Select Gown/Suit Size</h3>
-                <button
-                  type="button"
-                  onClick={() => setShowSizeGuide(true)}
-                  className="flex items-center gap-1.5 text-[0.62rem] font-bold tracking-[0.15em] uppercase text-lavender hover:text-mauve-deep transition-colors cursor-pointer bg-lavender/10 hover:bg-lavender/20 px-2.5 py-1 rounded-[2px]"
-                >
-                  <Ruler className="w-3.5 h-3.5" />
-                  Size Guide
-                </button>
               </div>
               <div className="flex gap-2.5">
                 {(product.sizes || ['S', 'M', 'L', 'XL', 'XXL']).map((sz) => (

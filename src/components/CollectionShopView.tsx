@@ -544,14 +544,6 @@ export default function CollectionShopView({
                 </li>
               )}
             </ul>
-
-            <button
-              type="button"
-              onClick={onOpenSizeGuide}
-              className="cb-text-body text-plum-dark/70 hover:text-plum-dark underline underline-offset-4 cursor-pointer bg-transparent border-none p-0 shrink-0"
-            >
-              Size guide
-            </button>
           </div>
         </nav>
 
@@ -682,8 +674,6 @@ export default function CollectionShopView({
                     ? 'animate-subtle-drift'
                     : 'animate-subtle-drift-alt'
                   : '';
-                const sizes =
-                  product.sizes && product.sizes.length > 0 ? product.sizes : ['S', 'M', 'L', 'XL'];
 
                 return (
                   <article
