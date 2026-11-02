@@ -24,39 +24,23 @@ export default function FeaturedOutfit({ outfit, onViewDetails }: FeaturedOutfit
     video.muted = true;
     video.playsInline = true;
 
-    const playVideo = () => {
-      video.play().catch(() => {});
-    };
-
-    playVideo();
-
     const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const syncPlayback = (prefersReducedMotion: boolean) => {
-      if (prefersReducedMotion) {
-        video.pause();
-      } else {
-        playVideo();
-      }
-    };
-
-    syncPlayback(reducedMotionQuery.matches);
-    const onChange = (event: MediaQueryListEvent) => syncPlayback(event.matches);
-    reducedMotionQuery.addEventListener('change', onChange);
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting && !reducedMotionQuery.matches) {
-            playVideo();
+            video.play().catch(() => {});
+          } else {
+            video.pause();
           }
         });
       },
-      { threshold: 0.1 }
+      { threshold: 0.15 }
     );
     observer.observe(video);
 
     return () => {
-      reducedMotionQuery.removeEventListener('change', onChange);
       observer.disconnect();
     };
   }, []);
@@ -85,7 +69,7 @@ export default function FeaturedOutfit({ outfit, onViewDetails }: FeaturedOutfit
             loop
             muted
             playsInline
-            preload="auto"
+            preload="none"
             className="w-full h-auto block"
           />
         </div>
