@@ -8,7 +8,6 @@ import Loader from './components/Loader.tsx';
 import Navbar from './components/Navbar.tsx';
 import MobileMenu from './components/MobileMenu.tsx';
 import Hero from './components/Hero.tsx';
-import Categories from './components/Categories.tsx';
 import FeaturedOutfit from './components/FeaturedOutfit.tsx';
 import Heritage from './components/Heritage.tsx';
 import Stats from './components/Stats.tsx';
@@ -498,44 +497,6 @@ export default function App() {
         <div className="animate-fade-in">
           {/* ═══ HERO PRESENTATION SLIDESHOW ═══ */}
           <Hero />
-
-          {/* ═══ ROLLING INFOBAND ACCENT TAPE ═══ */}
-          <div className="overflow-hidden bg-gradient-to-r from-plum via-lavender to-mauve-deep py-4 select-none relative z-10 shadow-sm">
-            <div className="flex w-max gap-14 animate-marquee">
-              {Array.from({ length: 4 }).map((_, rIdx) => (
-                <div key={rIdx} className="flex gap-14 items-center">
-                  <span className="flex items-center gap-6 text-[0.62rem] font-medium tracking-[0.3em] uppercase text-white/90 whitespace-nowrap">
-                    Handcrafted Luxury <span className="w-1.5 h-1.5 bg-white/45 rotate-45 inline-block" />
-                  </span>
-                  <span className="flex items-center gap-6 text-[0.62rem] font-medium tracking-[0.3em] uppercase text-white/90 whitespace-nowrap">
-                    Authentic African Fabrics <span className="w-1.5 h-1.5 bg-white/45 rotate-45 inline-block" />
-                  </span>
-                  <span className="flex items-center gap-6 text-[0.62rem] font-medium tracking-[0.3em] uppercase text-white/90 whitespace-nowrap">
-                    Custom Tailoring <span className="w-1.5 h-1.5 bg-white/45 rotate-45 inline-block" />
-                  </span>
-                  <span className="flex items-center gap-6 text-[0.62rem] font-medium tracking-[0.3em] uppercase text-white/90 whitespace-nowrap">
-                    Men & Women <span className="w-1.5 h-1.5 bg-white/45 rotate-45 inline-block" />
-                  </span>
-                  <span className="flex items-center gap-6 text-[0.62rem] font-medium tracking-[0.3em] uppercase text-white/90 whitespace-nowrap">
-                    Ghana Showrooms <span className="w-1.5 h-1.5 bg-white/45 rotate-45 inline-block" />
-                  </span>
-                  <span className="flex items-center gap-6 text-[0.62rem] font-medium tracking-[0.3em] uppercase text-white/90 whitespace-nowrap">
-                    Made to Measure <span className="w-1.5 h-1.5 bg-white/45 rotate-45 inline-block" />
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* ═══ CATEGORIES MODULE ═══ */}
-          <Categories
-            onCategorySelect={(cat) => {
-              setActiveCategory(cat);
-              setShowWishlistOnly(false);
-              setPageWithHash('shop');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-          />
 
           {/* ═══ FEATURED TOP OUTFIT SHOWCASE ═══ */}
           <FeaturedOutfit
