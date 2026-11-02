@@ -44,7 +44,7 @@ export default function Categories(_props: CategoriesProps) {
             Our Collections
           </div>
           <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl font-light text-plum-dark leading-tight">
-            Shop By <em className="font-serif italic text-lavender">Category</em>
+            Shop By <em className="font-serif italic">Category</em>
           </h2>
         </div>
         <p className="text-sm font-light text-text-muted leading-relaxed max-w-[480px]">

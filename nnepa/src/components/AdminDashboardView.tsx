@@ -385,7 +385,7 @@ export default function AdminDashboardView({ adminToken, onLogout, showToast, on
               Store Management Console
             </span>
             <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl font-light">
-              Brand Control <em className="font-serif italic text-lilac">Dashboard</em>
+              Brand Control <em className="font-serif italic">Dashboard</em>
             </h1>
             <p className="text-white/70 text-xs sm:text-sm mt-1 max-w-xl leading-relaxed">
               Upload photos from mobile camera or PC, update prices in Cedis (GH₵), adjust stock status, or manage custom garments.

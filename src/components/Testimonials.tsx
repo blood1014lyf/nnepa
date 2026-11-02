@@ -16,7 +16,7 @@ export default function Testimonials() {
           <span className="w-5 h-[1px] bg-gradient-to-l from-lavender to-mauve" />
         </div>
         <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-light text-plum-dark">
-          What Our <em className="font-serif italic text-lavender">Clients</em> Say
+          What Our <em className="font-serif italic">Clients</em> Say
         </h2>
       </div>
 

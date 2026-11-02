@@ -38,7 +38,7 @@ export default function AboutView() {
               About Nnepa Foriwaa
             </span>
             <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl text-plum-dark font-light mb-5 leading-[1.08]">
-              Rooted. Refined. <em className="font-serif italic text-lavender">Regal.</em>
+              Rooted. Refined. <em className="font-serif italic">Regal.</em>
             </h1>
             <div className="w-16 h-[2px] bg-gradient-to-r from-lavender to-mauve mb-8" />
 

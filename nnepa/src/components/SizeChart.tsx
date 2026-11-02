@@ -132,7 +132,7 @@ export default function SizeChart({
           <div className="flex flex-col gap-1.5">
             <label className="text-[0.58rem] font-bold tracking-[0.2em] uppercase text-text-light flex items-center gap-1.5">
               <span>Filter By Standard Region</span>
-              <span className="text-[0.55rem] font-semibold text-lavender normal-case">(US · UK · EU)</span>
+              <span className="text-[0.55rem] font-semibold normal-case">(US · UK · EU)</span>
             </label>
             <div className="inline-flex p-1 bg-zinc-100 rounded-[3px] border border-zinc-200">
               {(['US', 'UK', 'EU'] as SizingRegion[]).map((reg) => (

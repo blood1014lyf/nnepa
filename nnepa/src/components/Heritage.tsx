@@ -63,7 +63,7 @@ export default function Heritage() {
           Our Heritage
         </div>
         <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-light text-plum-dark leading-tight mb-4">
-          The Art of <em className="font-serif italic text-lavender">African Craft</em>
+          The Art of <em className="font-serif italic">African Craft</em>
         </h2>
         <p className="text-sm font-light text-text-muted leading-relaxed max-w-[480px]">
           Every piece from Nnepa Foriwaa is a labour of love — sourced from the finest artisans across West Africa and tailored to perfection for modern African elegance.

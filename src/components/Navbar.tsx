@@ -64,7 +64,7 @@ export default function Navbar({
         }}
         className="font-serif text-xl md:text-[1.35rem] font-semibold tracking-[0.28em] no-underline whitespace-nowrap bg-transparent border-none cursor-pointer text-left"
       >
-        NNEPA <span className={showScrolledStyle ? 'text-lavender' : 'text-lilac'}>FORIWAA</span>
+        NNEPA FORIWAA
       </button>
 
       {/* Desktop Links */}

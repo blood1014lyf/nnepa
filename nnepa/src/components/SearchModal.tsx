@@ -82,7 +82,7 @@ export default function SearchModal({
 
               {filtered.length === 0 ? (
                 <div className="py-12 text-center text-sm text-text-light font-sans">
-                  No matches found for "<span className="text-plum">{query}</span>". Try another luxury fashion keyword.
+                  No matches found for "{query}". Try another keyword.
                 </div>
               ) : (
                 <div className="flex flex-col gap-4">

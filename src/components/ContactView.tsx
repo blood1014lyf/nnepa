@@ -45,7 +45,7 @@ export default function ContactView() {
             Appointments & Consultations
           </span>
           <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-light text-plum-dark">
-            Schedule a <em className="font-serif italic text-lavender">Fitting</em>
+            Schedule a <em className="font-serif italic">Fitting</em>
           </h1>
           <div className="w-12 h-[1px] bg-gradient-to-r from-lavender to-mauve mx-auto mt-4 mb-3" />
           <p className="text-xs sm:text-sm text-text-light max-w-lg mx-auto leading-relaxed">
