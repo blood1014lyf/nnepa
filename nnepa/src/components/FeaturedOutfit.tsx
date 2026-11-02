@@ -70,11 +70,11 @@ export default function FeaturedOutfit({ outfit, onViewDetails }: FeaturedOutfit
         </h2>
       </div>
 
-      {/* Full width bestseller video — zero overlays, completely unobstructed, 100% uncropped full video */}
+      {/* Full width bestseller video — fills all devices full width uncropped with zero borders just like hero */}
       <div className="w-full">
         <div
           onClick={() => onViewDetails(outfit)}
-          className="relative w-full overflow-hidden bg-black cursor-pointer group flex items-center justify-center py-2 sm:py-6"
+          className="relative w-full overflow-hidden cursor-pointer group"
         >
           <video
             ref={videoRef}
@@ -82,10 +82,11 @@ export default function FeaturedOutfit({ outfit, onViewDetails }: FeaturedOutfit
             width={576}
             height={1024}
             autoPlay
+            loop
             muted
             playsInline
             preload="auto"
-            className="w-auto h-auto max-h-[90vh] max-w-full object-contain mx-auto block transition-transform duration-700 ease-out group-hover:scale-[1.01]"
+            className="w-full h-auto block"
           />
         </div>
 
