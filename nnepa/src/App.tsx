@@ -9,7 +9,6 @@ import Navbar from './components/Navbar.tsx';
 import MobileMenu from './components/MobileMenu.tsx';
 import Hero from './components/Hero.tsx';
 import Categories from './components/Categories.tsx';
-import ProductCard from './components/ProductCard.tsx';
 import FeaturedOutfit from './components/FeaturedOutfit.tsx';
 import Heritage from './components/Heritage.tsx';
 import Stats from './components/Stats.tsx';
@@ -20,7 +19,7 @@ import CartDrawer from './components/CartDrawer.tsx';
 import SearchModal from './components/SearchModal.tsx';
 import Toast from './components/Toast.tsx';
 import CookieBanner from './components/CookieBanner.tsx';
-import RunwayShopView from './components/RunwayShopView.tsx';
+import CollectionShopView from './components/CollectionShopView.tsx';
 
 // Code-split auxiliary multi-page views with React.lazy
 const AboutView = React.lazy(() => import('./components/AboutView.tsx'));
@@ -33,11 +32,31 @@ const SizeChartView = React.lazy(() => import('./components/SizeChartView.tsx'))
 const CheckoutView = React.lazy(() => import('./components/CheckoutView.tsx'));
 
 import { PRODUCTS as DEFAULT_PRODUCTS } from './data.ts';
-import {
-  getRunwayProductsWithThumbnails,
-  preloadRunwaySheets,
-} from './utils/runwaySprites.ts';
 import { Product, CartItem, Order } from './types.ts';
+
+function enrichCatalogWithDefaults(source: Product[]): Product[] {
+  if (!source || source.length === 0) return DEFAULT_PRODUCTS;
+  const defaultsById = new Map(DEFAULT_PRODUCTS.map((d) => [d.id, d]));
+
+  const enriched = source.map((item) => {
+    const def = defaultsById.get(item.id);
+    if (!def) return item;
+    return {
+      ...def,
+      ...item,
+      subcategory: def.subcategory || item.subcategory,
+      hoverImageUrl: item.hoverImageUrl || def.hoverImageUrl,
+      color: item.color || def.color,
+      colorCount: item.colorCount ?? def.colorCount,
+    };
+  });
+
+  const missingDefaults = DEFAULT_PRODUCTS.filter(
+    (def) => !enriched.some((existing) => existing.id === def.id)
+  );
+
+  return [...enriched, ...missingDefaults];
+}
 
 const DEFAULT_TOP_OUTFIT: Product = {
   id: 'featured_top_outfit',
@@ -56,11 +75,7 @@ const DEFAULT_TOP_OUTFIT: Product = {
 export default function App() {
   // Virtual State-Based Routing
   const [page, setPage] = useState<string>('home');
-  const [shopMode, setShopMode] = useState<'runway' | 'archive'>('runway');
-  const [, setRunwayTick] = useState<number>(0);
   const [activeCategory, setActiveCategory] = useState<'all' | 'women' | 'men' | 'bags'>('all');
-  const [sortBy, setSortBy] = useState<'featured' | 'price-asc' | 'price-desc' | 'rating' | 'newest'>('featured');
-  const [inStockOnly, setInStockOnly] = useState<boolean>(false);
   const [showWishlistOnly, setShowWishlistOnly] = useState<boolean>(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>(() => {
@@ -137,11 +152,6 @@ export default function App() {
           });
       }
     } catch {}
-    // Warm up runway sprite sheets & slice product thumbnails quietly in background
-    const warmTimer = setTimeout(() => {
-      preloadRunwaySheets().then(() => setRunwayTick((t) => t + 1));
-    }, 600);
-    return () => clearTimeout(warmTimer);
   }, []);
 
   // Synchronize route with window.location.hash for deep linking & history navigation
@@ -155,9 +165,7 @@ export default function App() {
 
       if (hash.startsWith('product/')) {
         const prodId = hash.replace('product/', '');
-        const baseList = products.length > 0 ? products : DEFAULT_PRODUCTS;
-        const runwayList = getRunwayProductsWithThumbnails();
-        const combined = [...runwayList, ...baseList];
+        const combined = enrichCatalogWithDefaults(products);
         const found = combined.find((p) => p.id === prodId);
         if (found) {
           setActiveProduct(found);
@@ -382,70 +390,12 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleShopTheLook = (pieces: Product[], lookNumber: number) => {
-    if (!pieces.length) return;
-    setCartItems((prev) => {
-      let next = [...prev];
-      for (const piece of pieces) {
-        const defaultSize = piece.sizes?.[0] || 'M';
-        const matchIdx = next.findIndex(
-          (item) => item.product.id === piece.id && item.size === defaultSize
-        );
-        if (matchIdx >= 0) {
-          next[matchIdx] = { ...next[matchIdx], quantity: next[matchIdx].quantity + 1 };
-        } else {
-          next.push({ product: piece, quantity: 1, size: defaultSize });
-        }
-      }
-      return next;
-    });
-    showToast(`✨ Added Look ${lookNumber} (${pieces.length} pieces) to cart`);
-    setIsCartOpen(true);
-  };
-
-  // Merge Runway pieces with dynamic Heritage catalog
-  const runwayProducts = getRunwayProductsWithThumbnails();
-  const baseCatalog = products.length > 0 ? products : DEFAULT_PRODUCTS;
-  const allCatalogProducts: Product[] = [
-    ...baseCatalog,
-    ...runwayProducts.filter((rp) => !baseCatalog.some((bp) => bp.id === rp.id)),
-  ];
-
-  // Filter dynamic catalogue list
-  let filteredProducts = allCatalogProducts.filter((p) => {
-    if (showWishlistOnly && !wishlist.includes(p.id)) return false;
-    if (activeCategory !== 'all' && p.category !== activeCategory) return false;
-    if (inStockOnly && !p.inStock) return false;
-    return true;
-  });
-
-  filteredProducts = [...filteredProducts].sort((a, b) => {
-    if (sortBy === 'price-asc') return a.price - b.price;
-    if (sortBy === 'price-desc') return b.price - a.price;
-    if (sortBy === 'rating') return b.rating - a.rating;
-    if (sortBy === 'newest') return b.id.localeCompare(a.id);
-    return 0; // featured
-  });
+  const allCatalogProducts: Product[] = enrichCatalogWithDefaults(products);
 
   const totalCartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  const isFullViewportRunway = page === 'shop' && shopMode === 'runway';
-
-  useEffect(() => {
-    if (isFullViewportRunway) {
-      const prev = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = prev;
-      };
-    }
-  }, [isFullViewportRunway]);
 
   return (
-    <div
-      className={`min-h-screen flex flex-col bg-pearl font-sans text-plum-dark overflow-x-hidden antialiased select-none scroll-smooth${
-        isFullViewportRunway ? ' h-[100svh] overflow-hidden' : ''
-      }`}
-    >
+    <div className="min-h-screen flex flex-col bg-pearl font-sans text-plum-dark overflow-x-hidden antialiased select-none scroll-smooth">
       {/* ═══ LOADER ═══ */}
       <Loader />
 
@@ -461,18 +411,19 @@ export default function App() {
         onPageChange={(p) => {
           if (p === 'wishlist') {
             setShowWishlistOnly(true);
-            setShopMode('archive');
             setPageWithHash('shop');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
           } else {
             if (p === 'shop') {
+              setActiveCategory('all');
               setShowWishlistOnly(false);
-              setShopMode('runway');
             }
             if (p === 'admin-dashboard' && !adminToken) {
               setPageWithHash('admin-login');
             } else {
               setPageWithHash(p);
             }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
           }
         }}
         adminToken={adminToken}
@@ -486,18 +437,19 @@ export default function App() {
         onPageChange={(p) => {
           if (p === 'wishlist') {
             setShowWishlistOnly(true);
-            setShopMode('archive');
             setPageWithHash('shop');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
           } else {
             if (p === 'shop') {
+              setActiveCategory('all');
               setShowWishlistOnly(false);
-              setShopMode('runway');
             }
             if (p === 'admin-dashboard' && !adminToken) {
               setPageWithHash('admin-login');
             } else {
               setPageWithHash(p);
             }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
           }
         }}
         adminToken={adminToken}
@@ -511,9 +463,10 @@ export default function App() {
           {/* ═══ HERO PRESENTATION SLIDESHOW ═══ */}
           <Hero
             onExplore={() => {
+              setActiveCategory('all');
               setShowWishlistOnly(false);
-              setShopMode('runway');
               setPageWithHash('shop');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
           />
 
@@ -550,7 +503,6 @@ export default function App() {
             onCategorySelect={(cat) => {
               setActiveCategory(cat);
               setShowWishlistOnly(false);
-              setShopMode(cat === 'all' ? 'runway' : 'archive');
               setPageWithHash('shop');
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
@@ -569,172 +521,29 @@ export default function App() {
         </div>
       )}
 
-      {/* ═══ RUNWAY DEPTH LOOKBOOK SHOP VIEW (PRIMARY SHOP EXPERIENCE) ═══ */}
-      {page === 'shop' && shopMode === 'runway' && (
-        <RunwayShopView
+      {/* ═══ CECILIE BAHNSEN GALLERY SHOP VIEW ═══ */}
+      {page === 'shop' && (
+        <CollectionShopView
+          products={allCatalogProducts}
+          initialCategory={activeCategory}
+          initialShowWishlistOnly={showWishlistOnly}
           wishlist={wishlist}
           onToggleWishlist={handleToggleWishlist}
           onAddToCart={handleAddToCart}
-          onShopTheLook={handleShopTheLook}
           onViewDetails={handleViewDetails}
-          onOpenArchiveGrid={(cat = 'all', savedOnly = false) => {
-            setActiveCategory(cat);
-            setShowWishlistOnly(savedOnly);
-            setShopMode('archive');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
           onOpenSizeGuide={() => {
             setPageWithHash('size-chart');
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
-          onThumbnailsReady={() => setRunwayTick((t) => t + 1)}
+          onRequestCustomFitting={() => {
+            setPageWithHash('contact');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onOpenAdminUpload={() => {
+            setPageWithHash(adminToken ? 'admin-dashboard' : 'admin-login');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
         />
-      )}
-
-      {/* ═══ ARCHIVE CATALOG GRID VIEW (SECONDARY DEPARTMENT FILTER VIEW) ═══ */}
-      {page === 'shop' && shopMode === 'archive' && (
-        <div className="pt-28 pb-20 bg-pearl min-h-[85vh] animate-fade-in">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-12">
-            {/* Filter and Sorting Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-6 border-b border-lilac/15">
-              {/* Back to Runway + Category Pills & Wishlist Tab */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowWishlistOnly(false);
-                    setShopMode('runway');
-                  }}
-                  className="px-4 py-2 text-[0.62rem] font-bold tracking-[0.18em] uppercase rounded-[3px] bg-plum-dark hover:bg-plum text-white border-none cursor-pointer transition-all shadow-xs"
-                >
-                  ← Runway Lookbook
-                </button>
-
-                <div className="flex border border-solid border-lilac/25 rounded-[3px] overflow-hidden w-fit bg-white/60 shadow-xs">
-                  {(['all', 'women', 'men', 'bags'] as const).map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => {
-                        setActiveCategory(cat);
-                        setShowWishlistOnly(false);
-                      }}
-                      className={`px-4 sm:px-5 py-2 text-[0.62rem] font-bold tracking-[0.16em] uppercase border-none cursor-pointer border-r border-solid border-lilac/25 last:border-r-0 transition-all ${
-                        !showWishlistOnly && activeCategory === cat
-                          ? 'bg-gradient-to-br from-lavender to-mauve-deep text-white shadow-inner'
-                          : 'bg-transparent text-text-muted hover:text-lavender'
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Wishlist Pill */}
-                {wishlist.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setShowWishlistOnly(!showWishlistOnly)}
-                    className={`px-3.5 py-2 text-[0.62rem] font-bold tracking-[0.16em] uppercase rounded-[3px] border transition-all cursor-pointer flex items-center gap-1.5 ${
-                      showWishlistOnly
-                        ? 'bg-mauve-deep text-white border-mauve-deep shadow-xs'
-                        : 'bg-white/70 hover:bg-white text-plum-dark border-lilac/25'
-                    }`}
-                  >
-                    <span>♥</span>
-                    Saved ({wishlist.length})
-                  </button>
-                )}
-
-                {/* In Stock Toggle */}
-                <button
-                  type="button"
-                  onClick={() => setInStockOnly(!inStockOnly)}
-                  className={`px-3.5 py-2 text-[0.62rem] font-bold tracking-[0.16em] uppercase rounded-[3px] border transition-all cursor-pointer ${
-                    inStockOnly
-                      ? 'bg-emerald-600 text-white border-emerald-600'
-                      : 'bg-white/70 hover:bg-white text-plum-dark border-lilac/25'
-                  }`}
-                >
-                  {inStockOnly ? '✓ In Stock' : 'In Stock Only'}
-                </button>
-              </div>
-
-              {/* Sorting and Size Guide */}
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 bg-white/70 border border-lilac/25 rounded-[3px] px-3 py-1.5">
-                  <span className="text-[0.6rem] font-bold tracking-[0.14em] uppercase text-text-muted">Sort:</span>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as any)}
-                    className="bg-transparent border-none text-xs font-semibold text-plum-dark outline-none cursor-pointer"
-                  >
-                    <option value="featured">Featured</option>
-                    <option value="price-asc">Price: Low to High</option>
-                    <option value="price-desc">Price: High to Low</option>
-                    <option value="rating">Highest Rated</option>
-                    <option value="newest">Newest Arrivals</option>
-                  </select>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPageWithHash('size-chart');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  className="hidden sm:inline-block px-3.5 py-2 bg-white/70 hover:bg-white text-plum-dark text-[0.62rem] font-bold tracking-[0.16em] uppercase rounded-[3px] border border-lilac/25 transition-all cursor-pointer shadow-2xs"
-                >
-                  Size Guide
-                </button>
-              </div>
-            </div>
-
-            {/* Main Dynamic Grid */}
-            {filteredProducts.length === 0 ? (
-              <div className="text-center py-20 bg-white/60 rounded-md border border-lilac/20 p-8 flex flex-col items-center justify-center max-w-lg mx-auto">
-                <p className="font-serif text-xl text-plum-dark mb-2">New Season Creations</p>
-                <p className="text-xs text-text-light leading-relaxed mb-6">
-                  {activeCategory === 'all'
-                    ? 'Our ateliers are tailoring custom pieces. Upload outfits via the Admin Portal or request a bespoke custom order.'
-                    : `No items currently listed in the ${activeCategory} collection.`}
-                </p>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => {
-                      setPageWithHash('contact');
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                    className="px-6 py-3 bg-plum-dark hover:bg-plum text-white text-xs font-bold tracking-[0.2em] uppercase rounded-[2px] transition-all cursor-pointer"
-                  >
-                    Custom Bespoke Fitting
-                  </button>
-                  <button
-                    onClick={() => {
-                      setPageWithHash(adminToken ? 'admin-dashboard' : 'admin-login');
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                    className="px-5 py-3 bg-transparent border border-lilac/40 text-mauve-deep hover:bg-lilac/10 text-xs font-bold tracking-[0.18em] uppercase rounded-[2px] transition-all cursor-pointer"
-                  >
-                    + Upload Outfit
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-6">
-                {filteredProducts.map((p) => (
-                  <ProductCard
-                    key={p.id}
-                    product={p}
-                    onAddToCart={handleAddToCart}
-                    onToggleWishlist={handleToggleWishlist}
-                    isWished={wishlist.includes(p.id)}
-                    onViewDetails={handleViewDetails}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
       )}
 
       {/* ═══ CODE-SPLIT VIEWS WRAPPED IN SUSPENSE ═══ */}
@@ -831,34 +640,35 @@ export default function App() {
         )}
       </Suspense>
 
-      {/* ═══ NEWSLETTER INK (Hiding inside admin screens & full-viewport runway) ═══ */}
-      {page !== 'admin-dashboard' && page !== 'admin-login' && !isFullViewportRunway && (
+      {/* ═══ NEWSLETTER INK (Hiding inside admin screens) ═══ */}
+      {page !== 'admin-dashboard' && page !== 'admin-login' && (
         <Newsletter onSubscribe={handleSubscribe} />
       )}
       </main>
 
       {/* ═══ COMPREHENSIVE COMPACT FOOTER BAR ═══ */}
-      {!isFullViewportRunway && (
-        <Footer
-          currentPage={page}
-          onNavigate={(targetPage, category) => {
-            if (category) setActiveCategory(category);
-            if (targetPage === 'shop') {
-              setShowWishlistOnly(false);
-              setShopMode(category && category !== 'all' ? 'archive' : 'runway');
-            }
-            if (targetPage === 'admin-dashboard' && !adminToken) {
-              setPageWithHash('admin-login');
-            } else {
-              setPageWithHash(targetPage);
-            }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-          onScrollToSection={handleScrollToSection}
-          adminToken={adminToken}
-          onOpenCookieSettings={() => setIsCookieSettingsOpen(true)}
-        />
-      )}
+      <Footer
+        currentPage={page}
+        onNavigate={(targetPage, category) => {
+          if (category) {
+            setActiveCategory(category);
+          } else if (targetPage === 'shop') {
+            setActiveCategory('all');
+          }
+          if (targetPage === 'shop') {
+            setShowWishlistOnly(false);
+          }
+          if (targetPage === 'admin-dashboard' && !adminToken) {
+            setPageWithHash('admin-login');
+          } else {
+            setPageWithHash(targetPage);
+          }
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+        onScrollToSection={handleScrollToSection}
+        adminToken={adminToken}
+        onOpenCookieSettings={() => setIsCookieSettingsOpen(true)}
+      />
 
       {/* ═══ UTILITY CART SHOPPING BAG DRAWER ═══ */}
       <CartDrawer
@@ -870,9 +680,10 @@ export default function App() {
         onCheckout={handleCheckout}
         onStartShopping={() => {
           setIsCartOpen(false);
+          setActiveCategory('all');
           setShowWishlistOnly(false);
-          setShopMode('runway');
           setPageWithHash('shop');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
       />
 

@@ -12,6 +12,9 @@ export interface Product {
   originalPrice?: number;
   rating: number;
   imageUrl: string;
+  hoverImageUrl?: string;
+  color?: string;
+  colorCount?: number;
   badge?: 'Bestseller' | 'New' | 'Sale' | 'Exclusive';
   inStock?: boolean;
   description?: string;
