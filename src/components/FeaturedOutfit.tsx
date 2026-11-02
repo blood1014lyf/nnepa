@@ -85,7 +85,6 @@ export default function FeaturedOutfit({ outfit, onViewDetails }: FeaturedOutfit
             width={576}
             height={1024}
             autoPlay
-            loop
             muted
             playsInline
             preload="auto"
