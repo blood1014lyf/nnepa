@@ -77,18 +77,17 @@ export default function CartDrawer({
                   <div className="text-[0.9rem] font-medium tracking-wide">
                     Your cart is beautifully empty
                   </div>
-                  <button
+                  <a
+                    href="#/shop"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     onClick={() => {
-                      if (onStartShopping) {
-                        onStartShopping();
-                      } else {
-                        onClose();
-                      }
+                      onClose();
                     }}
-                    className="mt-2 py-3 px-6 bg-gradient-to-br from-lavender to-mauve-deep text-white text-[0.62rem] font-semibold tracking-[0.22em] uppercase border-none cursor-pointer rounded-[4px] shadow-md active:scale-95 duration-200"
+                    className="mt-2 py-3 px-6 bg-gradient-to-br from-lavender to-mauve-deep text-white text-[0.62rem] font-semibold tracking-[0.22em] uppercase no-underline cursor-pointer rounded-[4px] shadow-md active:scale-95 duration-200 inline-block"
                   >
                     Start Shopping
-                  </button>
+                  </a>
                 </div>
               ) : (
                 <div className="flex flex-col gap-1">

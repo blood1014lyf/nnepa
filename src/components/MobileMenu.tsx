@@ -50,26 +50,42 @@ export default function MobileMenu({ isOpen, onClose, currentPage, onPageChange,
           </button>
 
           <div className="flex flex-col gap-6">
-            {menuLinks.map((link) => (
-              <motion.button
-                key={link.page}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 }}
-                onClick={() => {
-                  onPageChange(link.page);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                  onClose();
-                }}
-                className={`font-serif text-2xl font-light border-none bg-transparent cursor-pointer tracking-wide transition-colors ${
-                  currentPage === link.page
-                    ? 'text-white font-extrabold underline decoration-lavender underline-offset-8 decoration-2'
-                    : 'text-[rgba(228,218,245,0.7)] hover:text-lilac'
-                }`}
-              >
-                {link.label}
-              </motion.button>
-            ))}
+            {menuLinks.map((link) =>
+              link.page === 'shop' && currentPage !== 'shop' ? (
+                <motion.a
+                  key={link.page}
+                  href="#/shop"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 }}
+                  onClick={onClose}
+                  className="font-serif text-2xl font-light no-underline cursor-pointer tracking-wide transition-colors text-[rgba(228,218,245,0.7)] hover:text-lilac"
+                >
+                  {link.label}
+                </motion.a>
+              ) : (
+                <motion.button
+                  key={link.page}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 }}
+                  onClick={() => {
+                    onPageChange(link.page);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    onClose();
+                  }}
+                  className={`font-serif text-2xl font-light border-none bg-transparent cursor-pointer tracking-wide transition-colors ${
+                    currentPage === link.page
+                      ? 'text-white font-extrabold underline decoration-lavender underline-offset-8 decoration-2'
+                      : 'text-[rgba(228,218,245,0.7)] hover:text-lilac'
+                  }`}
+                >
+                  {link.label}
+                </motion.button>
+              )
+            )}
           </div>
 
           {/* Social Links Row */}

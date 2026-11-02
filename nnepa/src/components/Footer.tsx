@@ -99,38 +99,32 @@ export default function Footer({ currentPage, onNavigate, onScrollToSection, adm
                 Shop
               </div>
               <ul className="list-none m-0 p-0 flex flex-col gap-0.5 sm:gap-1.5">
-                <li>
-                  <button
-                    onClick={() => onNavigate('shop', 'women')}
-                    className="bg-transparent border-none p-0 text-[0.65rem] sm:text-xs text-pearl-2/50 hover:text-lilac cursor-pointer font-light transition-colors text-left block"
-                  >
-                    Womenswear
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => onNavigate('shop', 'men')}
-                    className="bg-transparent border-none p-0 text-[0.65rem] sm:text-xs text-pearl-2/50 hover:text-lilac cursor-pointer font-light transition-colors text-left block"
-                  >
-                    Menswear
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => onNavigate('shop', 'bags')}
-                    className="bg-transparent border-none p-0 text-[0.65rem] sm:text-xs text-pearl-2/50 hover:text-lilac cursor-pointer font-light transition-colors text-left block"
-                  >
-                    Bags & Accessories
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => onNavigate('shop', 'all')}
-                    className="bg-transparent border-none p-0 text-[0.65rem] sm:text-xs text-pearl-2/50 hover:text-lilac cursor-pointer font-light transition-colors text-left block"
-                  >
-                    All Outfits
-                  </button>
-                </li>
+                {([
+                  { label: 'Womenswear', category: 'women', href: '#/shop?category=women' },
+                  { label: 'Menswear', category: 'men', href: '#/shop?category=men' },
+                  { label: 'Bags & Accessories', category: 'bags', href: '#/shop?category=bags' },
+                  { label: 'All Outfits', category: 'all', href: '#/shop' },
+                ] as const).map((item) => (
+                  <li key={item.label}>
+                    {currentPage !== 'shop' ? (
+                      <a
+                        href={item.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="no-underline text-[0.65rem] sm:text-xs text-pearl-2/50 hover:text-lilac cursor-pointer font-light transition-colors text-left block"
+                      >
+                        {item.label}
+                      </a>
+                    ) : (
+                      <button
+                        onClick={() => onNavigate('shop', item.category)}
+                        className="bg-transparent border-none p-0 text-[0.65rem] sm:text-xs text-pearl-2/50 hover:text-lilac cursor-pointer font-light transition-colors text-left block"
+                      >
+                        {item.label}
+                      </button>
+                    )}
+                  </li>
+                ))}
               </ul>
             </div>
 

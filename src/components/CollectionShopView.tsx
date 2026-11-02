@@ -79,52 +79,16 @@ const DRAWER_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'One Size'];
 
 const PAGE_STEP = 12;
 
-const COLLECTION_COPY: Record<QuickFilterKey, { heading: string; intro: string }> = {
-  all: {
-    heading: 'All',
-    intro:
-      "Explore the full range of Nnepa Foriwaa's ready-to-wear, ceremonial menswear, and handwoven accessories — cut and finished in our Accra studio from authentic Ghanaian Kente, washed linen, and silk-cotton blends. Discover enduring pieces shaped for quiet confidence and unhurried comfort.",
-  },
-  women: {
-    heading: 'Womenswear',
-    intro:
-      'Fluid silk-cotton boubous, gathered organza midis, and structured wax-print separates tailored in Accra. Every piece balances generous volume with light, breathable movement from morning to evening.',
-  },
-  men: {
-    heading: 'Menswear',
-    intro:
-      'Ceremonial three-piece Agbadas, washed-linen Kente kaftans, Northern Fugu smocks, and sharp Senator two-pieces — cut cleanly for effortless poise across celebratory and everyday occasions.',
-  },
-  'Dresses & Gowns': {
-    heading: 'Dresses & Gowns',
-    intro:
-      'From floor-sweeping silk Kente evening gowns to airy puff-sleeve midis and draped boubous, each dress is hand-finished in our Accra atelier with deep pockets and enduring seamwork.',
-  },
-  'Tops & Sets': {
-    heading: 'Tops & Sets',
-    intro:
-      'Coordinated two-piece ensembles, peplum bodices, cotton-jacquard wrap blouses, and tailored Senator sets designed to wear together or mix effortlessly across your wardrobe.',
-  },
-  'Kaftans & Agbada': {
-    heading: 'Kaftans & Agbada',
-    intro:
-      'Damask brocade Agbadas and crisp linen kaftans accented with handwoven Asante Kente yokes and tonal chest embroidery.',
-  },
-  'Outerwear & Smocks': {
-    heading: 'Outerwear & Smocks',
-    intro:
-      'Strip-woven Northern Ghanaian Fugu smocks and quilted hand-loomed Aso-Oke jackets crafted for textural layering across seasons.',
-  },
-  'Bags & Accessories': {
-    heading: 'Bags & Accessories',
-    intro:
-      'Hand-plaited Bolgatanga elephant-grass totes, silk Kente minaudières, and cast-brass Adinkra evening clutches finished with Ghanaian leather.',
-  },
-  saved: {
-    heading: 'Saved Pieces',
-    intro:
-      'Your personal shortlist of Nnepa Foriwaa garments and woven accessories, kept ready whenever you wish to order or arrange a custom studio fitting.',
-  },
+const COLLECTION_HEADINGS: Record<QuickFilterKey, string> = {
+  all: 'All',
+  women: 'Womenswear',
+  men: 'Menswear',
+  'Dresses & Gowns': 'Dresses & Gowns',
+  'Tops & Sets': 'Tops & Sets',
+  'Kaftans & Agbada': 'Kaftans & Agbada',
+  'Outerwear & Smocks': 'Outerwear & Smocks',
+  'Bags & Accessories': 'Bags & Accessories',
+  saved: 'Saved',
 };
 
 function mapInitialToQuickFilter(
@@ -517,7 +481,7 @@ export default function CollectionShopView({
     }
   };
 
-  const activeCopy = COLLECTION_COPY[quickFilter] || COLLECTION_COPY.all;
+  const activeHeading = COLLECTION_HEADINGS[quickFilter] || COLLECTION_HEADINGS.all;
   const shownProducts = filteredProducts.slice(0, visibleCount);
   const progressPct =
     filteredProducts.length > 0
@@ -528,19 +492,13 @@ export default function CollectionShopView({
     <div className="bg-pearl text-plum-dark pt-[78px] min-h-screen">
       {/* Main collection surface (marked inert while Filter & Sort drawer is expanded) */}
       <div ref={contentWrapperRef}>
-        {/* ═══ 1. COLLECTION INTRO & H1 HEADER (24-COLUMN EDITORIAL RHYTHM) ═══ */}
+        {/* ═══ 1. COLLECTION H1 HEADER ═══ */}
         <div
           ref={gridTopRef}
-          className="cb-grid-24 gap-y-7 pb-0 pt-6 px-5 md:gap-y-5 md:py-6 md:px-10"
+          className="pb-0 pt-6 px-5 md:py-6 md:px-10"
         >
-          <div className="col-[1/13] md:col-[1/13]">
-            <p className="cb-text-body text-plum-dark/80 max-w-[43.75rem]">
-              {activeCopy.intro}
-            </p>
-          </div>
-
-          <h1 className="col-[1/13] md:col-[1/25] font-serif text-[2.1rem] md:text-[2.75rem] font-light tracking-[-0.01em] text-plum-dark leading-[1.08]">
-            {activeCopy.heading}
+          <h1 className="font-serif text-[2.1rem] md:text-[2.75rem] font-light tracking-[-0.01em] text-plum-dark leading-[1.08]">
+            {activeHeading}
           </h1>
         </div>
 
@@ -694,36 +652,17 @@ export default function CollectionShopView({
 
         {/* ═══ 4. DUAL-MODE PRODUCT GALLERY GRID ('even' 4-col / 'uneven' 2-wide + 4-up) ═══ */}
         {filteredProducts.length === 0 ? (
-          <div className="px-5 md:px-10 py-24 text-center max-w-lg mx-auto">
-            <h2 className="font-serif text-2xl md:text-3xl font-light text-plum-dark mb-3">
-              No matching pieces found
+          <div className="px-5 md:px-10 py-24 text-center max-w-md mx-auto">
+            <h2 className="font-serif text-2xl md:text-3xl font-light text-plum-dark mb-6">
+              No matching pieces
             </h2>
-            <p className="cb-text-body text-plum-dark/70 mb-8">
-              Try clearing one of your active filters, or speak with our Accra studio to commission a custom-measured garment.
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              <button
-                type="button"
-                onClick={handleClearAllApplied}
-                className="h-10 px-6 bg-plum-dark hover:bg-plum text-white cb-text-body cursor-pointer border-none transition-colors"
-              >
-                Reset selection
-              </button>
-              <button
-                type="button"
-                onClick={onRequestCustomFitting}
-                className="h-10 px-6 bg-transparent border border-plum-dark/25 hover:border-plum-dark text-plum-dark cb-text-body cursor-pointer transition-colors"
-              >
-                Book custom fitting
-              </button>
-              <button
-                type="button"
-                onClick={onOpenAdminUpload}
-                className="h-10 px-5 bg-transparent text-plum-dark/70 hover:text-plum-dark underline underline-offset-4 cb-text-body cursor-pointer border-none"
-              >
-                + Atelier upload
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={handleClearAllApplied}
+              className="h-10 px-6 bg-plum-dark hover:bg-plum text-white cb-text-body cursor-pointer border-none transition-colors"
+            >
+              Clear filters
+            </button>
           </div>
         ) : (
           <>
@@ -735,7 +674,7 @@ export default function CollectionShopView({
               {shownProducts.map((product, idx) => {
                 const isWished = wishlist.includes(product.id);
                 const isAboveFold = idx < 8;
-                const isPriorityLcp = idx < 4;
+                const isPriorityLcp = idx < 2;
                 const sizes =
                   product.sizes && product.sizes.length > 0 ? product.sizes : ['S', 'M', 'L', 'XL'];
 
@@ -764,8 +703,8 @@ export default function CollectionShopView({
                         <img
                           src={product.imageUrl}
                           alt={product.name}
-                          loading={isPriorityLcp ? 'eager' : 'lazy'}
-                          fetchPriority={isPriorityLcp ? 'high' : 'auto'}
+                          loading={isPriorityLcp ? undefined : 'lazy'}
+                          fetchPriority={isPriorityLcp ? 'high' : undefined}
                           referrerPolicy="no-referrer"
                           className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover/image:scale-[1.015]"
                         />
@@ -776,20 +715,17 @@ export default function CollectionShopView({
                             alt=""
                             aria-hidden="true"
                             loading="lazy"
+                            fetchPriority="low"
                             referrerPolicy="no-referrer"
                             className="absolute inset-0 h-full w-full object-cover opacity-0 group-hover/image:opacity-100 transition-opacity duration-300"
                           />
                         )}
 
-                        {product.inStock === false ? (
+                        {product.inStock === false && (
                           <span className="absolute left-3 top-3 bg-pearl/92 px-2.5 py-1 text-[11px] tracking-[0.06em] text-plum-dark">
                             Made to order
                           </span>
-                        ) : product.badge === 'Sale' ? (
-                          <span className="absolute left-3 top-3 bg-pearl/92 px-2.5 py-1 text-[11px] tracking-[0.06em] text-mauve-deep">
-                            Archive value
-                          </span>
-                        ) : null}
+                        )}
                       </a>
 
                       {/* Discreet Quick-Add Size Bar on Hover / Focus */}
@@ -800,7 +736,7 @@ export default function CollectionShopView({
                             onClick={() => onViewDetails(product)}
                             className="cb-text-body text-[12px] text-plum-dark hover:underline bg-transparent border-none cursor-pointer py-0.5 px-2"
                           >
-                            Request bespoke fitting
+                            Custom order
                           </button>
                         ) : sizes.length === 1 && sizes[0] === 'One Size' ? (
                           <button
@@ -808,13 +744,10 @@ export default function CollectionShopView({
                             onClick={() => onAddToCart(product, 'One Size')}
                             className="cb-text-body text-[12px] text-plum-dark hover:underline bg-transparent border-none cursor-pointer py-0.5 px-2 font-medium"
                           >
-                            + Quick add to bag
+                            + Add
                           </button>
                         ) : (
-                          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
-                            <span className="text-[11px] text-plum-dark/55 select-none">
-                              Quick add:
-                            </span>
+                          <div className="flex flex-wrap items-center justify-center gap-x-3.5 gap-y-1">
                             {sizes.map((sz) => (
                               <button
                                 key={sz}
@@ -831,8 +764,8 @@ export default function CollectionShopView({
                       </div>
                     </div>
 
-                    {/* Product Info Row (Title, Price, Signature Floral Wishlist Icon, Colour Count) */}
-                    <div data-product-info className="flex flex-col gap-[2px]">
+                    {/* Product Info Row (Title, Price, Wishlist Icon) */}
+                    <div data-product-info className="flex flex-col">
                       <div className="flex w-full items-start justify-between gap-2">
                         <div className="cb-text-body flex min-w-0 flex-1 flex-col gap-0.5">
                           <a
@@ -918,19 +851,6 @@ export default function CollectionShopView({
                           )}
                         </button>
                       </div>
-
-                      <a
-                        href={`#/product/${encodeURIComponent(product.id)}`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          onViewDetails(product);
-                        }}
-                        className="cb-text-body text-plum-dark/52 no-underline"
-                      >
-                        {product.colorCount
-                          ? `${product.colorCount} colours`
-                          : product.subcategory}
-                      </a>
                     </div>
                   </article>
                 );
@@ -966,62 +886,6 @@ export default function CollectionShopView({
             </div>
           </>
         )}
-
-        {/* ═══ 6. CENTERED EDITORIAL COLLECTION STORY & INLINE CATEGORY LINKS ═══ */}
-        <div className="cb-text-body border-t border-plum-dark/12 mt-4 w-full px-5 py-12 md:py-16">
-          <div className="mx-auto w-full max-w-full sm:max-w-[52%] text-plum-dark/82 leading-[1.65] space-y-4">
-            <p>
-              Nnepa Foriwaa’s full collection brings together our Accra studio’s language of
-              generous volume and handwoven West African textiles across every department. Explore
-              fluid{' '}
-              <button
-                type="button"
-                onClick={() => handleQuickFilterSelect('Dresses & Gowns', true)}
-                className="cb-text-body underline underline-offset-3 text-plum-dark hover:text-lavender bg-transparent border-none p-0 cursor-pointer"
-              >
-                dresses and gowns
-              </button>{' '}
-              and coordinated{' '}
-              <button
-                type="button"
-                onClick={() => handleQuickFilterSelect('Tops & Sets', true)}
-                className="cb-text-body underline underline-offset-3 text-plum-dark hover:text-lavender bg-transparent border-none p-0 cursor-pointer"
-              >
-                tops and two-piece sets
-              </button>
-              , layer with hand-loomed{' '}
-              <button
-                type="button"
-                onClick={() => handleQuickFilterSelect('Outerwear & Smocks', true)}
-                className="cb-text-body underline underline-offset-3 text-plum-dark hover:text-lavender bg-transparent border-none p-0 cursor-pointer"
-              >
-                outerwear and Northern smocks
-              </button>{' '}
-              or ceremonial{' '}
-              <button
-                type="button"
-                onClick={() => handleQuickFilterSelect('Kaftans & Agbada', true)}
-                className="cb-text-body underline underline-offset-3 text-plum-dark hover:text-lavender bg-transparent border-none p-0 cursor-pointer"
-              >
-                kaftans and Agbadas
-              </button>
-              , and finish the look with{' '}
-              <button
-                type="button"
-                onClick={() => handleQuickFilterSelect('Bags & Accessories', true)}
-                className="cb-text-body underline underline-offset-3 text-plum-dark hover:text-lavender bg-transparent border-none p-0 cursor-pointer"
-              >
-                hand-plaited bags and evening clutches
-              </button>
-              .
-            </p>
-            <p>
-              Each garment is cut and finished in small runs or tailored to your personal
-              measurements in Accra — pairing authentic Asante Kente, breathable linen, and natural
-              raffia with quiet, lasting comfort season after season.
-            </p>
-          </div>
-        </div>
       </div>
 
       {/* ═══ 7. FLOATING BACK-TO-TOP BUTTON ═══ */}

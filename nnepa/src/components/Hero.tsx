@@ -7,12 +7,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { HERO_SLIDES } from '../data.ts';
 
-interface HeroProps {
-  onExplore?: () => void;
-  onContact?: () => void;
-}
-
-export default function Hero({ onExplore, onContact }: HeroProps) {
+export default function Hero() {
   const [current, setCurrent] = useState(0);
   const [progress, setProgress] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -78,9 +73,6 @@ export default function Hero({ onExplore, onContact }: HeroProps) {
     }
   };
 
-  const currentFormatted = String(current + 1).padStart(2, '0');
-  const totalFormatted = String(total).padStart(2, '0');
-
   return (
     <section
       id="home"
@@ -108,49 +100,11 @@ export default function Hero({ onExplore, onContact }: HeroProps) {
                 style={{ backgroundImage: `url('${slide.imageUrl}')` }}
               />
 
-              {/* Clean Cinematic Gradient Overlay (Pure, non-muddy, natural contrast) */}
-              <div className="absolute inset-0 bg-gradient-to-t from-plum-dark/90 via-plum-dark/40 to-black/25 sm:bg-gradient-to-r sm:from-plum-dark/85 sm:via-plum-dark/40 sm:to-black/15" />
+              {/* Subtle top/bottom vignette for navigation legibility */}
+              <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-transparent to-black/25" />
             </div>
           );
         })}
-      </div>
-
-      {/* Hero Typography & Content Container */}
-      <div className="relative z-20 w-full max-w-7xl mx-auto px-6 sm:px-10 md:px-16 pt-32 xs:pt-36 sm:pt-14 md:pt-16 pb-12 sm:pb-0">
-        <div className="max-w-[720px] flex flex-col justify-center">
-          
-          {/* Eyebrow */}
-          <div className="flex items-center gap-3 text-[0.65rem] sm:text-xs font-semibold tracking-[0.32em] sm:tracking-[0.4em] uppercase text-lilac-light animate-fade-in">
-            <span className="w-7 sm:w-9 h-[1.5px] bg-gradient-to-r from-lilac to-transparent" />
-            New Collection 2026
-          </div>
-
-          {/* Headline */}
-          <h1 className="mt-3 sm:mt-5 text-4xl xs:text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-serif font-light text-white leading-[1.06] tracking-tight">
-            Wear Your <br className="hidden sm:inline" />
-            <em className="font-serif italic text-lilac-light font-normal">Heritage</em> <br />
-            With Grace
-          </h1>
-
-          {/* Description Paragraph (Clean text, no translucent box or border) */}
-          <p className="mt-4 sm:mt-6 text-sm sm:text-base md:text-lg font-light tracking-wide leading-relaxed text-pearl/90 max-w-[520px]">
-            Ready-to-wear and custom luxury made-to-fit clothing, handcrafted with quality African fabrics for the Afrocentric.
-          </p>
-
-          {/* Action CTA */}
-          <div className="flex flex-col gap-3 sm:gap-3.5 mt-8 xs:mt-10 sm:mt-8 md:mt-10 w-full sm:w-auto items-start">
-            {onExplore && (
-              <button
-                onClick={onExplore}
-                className="w-full sm:w-auto sm:min-w-[210px] justify-center px-7 sm:px-9 py-3.5 sm:py-4 bg-gradient-to-br from-lavender via-mauve to-mauve-deep text-white text-[0.7rem] sm:text-xs font-semibold tracking-[0.25em] uppercase border-none cursor-pointer rounded-[2px] shadow-[0_8px_32px_rgba(155,132,204,0.35)] hover:-translate-y-[2px] hover:shadow-[0_12px_36px_rgba(155,132,204,0.45)] transition-all flex items-center gap-2.5 active:scale-[0.98]"
-              >
-                Shop Now
-                <ArrowRight className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
-              </button>
-            )}
-          </div>
-
-        </div>
       </div>
 
       {/* Desktop Navigation Arrows */}
@@ -181,11 +135,6 @@ export default function Hero({ onExplore, onContact }: HeroProps) {
             aria-label={`Go to slide ${idx + 1}`}
           />
         ))}
-      </div>
-
-      {/* Slide Counter */}
-      <div className="absolute right-6 sm:right-12 bottom-5 sm:bottom-10 z-30 font-serif text-[0.75rem] text-lilac/70 tracking-[0.2em] selection:bg-transparent">
-        <strong className="text-white text-base sm:text-lg">{currentFormatted}</strong> / {totalFormatted}
       </div>
 
       {/* Slide Auto Timer Linear Accent Progress Bar */}

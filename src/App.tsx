@@ -13,7 +13,6 @@ import FeaturedOutfit from './components/FeaturedOutfit.tsx';
 import Heritage from './components/Heritage.tsx';
 import Stats from './components/Stats.tsx';
 import Testimonials from './components/Testimonials.tsx';
-import Newsletter from './components/Newsletter.tsx';
 import Footer from './components/Footer.tsx';
 import CartDrawer from './components/CartDrawer.tsx';
 import SearchModal from './components/SearchModal.tsx';
@@ -77,7 +76,13 @@ export default function App() {
   const [page, setPage] = useState<string>('home');
   const [activeCategory, setActiveCategory] = useState<'all' | 'women' | 'men' | 'bags'>('all');
   const [showWishlistOnly, setShowWishlistOnly] = useState<boolean>(false);
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
+    try {
+      const cached = localStorage.getItem('nnepa_foriwaa_cart');
+      if (cached) return JSON.parse(cached);
+    } catch {}
+    return [];
+  });
   const [orders, setOrders] = useState<Order[]>(() => {
     try {
       const cached = localStorage.getItem('nnepa_foriwaa_orders');
@@ -96,12 +101,32 @@ export default function App() {
   });
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // Sync wishlist to localStorage on change
+  // Sync cart and wishlist to localStorage and across browser tabs
+  useEffect(() => {
+    try {
+      localStorage.setItem('nnepa_foriwaa_cart', JSON.stringify(cartItems));
+    } catch {}
+  }, [cartItems]);
+
   useEffect(() => {
     try {
       localStorage.setItem('nnepa_foriwaa_wishlist', JSON.stringify(wishlist));
     } catch {}
   }, [wishlist]);
+
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      try {
+        if (e.key === 'nnepa_foriwaa_cart' && e.newValue) {
+          setCartItems(JSON.parse(e.newValue));
+        } else if (e.key === 'nnepa_foriwaa_wishlist' && e.newValue) {
+          setWishlist(JSON.parse(e.newValue));
+        }
+      } catch {}
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCookieSettingsOpen, setIsCookieSettingsOpen] = useState(false);
@@ -154,17 +179,19 @@ export default function App() {
     } catch {}
   }, []);
 
-  // Synchronize route with window.location.hash for deep linking & history navigation
+  // Synchronize route with window.location.hash for deep linking & multi-tab shop navigation
   useEffect(() => {
     const syncRouteFromHash = () => {
-      const hash = window.location.hash.replace(/^#\/?/, '').trim();
-      if (!hash || hash === 'home') {
+      const rawHash = window.location.hash.replace(/^#\/?/, '').trim();
+      const [hashPath, rawQuery = ''] = rawHash.split('?');
+
+      if (!hashPath || hashPath === 'home') {
         setPage('home');
         return;
       }
 
-      if (hash.startsWith('product/')) {
-        const prodId = hash.replace('product/', '');
+      if (hashPath.startsWith('product/')) {
+        const prodId = decodeURIComponent(hashPath.replace('product/', ''));
         const combined = enrichCatalogWithDefaults(products);
         const found = combined.find((p) => p.id === prodId);
         if (found) {
@@ -176,8 +203,21 @@ export default function App() {
         return;
       }
 
-      if (['shop', 'about', 'contact', 'terms', 'privacy', 'size-chart', 'checkout', 'admin-login', 'admin-dashboard'].includes(hash)) {
-        setPage(hash);
+      if (hashPath === 'shop') {
+        const params = new URLSearchParams(rawQuery);
+        const cat = params.get('category');
+        if (cat === 'women' || cat === 'men' || cat === 'bags' || cat === 'all') {
+          setActiveCategory(cat);
+        } else {
+          setActiveCategory('all');
+        }
+        setShowWishlistOnly(params.get('saved') === '1');
+        setPage('shop');
+        return;
+      }
+
+      if (['about', 'contact', 'terms', 'privacy', 'size-chart', 'checkout', 'admin-login', 'admin-dashboard'].includes(hashPath)) {
+        setPage(hashPath);
       }
     };
 
@@ -371,10 +411,6 @@ export default function App() {
     setCartItems([]);
   };
 
-  const handleSubscribe = (email: string) => {
-    showToast(`🎉 Thank you! 10% coupon has been sent to ${email}`);
-  };
-
   const handleScrollToSection = (sectionId: string) => {
     setPageWithHash('home');
     setTimeout(() => {
@@ -461,14 +497,7 @@ export default function App() {
       {page === 'home' && (
         <div className="animate-fade-in">
           {/* ═══ HERO PRESENTATION SLIDESHOW ═══ */}
-          <Hero
-            onExplore={() => {
-              setActiveCategory('all');
-              setShowWishlistOnly(false);
-              setPageWithHash('shop');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-          />
+          <Hero />
 
           {/* ═══ ROLLING INFOBAND ACCENT TAPE ═══ */}
           <div className="overflow-hidden bg-gradient-to-r from-plum via-lavender to-mauve-deep py-4 select-none relative z-10 shadow-sm">
@@ -639,11 +668,6 @@ export default function App() {
           />
         )}
       </Suspense>
-
-      {/* ═══ NEWSLETTER INK (Hiding inside admin screens) ═══ */}
-      {page !== 'admin-dashboard' && page !== 'admin-login' && (
-        <Newsletter onSubscribe={handleSubscribe} />
-      )}
       </main>
 
       {/* ═══ COMPREHENSIVE COMPACT FOOTER BAR ═══ */}

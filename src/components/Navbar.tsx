@@ -71,18 +71,32 @@ export default function Navbar({
       <ul className="hidden md:flex items-center gap-7 lg:gap-10 list-none m-0 p-0">
         {navLinks.map((link) => (
           <li key={link.label}>
-            <button
-              onClick={() => {
-                onPageChange(link.page);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              className={`text-[0.66rem] font-bold tracking-[0.2em] uppercase border-none bg-transparent cursor-pointer relative py-2 transition-colors duration-300 group ${
-                showScrolledStyle ? 'text-mauve-deep hover:text-lavender' : 'text-white/85 hover:text-lilac'
-              } ${currentPage === link.page ? 'text-lavender font-extrabold' : ''}`}
-            >
-              {link.label}
-              <span className={`absolute bottom-0 left-0 h-[1.5px] bg-gradient-to-r from-lavender to-mauve transition-all duration-350 w-0 group-hover:w-full ${currentPage === link.page ? 'w-full' : ''}`} />
-            </button>
+            {link.page === 'shop' && currentPage !== 'shop' ? (
+              <a
+                href="#/shop"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`text-[0.66rem] font-bold tracking-[0.2em] uppercase no-underline cursor-pointer relative py-2 inline-block transition-colors duration-300 group ${
+                  showScrolledStyle ? 'text-mauve-deep hover:text-lavender' : 'text-white/85 hover:text-lilac'
+                }`}
+              >
+                {link.label}
+                <span className="absolute bottom-0 left-0 h-[1.5px] bg-gradient-to-r from-lavender to-mauve transition-all duration-350 w-0 group-hover:w-full" />
+              </a>
+            ) : (
+              <button
+                onClick={() => {
+                  onPageChange(link.page);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className={`text-[0.66rem] font-bold tracking-[0.2em] uppercase border-none bg-transparent cursor-pointer relative py-2 transition-colors duration-300 group ${
+                  showScrolledStyle ? 'text-mauve-deep hover:text-lavender' : 'text-white/85 hover:text-lilac'
+                } ${currentPage === link.page ? 'text-lavender font-extrabold' : ''}`}
+              >
+                {link.label}
+                <span className={`absolute bottom-0 left-0 h-[1.5px] bg-gradient-to-r from-lavender to-mauve transition-all duration-350 w-0 group-hover:w-full ${currentPage === link.page ? 'w-full' : ''}`} />
+              </button>
+            )}
           </li>
         ))}
       </ul>
@@ -101,21 +115,38 @@ export default function Navbar({
         </button>
 
         {wishlistCount > 0 && (
-          <button
-            onClick={() => {
-              onPageChange('wishlist');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            className={`w-10 h-10 flex items-center justify-center border-none bg-transparent cursor-pointer rounded-full transition-all relative ${
-              showScrolledStyle ? 'hover:bg-plum-dark/5 text-plum-dark' : 'hover:bg-white/10 text-white'
-            }`}
-            title="Wishlist"
-          >
-            <Heart className="w-[18px] h-[18px] text-mauve fill-mauve" />
-            <span className="absolute top-[6px] right-[6px] min-w-3.5 h-3.5 px-1 rounded-full bg-gradient-to-br from-lavender to-mauve text-[0.55rem] font-bold text-white flex items-center justify-center">
-              {wishlistCount}
-            </span>
-          </button>
+          currentPage !== 'shop' ? (
+            <a
+              href="#/shop?saved=1"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`w-10 h-10 flex items-center justify-center no-underline cursor-pointer rounded-full transition-all relative ${
+                showScrolledStyle ? 'hover:bg-plum-dark/5 text-plum-dark' : 'hover:bg-white/10 text-white'
+              }`}
+              title="Wishlist"
+            >
+              <Heart className="w-[18px] h-[18px] text-mauve fill-mauve" />
+              <span className="absolute top-[6px] right-[6px] min-w-3.5 h-3.5 px-1 rounded-full bg-gradient-to-br from-lavender to-mauve text-[0.55rem] font-bold text-white flex items-center justify-center">
+                {wishlistCount}
+              </span>
+            </a>
+          ) : (
+            <button
+              onClick={() => {
+                onPageChange('wishlist');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className={`w-10 h-10 flex items-center justify-center border-none bg-transparent cursor-pointer rounded-full transition-all relative ${
+                showScrolledStyle ? 'hover:bg-plum-dark/5 text-plum-dark' : 'hover:bg-white/10 text-white'
+              }`}
+              title="Wishlist"
+            >
+              <Heart className="w-[18px] h-[18px] text-mauve fill-mauve" />
+              <span className="absolute top-[6px] right-[6px] min-w-3.5 h-3.5 px-1 rounded-full bg-gradient-to-br from-lavender to-mauve text-[0.55rem] font-bold text-white flex items-center justify-center">
+                {wishlistCount}
+              </span>
+            </button>
+          )
         )}
 
         <button

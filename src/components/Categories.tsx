@@ -7,10 +7,10 @@ import womenCollectionImage from '../assets/images/regenerated_image_17804272489
 import menEleganceImage from '../assets/images/men_elegance_category_1781702880164.jpg';
 
 interface CategoriesProps {
-  onCategorySelect: (category: 'all' | 'women' | 'men' | 'bags') => void;
+  onCategorySelect?: (category: 'all' | 'women' | 'men' | 'bags') => void;
 }
 
-export default function Categories({ onCategorySelect }: CategoriesProps) {
+export default function Categories(_props: CategoriesProps) {
   const categories = [
     {
       id: 'women',
@@ -54,10 +54,12 @@ export default function Categories({ onCategorySelect }: CategoriesProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
         {categories.map((cat) => (
-          <div
+          <a
             key={cat.id}
-            onClick={() => onCategorySelect(cat.id as 'women' | 'men' | 'bags')}
-            className="group relative rounded-lg overflow-hidden aspect-[3/4] cursor-pointer transition-all duration-300 shadow-md hover:shadow-xl"
+            href={`#/shop?category=${cat.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group relative rounded-lg overflow-hidden aspect-[3/4] cursor-pointer transition-all duration-300 shadow-md hover:shadow-xl block no-underline"
             id={`category-card-${cat.id}`}
           >
             <img
@@ -92,7 +94,7 @@ export default function Categories({ onCategorySelect }: CategoriesProps) {
                 Browse →
               </div>
             </div>
-          </div>
+          </a>
         ))}
       </div>
     </section>
