@@ -7,12 +7,12 @@ import React, { useState } from 'react';
 import { ShieldCheck, AlertCircle, RefreshCw, Scissors, Lock, FileText, ArrowRight } from 'lucide-react';
 
 interface LegalViewProps {
-  initialTab?: 'terms' | 'privacy';
+  initialTab?: 'terms' | 'privacy' | 'returns';
   onNavigateToContact: () => void;
 }
 
 export default function LegalView({ initialTab = 'terms', onNavigateToContact }: LegalViewProps) {
-  const [activeTab, setActiveTab] = useState<'terms' | 'privacy'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'terms' | 'privacy' | 'returns'>(initialTab);
 
   return (
     <div className="pt-28 pb-20 bg-pearl min-h-screen text-plum-dark" id="legal-policy-view">
@@ -24,7 +24,7 @@ export default function LegalView({ initialTab = 'terms', onNavigateToContact }:
             Nnepa Foriwaa • Official Policies
           </span>
           <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-light text-plum-dark">
-            {activeTab === 'terms' ? 'Terms of Service' : 'Privacy Policy'}
+            {activeTab === 'terms' ? 'Terms of Service' : activeTab === 'privacy' ? 'Privacy Policy' : 'Returns & Delivery'}
           </h1>
           <div className="w-12 h-[1px] bg-gradient-to-r from-lavender to-mauve mx-auto mt-4 mb-6" />
           
@@ -49,6 +49,16 @@ export default function LegalView({ initialTab = 'terms', onNavigateToContact }:
               }`}
             >
               Privacy Policy
+            </button>
+            <button
+              onClick={() => setActiveTab('returns')}
+              className={`px-5 py-2 text-xs font-bold tracking-wider uppercase rounded-[2px] transition-all cursor-pointer border-none ${
+                activeTab === 'returns'
+                  ? 'bg-gradient-to-br from-lavender to-mauve-deep text-white shadow-xs'
+                  : 'bg-transparent text-text-muted hover:text-plum-dark'
+              }`}
+            >
+              Returns & Delivery
             </button>
           </div>
         </div>
@@ -99,53 +109,38 @@ export default function LegalView({ initialTab = 'terms', onNavigateToContact }:
                 </p>
               </div>
 
-              {/* Policy Clause 3: Alterations & Revisions at Price */}
+              {/* Policy Clause 3: Ghana Fitting Guard */}
               <div className="border-b border-zinc-100 pb-6">
                 <div className="flex items-center gap-3 mb-2.5">
                   <div className="w-8 h-8 rounded-full bg-lavender/10 text-lavender flex items-center justify-center shrink-0">
                     <Scissors className="w-4 h-4" />
                   </div>
                   <h2 className="font-serif text-xl text-plum-dark font-medium">
-                    3. Alterations and Revisions at a Price
+                    3. Fitting Alteration Policy
                   </h2>
                 </div>
-                <p className="mb-2">
-                  We take pride in delivering garments of royal elegance. However, any subsequent fitting adjustments, resizing, design modifications, or post-delivery revisions are <strong>charged separately at an agreed service fee</strong>.
+                <p>
+                  While refunds and exchanges are strictly unavailable, we stand behind the precision of our tailored fit. For bespoke orders requiring slight fitting adjustments, complimentary alteration service is provided at our Accra location within 7 days of garment receipt.
                 </p>
-                <ul className="list-disc pl-5 space-y-1 text-xs sm:text-sm text-text-light">
-                  <li>Alteration and revision charges depend on the complexity, fabric handling, and artisan hours required.</li>
-                  <li>A quote for any alteration or revision will be provided before work commences.</li>
-                  <li>Clients must submit revision requests within 5 business days of garment receipt.</li>
-                </ul>
               </div>
 
-              {/* Policy Clause 4: Custom Fitting & Client Measurements */}
-              <div className="border-b border-zinc-100 pb-6">
+              {/* Policy Clause 4: Order Confirmation & Production */}
+              <div>
                 <div className="flex items-center gap-3 mb-2.5">
                   <div className="w-8 h-8 rounded-full bg-lavender/10 text-lavender flex items-center justify-center shrink-0">
                     <FileText className="w-4 h-4" />
                   </div>
                   <h2 className="font-serif text-xl text-plum-dark font-medium">
-                    4. Custom Measurement & Fitting Accuracy
+                    4. Production Timelines & Client Acceptance
                   </h2>
                 </div>
                 <p>
-                  For custom tailoring, it is the client's responsibility to provide accurate body measurements or attend a studio fitting session. In the event of weight fluctuations or inaccurate self-measurements, necessary modifications will be treated under our standard paid alteration policy.
-                </p>
-              </div>
-
-              {/* Policy Clause 5: Garment Care */}
-              <div>
-                <h2 className="font-serif text-xl text-plum-dark font-medium mb-2">
-                  5. Luxury Fabric Care
-                </h2>
-                <p>
-                  Authentic African textiles (Kente, Ankara, Aso-oke, Brocade) require delicate handling. We strongly recommend professional dry cleaning or mild hand-washing in cold water. We are not liable for color bleeds or shrinkage caused by aggressive machine washing.
+                  Custom couture silhouettes generally require 3 to 7 working days for complete tailoring, darting, and quality review. By submitting payment, clients confirm acceptance of our production turnaround, fabric choices, and finality of purchase.
                 </p>
               </div>
 
             </div>
-          ) : (
+          ) : activeTab === 'privacy' ? (
             <div className="space-y-8 animate-fade-in text-sm text-text-light leading-relaxed">
               
               <div className="border-b border-zinc-100 pb-6">
@@ -158,44 +153,23 @@ export default function LegalView({ initialTab = 'terms', onNavigateToContact }:
                   </h2>
                 </div>
                 <p>
-                  Nnepa Foriwaa collects client information provided voluntarily when you request a fitting, place an order, or contact us:
+                  We collect only the contact information necessary to tailor your garments and deliver your orders: your full name, phone/WhatsApp number, delivery address, and tailored measurement coordinates.
                 </p>
-                <ul className="list-disc pl-5 space-y-1 mt-2 text-xs sm:text-sm">
-                  <li>Full name, telephone / WhatsApp number, and email address.</li>
-                  <li>Physical delivery address and location coordinates.</li>
-                  <li>Personal tailoring measurements and style preferences.</li>
-                </ul>
               </div>
 
               <div className="border-b border-zinc-100 pb-6">
-                <div className="flex items-center gap-3 mb-2.5">
-                  <div className="w-8 h-8 rounded-full bg-lavender/10 text-lavender flex items-center justify-center shrink-0">
-                    <ShieldCheck className="w-4 h-4" />
-                  </div>
-                  <h2 className="font-serif text-xl text-plum-dark font-medium">
-                    2. How Your Information Is Used
-                  </h2>
-                </div>
+                <h2 className="font-serif text-xl text-plum-dark font-medium mb-2">
+                  2. Use of Your Information
+                </h2>
                 <p>
-                  Your information is utilized solely to:
+                  Your details are utilized strictly for order verification, measurement logging, delivery coordination, and direct customer concierge communications via WhatsApp.
                 </p>
-                <ul className="list-disc pl-5 space-y-1 mt-2 text-xs sm:text-sm">
-                  <li>Schedule, confirm, and execute personal fitting sessions.</li>
-                  <li>Craft custom garments according to your exact silhouette.</li>
-                  <li>Process direct delivery and provide delivery updates via WhatsApp or phone.</li>
-                  <li>Provide customer support regarding your orders or alteration quotes.</li>
-                </ul>
               </div>
 
               <div className="border-b border-zinc-100 pb-6">
-                <div className="flex items-center gap-3 mb-2.5">
-                  <div className="w-8 h-8 rounded-full bg-lavender/10 text-lavender flex items-center justify-center shrink-0">
-                    <Lock className="w-4 h-4" />
-                  </div>
-                  <h2 className="font-serif text-xl text-plum-dark font-medium">
-                    3. Strict Confidentiality (No Third-Party Selling)
-                  </h2>
-                </div>
+                <h2 className="font-serif text-xl text-plum-dark font-medium mb-2">
+                  3. Non-Disclosure & Confidentiality
+                </h2>
                 <p>
                   We treat all client measurements and personal details with utmost discretion. Nnepa Foriwaa never sells, trades, or rents your personal data to advertisers or third-party marketers.
                 </p>
@@ -230,6 +204,44 @@ export default function LegalView({ initialTab = 'terms', onNavigateToContact }:
                 </ul>
               </div>
 
+            </div>
+          ) : (
+            <div className="space-y-8 animate-fade-in text-sm text-text-light leading-relaxed">
+              <div className="border-b border-zinc-100 pb-6">
+                <h2 className="font-serif text-xl text-plum-dark font-medium mb-2.5">
+                  1. Handcrafted Tailoring & Delivery Timelines
+                </h2>
+                <p>
+                  Because every garment is made to measure and hand-finished in our Accra workshop, standard production takes between <strong>3 to 7 working days</strong> from the moment your measurements are confirmed.
+                </p>
+              </div>
+
+              <div className="border-b border-zinc-100 pb-6">
+                <h2 className="font-serif text-xl text-plum-dark font-medium mb-2.5">
+                  2. Accra & Regional Ghana Dispatch
+                </h2>
+                <p>
+                  We provide complimentary hand delivery within central Accra. For regional deliveries across Greater Accra, Kumasi, Takoradi, and other destinations, packages are routed via trusted courier services with direct tracking.
+                </p>
+              </div>
+
+              <div className="border-b border-zinc-100 pb-6">
+                <h2 className="font-serif text-xl text-plum-dark font-medium mb-2.5">
+                  3. Returns & Exchanges Policy
+                </h2>
+                <p>
+                  To uphold our standards of bespoke craftsmanship and fabric integrity, all orders are custom-cut and final. We do not accept returns or offer refunds. Complimentary alterations are available at our studio to ensure your piece fits comfortably.
+                </p>
+              </div>
+
+              <div>
+                <h2 className="font-serif text-xl text-plum-dark font-medium mb-2.5">
+                  4. International Shipping
+                </h2>
+                <p>
+                  Worldwide shipments are dispatched using DHL Express with door-to-door tracking. International clients receive tracking notifications directly via WhatsApp and email upon dispatch.
+                </p>
+              </div>
             </div>
           )}
 

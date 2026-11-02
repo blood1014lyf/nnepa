@@ -28,6 +28,7 @@ const AdminLoginView = React.lazy(() => import('./components/AdminLoginView.tsx'
 const AdminDashboardView = React.lazy(() => import('./components/AdminDashboardView.tsx'));
 const SizeChartView = React.lazy(() => import('./components/SizeChartView.tsx'));
 const CheckoutView = React.lazy(() => import('./components/CheckoutView.tsx'));
+const OrderStatusView = React.lazy(() => import('./components/OrderStatusView.tsx'));
 
 import { PRODUCTS as DEFAULT_PRODUCTS } from './data.ts';
 import { Product, CartItem, Order } from './types.ts';
@@ -81,7 +82,24 @@ export default function App() {
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
     try {
       const cached = localStorage.getItem('nnepa_foriwaa_cart');
-      if (cached) return JSON.parse(cached);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed)) {
+          const defaultsById = new Map(DEFAULT_PRODUCTS.map((d) => [d.id, d]));
+          return parsed
+            .map((item: any) => {
+              const pId = item.productId || (item.product && item.product.id);
+              const foundProduct = defaultsById.get(pId) || item.product;
+              if (!foundProduct) return null;
+              return {
+                product: foundProduct,
+                quantity: Math.max(1, Number(item.quantity) || 1),
+                size: item.size
+              };
+            })
+            .filter(Boolean) as CartItem[];
+        }
+      }
     } catch {}
     return [];
   });
@@ -103,10 +121,15 @@ export default function App() {
   });
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // Sync cart and wishlist to localStorage and across browser tabs
+  // Sync cart (only productId, size, quantity — never client prices) and wishlist to localStorage
   useEffect(() => {
     try {
-      localStorage.setItem('nnepa_foriwaa_cart', JSON.stringify(cartItems));
+      const storageSafeCart = cartItems.map((item) => ({
+        productId: item.product.id,
+        size: item.size,
+        quantity: item.quantity
+      }));
+      localStorage.setItem('nnepa_foriwaa_cart', JSON.stringify(storageSafeCart));
     } catch {}
   }, [cartItems]);
 
@@ -120,7 +143,23 @@ export default function App() {
     const onStorage = (e: StorageEvent) => {
       try {
         if (e.key === 'nnepa_foriwaa_cart' && e.newValue) {
-          setCartItems(JSON.parse(e.newValue));
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed)) {
+            const defaultsById = new Map(DEFAULT_PRODUCTS.map((d) => [d.id, d]));
+            const restored = parsed
+              .map((item: any) => {
+                const pId = item.productId || (item.product && item.product.id);
+                const foundProduct = defaultsById.get(pId) || item.product;
+                if (!foundProduct) return null;
+                return {
+                  product: foundProduct,
+                  quantity: Math.max(1, Number(item.quantity) || 1),
+                  size: item.size
+                };
+              })
+              .filter(Boolean) as CartItem[];
+            setCartItems(restored);
+          }
         } else if (e.key === 'nnepa_foriwaa_wishlist' && e.newValue) {
           setWishlist(JSON.parse(e.newValue));
         }
@@ -153,6 +192,7 @@ export default function App() {
     }
   });
 
+  const [activeOrderPublicId, setActiveOrderPublicId] = useState<string>('');
   const topOutfit = products.length > 0 ? products[0] : DEFAULT_TOP_OUTFIT;
 
   // Pull products dynamically on startup and verify admin session
@@ -215,6 +255,23 @@ export default function App() {
         }
         setShowWishlistOnly(params.get('saved') === '1');
         setPage('shop');
+        return;
+      }
+
+      if (hashPath.startsWith('order/')) {
+        const ordId = decodeURIComponent(hashPath.replace('order/', '')).trim();
+        setActiveOrderPublicId(ordId);
+        setPage('order-status');
+        return;
+      }
+
+      if (hashPath === 'admin' || hashPath === 'admin-dashboard') {
+        const savedToken = localStorage.getItem('nnepa_foriwaa_token') || adminToken;
+        if (!savedToken) {
+          setPage('admin-login');
+        } else {
+          setPage('admin-dashboard');
+        }
         return;
       }
 
@@ -629,6 +686,17 @@ export default function App() {
             }}
             showToast={showToast}
             onRefreshProducts={fetchActiveProducts}
+          />
+        )}
+
+        {/* ═══ PUBLIC CUSTOMER ORDER STATUS VIEW ═══ */}
+        {page === 'order-status' && (
+          <OrderStatusView
+            publicId={activeOrderPublicId}
+            onBackToShop={() => {
+              setPageWithHash('shop');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
           />
         )}
       </Suspense>

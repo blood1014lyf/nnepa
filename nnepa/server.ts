@@ -13,6 +13,16 @@ import { createServer as createViteServer } from 'vite';
 // Default mock database structure
 import { PRODUCTS as INITIAL_PRODUCTS } from './src/data.ts';
 import { Product } from './src/types.ts';
+import { lookupProductPrice } from './server/priceList.ts';
+import {
+  createOrder,
+  getOrderByPublicId,
+  listAllOrders,
+  updateOrderStatus,
+  StoredOrder,
+  OrderItem,
+  OrderStatus
+} from './server/ordersDb.ts';
 
 const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
@@ -485,6 +495,250 @@ app.get('/api/auth/verify', (req, res) => {
   }
   const token = authHeader.slice(7).trim();
   res.json({ authenticated: isValidSession(token) });
+});
+
+// ────────────────────────────────────────────────────────
+// ORDERS & CHECKOUT ENDPOINTS
+// ────────────────────────────────────────────────────────
+
+// In-memory rate limiter: max 10 orders per 10 minutes per IP
+const orderRateLimits = new Map<string, { count: number; resetAt: number }>();
+function checkOrderRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = orderRateLimits.get(ip);
+  if (!entry || now > entry.resetAt) {
+    orderRateLimits.set(ip, { count: 1, resetAt: now + 10 * 60 * 1000 });
+    return true;
+  }
+  if (entry.count >= 10) {
+    return false;
+  }
+  entry.count += 1;
+  return true;
+}
+
+// In-memory idempotency cache: deduplicates repeat submissions within 60s
+const orderIdempotencyMap = new Map<string, { order: StoredOrder; expiresAt: number }>();
+function getIdempotentOrder(key: string): StoredOrder | null {
+  const entry = orderIdempotencyMap.get(key);
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) {
+    orderIdempotencyMap.delete(key);
+    return null;
+  }
+  return entry.order;
+}
+function setIdempotentOrder(key: string, order: StoredOrder): void {
+  orderIdempotencyMap.set(key, { order, expiresAt: Date.now() + 60 * 1000 });
+}
+
+function buildWhatsAppOrderUrl(order: StoredOrder): string {
+  const orderLines = [
+    `*NNEPA FORIWAA LUXURY ORDER #${order.orderNumber}*`,
+    `*Order Ref:* ${order.publicId}`,
+    ``,
+    `*Customer Details:*`,
+    `• Name: ${order.customer.name}`,
+    `• Phone: ${order.customer.phone}`,
+    `• Delivery Address: ${order.customer.address}`,
+    order.customer.notes ? `• Notes: ${order.customer.notes}` : '',
+    ``,
+    `*Items Ordered:*`,
+    ...order.items.map(
+      (it) => `• ${it.name} (Size: ${it.size || 'M'}) x${it.quantity} — GH₵ ${it.lineTotal.toLocaleString()}`
+    ),
+    ``,
+    `*Total:* GH₵ ${order.total.toLocaleString()}`,
+    ``,
+    `Please confirm tailoring measurements and dispatch timeline. Thank you!`
+  ].filter(Boolean);
+
+  const whatsappPhone = process.env.WHATSAPP_NUMBER || '233538795669';
+  return `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(orderLines.join('\n'))}`;
+}
+
+// 7. Create guest order (server recalculates totals, validates products, prevents duplicates)
+app.post('/api/orders', async (req, res) => {
+  const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+  if (!checkOrderRateLimit(clientIp)) {
+    res.status(429).json({ error: 'Too many order attempts. Please wait a few minutes before trying again.' });
+    return;
+  }
+
+  const { customer, items, idempotencyKey } = req.body || {};
+
+  // Validate customer fields
+  if (!customer || typeof customer !== 'object') {
+    res.status(400).json({ error: 'Customer information is required.' });
+    return;
+  }
+  const name = String(customer.name || '').trim();
+  const phone = String(customer.phone || '').trim();
+  const address = String(customer.address || '').trim();
+  const notes = customer.notes ? String(customer.notes).trim() : '';
+
+  if (!name || name.length < 2) {
+    res.status(400).json({ error: 'Please enter a valid full name.' });
+    return;
+  }
+  if (!phone || phone.length < 7) {
+    res.status(400).json({ error: 'Please enter a valid phone number.' });
+    return;
+  }
+  if (!address || address.length < 5) {
+    res.status(400).json({ error: 'Please enter a complete delivery address.' });
+    return;
+  }
+
+  // Validate items
+  if (!Array.isArray(items) || items.length === 0) {
+    res.status(400).json({ error: 'Cart is empty. Please add garments before checking out.' });
+    return;
+  }
+
+  // Check idempotency (prevent accidental double submission)
+  const dedupeKey =
+    idempotencyKey ||
+    crypto
+      .createHash('sha256')
+      .update(phone + JSON.stringify(items.map((i: any) => ({ id: i.productId, s: i.size, q: i.quantity }))))
+      .digest('hex');
+
+  const existingOrder = getIdempotentOrder(dedupeKey);
+  if (existingOrder) {
+    const whatsappUrl = buildWhatsAppOrderUrl(existingOrder);
+    res.json({
+      success: true,
+      orderNumber: existingOrder.orderNumber,
+      publicId: existingOrder.publicId,
+      total: existingOrder.total,
+      whatsappUrl,
+      order: existingOrder
+    });
+    return;
+  }
+
+  // Server-side authoritative price lookup & recalculation
+  let subtotal = 0;
+  const verifiedItems: OrderItem[] = [];
+
+  for (const it of items) {
+    if (!it || !it.productId) {
+      res.status(400).json({ error: 'Invalid product entry in cart.' });
+      return;
+    }
+    const priceInfo = lookupProductPrice(String(it.productId));
+    if (!priceInfo) {
+      res.status(400).json({ error: `Garment (${it.productId}) is unrecognized or discontinued.` });
+      return;
+    }
+
+    const rawQty = Number(it.quantity);
+    const quantity = Math.max(1, Math.min(50, Math.floor(isNaN(rawQty) ? 1 : rawQty)));
+    const unitPrice = priceInfo.price;
+    const lineTotal = unitPrice * quantity;
+    subtotal += lineTotal;
+
+    verifiedItems.push({
+      productId: String(it.productId),
+      name: priceInfo.name,
+      size: typeof it.size === 'string' && it.size ? it.size.trim() : undefined,
+      quantity,
+      unitPrice,
+      lineTotal
+    });
+  }
+
+  const deliveryFee = 0; // Complimentary Accra delivery
+  const total = subtotal + deliveryFee;
+
+  try {
+    const savedOrder = await createOrder({
+      customer: { name, phone, address, notes },
+      items: verifiedItems,
+      subtotal,
+      deliveryFee,
+      total
+    });
+
+    setIdempotentOrder(dedupeKey, savedOrder);
+    const whatsappUrl = buildWhatsAppOrderUrl(savedOrder);
+
+    res.status(201).json({
+      success: true,
+      orderNumber: savedOrder.orderNumber,
+      publicId: savedOrder.publicId,
+      total: savedOrder.total,
+      whatsappUrl,
+      order: savedOrder
+    });
+  } catch (err: any) {
+    console.error('Failed creating order:', err);
+    res.status(500).json({ error: 'Failed to record order. Please try again or message WhatsApp concierge.' });
+  }
+});
+
+// 8. Public order status lookup (guest only sees their specific order)
+app.get('/api/orders/:publicId', async (req, res) => {
+  const { publicId } = req.params;
+  if (!publicId || typeof publicId !== 'string') {
+    res.status(400).json({ error: 'Public ID is required.' });
+    return;
+  }
+  const order = await getOrderByPublicId(publicId);
+  if (!order) {
+    res.status(404).json({ error: 'Order not found.' });
+    return;
+  }
+
+  // Redact full customer phone and address for privacy on public link
+  res.json({
+    success: true,
+    order: {
+      orderNumber: order.orderNumber,
+      publicId: order.publicId,
+      status: order.status,
+      createdAt: order.createdAt,
+      items: order.items,
+      subtotal: order.subtotal,
+      deliveryFee: order.deliveryFee,
+      total: order.total,
+      customerName: order.customer.name
+    }
+  });
+});
+
+// 9. Admin view all orders (requires admin session)
+app.get('/api/admin/orders', requireAdmin, async (req, res) => {
+  try {
+    const orders = await listAllOrders();
+    res.json({ success: true, orders });
+  } catch (err: any) {
+    res.status(500).json({ error: `Failed to retrieve orders: ${err.message}` });
+  }
+});
+
+// 10. Admin change order status (new, confirmed, shipped, cancelled)
+app.patch('/api/admin/orders/:id/status', requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body || {};
+
+  const allowedStatuses: OrderStatus[] = ['new', 'confirmed', 'shipped', 'cancelled'];
+  if (!status || !allowedStatuses.includes(status)) {
+    res.status(400).json({ error: `Status must be one of: ${allowedStatuses.join(', ')}` });
+    return;
+  }
+
+  try {
+    const updated = await updateOrderStatus(id, status);
+    if (!updated) {
+      res.status(404).json({ error: 'Order not found.' });
+      return;
+    }
+    res.json({ success: true, order: updated });
+  } catch (err: any) {
+    res.status(500).json({ error: `Failed to update status: ${err.message}` });
+  }
 });
 
 // Admin Logout

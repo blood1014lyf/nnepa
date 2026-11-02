@@ -85,7 +85,7 @@ export default function CheckoutView({
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmitOrder = (e: React.FormEvent) => {
+  const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.fullName.trim() || !formData.phone.trim() || !formData.address.trim()) {
@@ -93,49 +93,92 @@ export default function CheckoutView({
       return;
     }
 
+    if (cartItems.length === 0) {
+      showToast('Your bag is empty.');
+      return;
+    }
+
     setIsSubmitting(true);
 
-    const orderId = `NF-${Math.floor(100000 + Math.random() * 900000)}`;
-    const newOrder: Order = {
-      id: orderId,
-      createdAt: new Date().toISOString(),
-      items: [...cartItems],
-      subtotal,
-      deliveryFee,
-      total,
-      customer: { ...formData },
-      paymentMethod,
-      paymentStatus: paymentMethod === 'cod' ? 'pending' : 'confirmed',
-      deliveryStatus: 'order_received',
-    };
+    try {
+      const fullAddress = [
+        formData.address.trim(),
+        formData.city?.trim(),
+        formData.region?.trim()
+      ].filter(Boolean).join(', ');
 
-    setTimeout(() => {
-      setIsSubmitting(false);
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customer: {
+            name: formData.fullName.trim(),
+            phone: formData.phone.trim(),
+            address: fullAddress,
+            notes: formData.deliveryNotes?.trim() || ''
+          },
+          items: cartItems.map((it) => ({
+            productId: it.product.id,
+            size: it.size,
+            quantity: it.quantity
+          }))
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        showToast(data.error || 'Failed to record order. Please try again.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      const serverOrder = data.order;
+      const newOrder: Order = {
+        id: `#${data.orderNumber}`,
+        createdAt: serverOrder.createdAt,
+        items: [...cartItems],
+        subtotal: serverOrder.subtotal,
+        deliveryFee: serverOrder.deliveryFee,
+        total: serverOrder.total,
+        customer: { ...formData },
+        paymentMethod: 'whatsapp',
+        paymentStatus: 'pending',
+        deliveryStatus: 'order_received'
+      };
+
       setCompletedOrder(newOrder);
       onOrderCompleted(newOrder);
-      showToast(`✨ Order ${orderId} received! We have initiated bespoke tailoring.`);
-    }, 900);
+
+      // Open WhatsApp automatically with prefilled accurate order summary
+      if (data.whatsappUrl) {
+        window.open(data.whatsappUrl, '_blank');
+      }
+
+      showToast(`✨ Order #${data.orderNumber} received!`);
+    } catch (err: any) {
+      showToast('Connection error. Please try again or reach out on WhatsApp.');
+      setIsSubmitting(false);
+    }
   };
 
-  // Pre-filled WhatsApp notification message
+  // Pre-filled accurate WhatsApp notification message
   const createWhatsAppUrl = (order: Order) => {
     const lines = [
-      `👑 *NNEPA FORIWAA LUXURY ORDER RECEIPT*`,
-      `*Order ID:* ${order.id}`,
-      `*Client:* ${order.customer.fullName} (${order.customer.phone})`,
-      `*Delivery Address:* ${order.customer.address}, ${order.customer.city}, ${order.customer.region}`,
-      order.customer.deliveryNotes ? `*Notes:* ${order.customer.deliveryNotes}` : '',
-      `*Payment Method:* ${order.paymentMethod.toUpperCase()}`,
+      `*NNEPA FORIWAA LUXURY ORDER ${order.id}*`,
       ``,
-      `*Garments Ordered:*`,
+      `*Customer Details:*`,
+      `• Name: ${order.customer.fullName}`,
+      `• Phone: ${order.customer.phone}`,
+      `• Delivery Address: ${order.customer.address}${order.customer.city ? `, ${order.customer.city}` : ''}`,
+      order.customer.deliveryNotes ? `• Notes: ${order.customer.deliveryNotes}` : '',
+      ``,
+      `*Items Ordered:*`,
       ...order.items.map(
         (it) => `• ${it.product.name} (Size: ${it.size || 'M'}) x${it.quantity} — GH₵ ${(it.product.price * it.quantity).toLocaleString()}`
       ),
       ``,
-      `*Subtotal:* GH₵ ${order.subtotal.toLocaleString()}`,
-      order.deliveryFee === 0 ? `*Delivery:* Complimentary (Accra)` : `*Delivery:* GH₵ ${order.deliveryFee}`,
-      discountAmount > 0 ? `*Discount:* -GH₵ ${discountAmount.toLocaleString()}` : '',
-      `*Total Due:* GH₵ ${order.total.toLocaleString()}`,
+      `*Total:* GH₵ ${order.total.toLocaleString()}`,
       ``,
       `Please confirm tailoring measurements and dispatch timeline. Thank you!`
     ].filter(Boolean);
