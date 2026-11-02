@@ -14,14 +14,22 @@ export default function Hero() {
     const video = videoRef.current;
     if (!video) return;
 
+    video.defaultMuted = true;
     video.muted = true;
+    video.playsInline = true;
     const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    const playVideo = () => {
+      video.play().catch(() => {});
+    };
+
+    playVideo();
 
     const syncPlayback = (prefersReducedMotion: boolean) => {
       if (prefersReducedMotion) {
         video.pause();
       } else {
-        video.play().catch(() => {});
+        playVideo();
       }
     };
 

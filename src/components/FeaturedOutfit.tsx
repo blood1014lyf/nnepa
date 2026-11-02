@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { Product } from '../types.ts';
+import featuredVideo from '../assets/videos/featured-outfit.mp4';
 
 interface FeaturedOutfitProps {
   outfit: Product;
@@ -13,9 +14,56 @@ interface FeaturedOutfitProps {
 }
 
 export default function FeaturedOutfit({ outfit, onViewDetails }: FeaturedOutfitProps) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
   const formatPrice = (price: number) => {
     return `GH₵ ${price.toLocaleString()}`;
   };
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.defaultMuted = true;
+    video.muted = true;
+    video.playsInline = true;
+
+    const playVideo = () => {
+      video.play().catch(() => {});
+    };
+
+    playVideo();
+
+    const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const syncPlayback = (prefersReducedMotion: boolean) => {
+      if (prefersReducedMotion) {
+        video.pause();
+      } else {
+        playVideo();
+      }
+    };
+
+    syncPlayback(reducedMotionQuery.matches);
+    const onChange = (event: MediaQueryListEvent) => syncPlayback(event.matches);
+    reducedMotionQuery.addEventListener('change', onChange);
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !reducedMotionQuery.matches) {
+            playVideo();
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(video);
+
+    return () => {
+      reducedMotionQuery.removeEventListener('change', onChange);
+      observer.disconnect();
+    };
+  }, []);
 
   return (
     <section
@@ -23,11 +71,17 @@ export default function FeaturedOutfit({ outfit, onViewDetails }: FeaturedOutfit
       onClick={() => onViewDetails(outfit)}
       className="relative w-full min-h-[580px] lg:min-h-[720px] h-[75vh] overflow-hidden bg-plum-dark select-none group cursor-pointer"
     >
-      <img
-        src={outfit.imageUrl}
-        alt={outfit.name}
+      <video
+        ref={videoRef}
+        src={featuredVideo}
+        width={576}
+        height={1024}
+        autoPlay
+        loop
+        muted
+        playsInline
+        preload="auto"
         className="w-full h-full object-cover object-center transition-transform duration-1000 ease-out group-hover:scale-105"
-        loading="lazy"
       />
 
       {/* Subtle cinematic gradient overlay for clean contrast */}
