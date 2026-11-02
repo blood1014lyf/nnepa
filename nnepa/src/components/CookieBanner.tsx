@@ -104,7 +104,7 @@ export default function CookieBanner({
       id="cookie-consent-banner"
       aria-label="Cookie and privacy preferences"
       role="region"
-      className="fixed bottom-3 left-3 right-3 sm:bottom-6 sm:right-6 sm:left-auto sm:max-w-md z-[850] animate-fade-in"
+      className="fixed bottom-3 left-3 right-3 sm:bottom-6 sm:right-6 sm:left-auto sm:max-w-md max-h-[85vh] overflow-y-auto z-[850] animate-fade-in"
     >
       <div className="bg-white/95 backdrop-blur-md border border-lilac/30 rounded-lg shadow-[0_12px_40px_rgba(58,34,72,0.18)] p-5 text-plum-dark text-xs overflow-hidden">
         

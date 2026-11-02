@@ -52,7 +52,7 @@ export default function CartDrawer({
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 bottom-0 w-full sm:w-[420px] z-[901] bg-pearl-2/97 backdrop-blur-[24px] border-l border-solid border-lilac/25 flex flex-col shadow-2xl"
+            className="fixed top-0 right-0 bottom-0 w-full sm:w-[420px] max-w-full z-[901] bg-pearl-2/97 backdrop-blur-[24px] border-l border-solid border-lilac/25 flex flex-col shadow-2xl overflow-hidden"
             id="cart-drawer-container"
           >
             {/* Header section */}
