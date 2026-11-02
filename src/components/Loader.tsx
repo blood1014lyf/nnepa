@@ -9,21 +9,34 @@ import { AnimatePresence, motion } from 'motion/react';
 export default function Loader() {
   const [visible, setVisible] = useState(() => {
     try {
-      // Only show full splash on first arrival in the session
-      return !sessionStorage.getItem('nnepa_loader_shown');
-    } catch {
+      // Never show preloader when opening or navigating to the shop page
+      if (typeof window !== 'undefined' && window.location.hash.toLowerCase().includes('shop')) {
+        return false;
+      }
+      // Never show again if already shown once in this browser (persisted in localStorage & sessionStorage)
+      if (
+        localStorage.getItem('nnepa_loader_shown') ||
+        sessionStorage.getItem('nnepa_loader_shown')
+      ) {
+        return false;
+      }
       return true;
+    } catch {
+      return false;
     }
   });
 
   useEffect(() => {
+    // Record that the loader was shown so it never runs again on subsequent page/tab opens
+    try {
+      localStorage.setItem('nnepa_loader_shown', 'true');
+      sessionStorage.setItem('nnepa_loader_shown', 'true');
+    } catch {}
+
     if (!visible) return;
     const timer = setTimeout(() => {
       setVisible(false);
-      try {
-        sessionStorage.setItem('nnepa_loader_shown', 'true');
-      } catch {}
-    }, 450); // Snappy luxury reveal (450ms vs 900ms)
+    }, 450);
     return () => clearTimeout(timer);
   }, [visible]);
 
@@ -34,7 +47,7 @@ export default function Loader() {
           id="loader"
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.5, ease: 'easeInOut' }}
+          transition={{ duration: 0.4, ease: 'easeInOut' }}
           className="fixed inset-0 z-[9999] bg-plum-dark flex flex-col items-center justify-center gap-4 sm:gap-6 px-4 text-center overflow-hidden select-none"
         >
           {/* Animated loading wave bars */}

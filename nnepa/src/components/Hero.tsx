@@ -58,6 +58,12 @@ export default function Hero() {
           href="#/shop"
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => {
+            try {
+              localStorage.setItem('nnepa_loader_shown', 'true');
+              sessionStorage.setItem('nnepa_loader_shown', 'true');
+            } catch {}
+          }}
           className="group inline-flex items-center gap-3 px-8 py-3.5 sm:px-10 sm:py-4 bg-white/95 hover:bg-white text-plum-dark text-[0.68rem] sm:text-xs font-semibold tracking-[0.25em] uppercase rounded-full shadow-[0_10px_35px_rgba(0,0,0,0.3)] hover:shadow-[0_14px_45px_rgba(0,0,0,0.4)] backdrop-blur-md transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] no-underline"
         >
           <span>Shop Now</span>

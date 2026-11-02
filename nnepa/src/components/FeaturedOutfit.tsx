@@ -18,73 +18,51 @@ export default function FeaturedOutfit({ outfit, onViewDetails }: FeaturedOutfit
   };
 
   return (
-    <section id="featured-outfit" className="py-16 md:py-24 px-6 md:px-12 bg-gradient-to-b from-pearl-2 to-pearl border-t border-lilac/10">
-      <div className="max-w-5xl mx-auto">
-        
-        {/* Section Header */}
-        <div className="text-center mb-8 md:mb-10">
-          <div className="text-[0.65rem] sm:text-xs font-bold tracking-[0.4em] uppercase text-mauve-deep flex items-center justify-center gap-3.5 animate-fade-in">
-            <span className="w-6 h-[1px] bg-gradient-to-r from-lavender to-mauve" />
-            Featured Outfit
-            <span className="w-6 h-[1px] bg-gradient-to-l from-lavender to-mauve" />
-          </div>
-        </div>
+    <section
+      id="featured-outfit"
+      onClick={() => onViewDetails(outfit)}
+      className="relative w-full min-h-[580px] lg:min-h-[720px] h-[75vh] overflow-hidden bg-plum-dark select-none group cursor-pointer"
+    >
+      <img
+        src={outfit.imageUrl}
+        alt={outfit.name}
+        className="w-full h-full object-cover object-center transition-transform duration-1000 ease-out group-hover:scale-105"
+        loading="lazy"
+      />
 
-        {/* Minimalist High-Fashion Showcase Card */}
-        <div 
-          onClick={() => onViewDetails(outfit)}
-          className="group cursor-pointer bg-white rounded-md overflow-hidden border border-lilac/20 shadow-[0_4px_30px_rgba(92,61,110,0.06)] hover:shadow-[0_16px_50px_rgba(92,61,110,0.12)] transition-all duration-500 grid grid-cols-1 md:grid-cols-12"
-        >
-          {/* Visual Imagery (7 cols on desktop) */}
-          <div className="md:col-span-7 relative overflow-hidden bg-plum-dark/5 min-h-[300px] xs:min-h-[360px] sm:min-h-[480px]">
-            <img
-              src={outfit.imageUrl}
-              alt={outfit.name}
-              className="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
-            />
-          </div>
+      {/* Subtle cinematic gradient overlay for clean contrast */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
 
-          {/* Clean Editorial Details & Single View Details Action (5 cols on desktop) */}
-          <div className="md:col-span-5 p-6 sm:p-10 md:p-12 flex flex-col justify-between bg-white">
-            <div>
-              <span className="text-[0.65rem] font-bold tracking-[0.25em] uppercase text-mauve-deep block mb-3">
-                {outfit.category === 'men' ? "Men's Collection" : "Women's Collection"}
-                {outfit.subcategory && ` • ${outfit.subcategory}`}
-              </span>
-
-              <h3 className="font-serif text-2xl sm:text-3xl text-plum-dark font-light leading-snug mb-3 group-hover:text-mauve transition-colors">
-                {outfit.name}
-              </h3>
-
-              <div className="font-serif text-xl sm:text-2xl text-mauve-deep mb-5">
-                {formatPrice(outfit.price)}
-              </div>
-
-              {outfit.description && (
-                <p className="text-xs sm:text-sm text-text-light font-light leading-relaxed mb-6">
-                  {outfit.description}
-                </p>
-              )}
-            </div>
-
-            {/* View Details Action Button */}
-            <div className="pt-4 border-t border-lilac/10">
-              <button
-                type="button"
-                id="btn-featured-view-details"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onViewDetails(outfit);
-                }}
-                className="w-full py-4 bg-plum-dark hover:bg-plum text-white text-xs font-bold tracking-[0.22em] uppercase rounded-[2px] transition-all cursor-pointer flex items-center justify-center gap-2 border-none shadow-sm"
-              >
-                <span>View Details</span>
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </button>
+      {/* Full-width editorial details (without description) */}
+      <div className="absolute inset-x-0 bottom-0 p-8 sm:p-12 md:p-16 z-10 pointer-events-none">
+        <div className="w-full max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-end justify-between gap-6 pointer-events-auto">
+          <div>
+            <span className="text-[0.62rem] font-bold tracking-[0.3em] uppercase text-white/75 block mb-2">
+              Featured Outfit {outfit.subcategory ? `• ${outfit.subcategory}` : ''}
+            </span>
+            <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-light text-white leading-tight">
+              {outfit.name}
+            </h2>
+            <div className="font-serif text-xl sm:text-2xl text-white/90 mt-2">
+              {formatPrice(outfit.price)}
             </div>
           </div>
-        </div>
 
+          <div className="shrink-0">
+            <button
+              type="button"
+              id="btn-featured-view-details"
+              onClick={(e) => {
+                e.stopPropagation();
+                onViewDetails(outfit);
+              }}
+              className="px-8 py-3.5 sm:px-9 sm:py-4 bg-white/95 hover:bg-white text-plum-dark text-[0.68rem] sm:text-xs font-semibold tracking-[0.25em] uppercase rounded-full shadow-[0_10px_35px_rgba(0,0,0,0.3)] hover:shadow-[0_14px_45px_rgba(0,0,0,0.4)] backdrop-blur-md transition-all duration-300 flex items-center gap-2.5 cursor-pointer border-none hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <span>View Details</span>
+              <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+            </button>
+          </div>
+        </div>
       </div>
     </section>
   );
