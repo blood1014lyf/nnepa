@@ -646,4 +646,90 @@ describe('NNEPA Shopping Concierge — Core Knowledge & Intelligence Test Suite'
     assert.ok(res.options.some((o) => o.action === 'open_size_chart'), 'Offers size chart path');
     assert.ok(res.options.some((o) => o.action === 'contact_whatsapp'), 'Offers WhatsApp stylist consultation');
   });
+
+  // 37. Gender Declaration: "im a woman"
+  test('Scenario 37: Customer declares "im a woman" -> routes to womenswear without misinterpreting as a name', () => {
+    let ctx = createInitialConciergeContext(null);
+
+    const res = processConciergeMessage('im a woman', ctx, CATALOGUE);
+    assert.equal(res.intent, 'explore_women');
+    assert.equal(res.updatedContext.activeCategory, 'women');
+    assert.equal(res.updatedContext.profile.preferredName, undefined, 'Does not treat "a woman" as customer name');
+    assert.ok(res.text.includes('Womenswear'), 'Mentions Womenswear collection');
+    assert.ok(res.products && res.products.length > 0, 'Returns womenswear products');
+    assert.ok(res.options.some((o) => o.action === 'filter_women'), 'Provides filter womenswear button');
+  });
+
+  // 38. Gender Declaration: "I am a man"
+  test('Scenario 38: Customer declares "I am a man" -> routes to menswear without misinterpreting as a name', () => {
+    let ctx = createInitialConciergeContext(null);
+
+    const res = processConciergeMessage('I am a man', ctx, CATALOGUE);
+    assert.equal(res.intent, 'explore_men');
+    assert.equal(res.updatedContext.activeCategory, 'men');
+    assert.equal(res.updatedContext.profile.preferredName, undefined, 'Does not treat "a man" as customer name');
+    assert.ok(res.text.includes('Menswear'), 'Mentions Menswear collection');
+    assert.ok(res.products && res.products.length > 0, 'Returns menswear products');
+    assert.ok(res.options.some((o) => o.action === 'filter_men'), 'Provides filter menswear button');
+  });
+
+  // 39. Occasion Styling: Wedding Guest / Gala
+  test('Scenario 39: Customer asks for wedding guest and gala recommendations', () => {
+    let ctx = createInitialConciergeContext(null);
+
+    const res = processConciergeMessage('What should I wear to a wedding as a guest?', ctx, CATALOGUE);
+    assert.equal(res.intent, 'occasion_styling');
+    assert.ok(res.text.includes('weddings') || res.text.includes('ceremonies'), 'Mentions wedding ceremony styling');
+    assert.ok(res.products && res.products.length > 0, 'Recommends appropriate ceremonial products');
+
+    const galaRes = processConciergeMessage('I need an outfit for a black tie gala', ctx, CATALOGUE);
+    assert.equal(galaRes.intent, 'occasion_styling');
+    assert.ok(galaRes.text.includes('galas') || galaRes.text.includes('evening'), 'Mentions gala evening styling');
+  });
+
+  // 40. Direct Size Declaration: "I'm a size 12"
+  test('Scenario 40: Customer declares size directly (e.g. "I\'m a size 12") -> maps to Size M', () => {
+    let ctx = createInitialConciergeContext(null);
+
+    const res = processConciergeMessage("I'm a size 12", ctx, CATALOGUE);
+    assert.equal(res.intent, 'customer_size_declaration');
+    assert.equal(res.updatedContext.profile.usualSize, 'M');
+    assert.ok(res.text.includes('Size M'), 'Mentions Size M');
+    assert.ok(res.text.includes('36') && res.text.includes('38'), 'Quotes Size M measurements');
+  });
+
+  // 41. General Fit Run: "How do your sizes run?"
+  test('Scenario 41: Customer asks "How do your sizes run?" -> answers true-to-size and alterations policy', () => {
+    let ctx = createInitialConciergeContext(null);
+
+    const res = processConciergeMessage('How do your sizes run? Are they true to size?', ctx, CATALOGUE);
+    assert.equal(res.intent, 'general_fit_inquiry');
+    assert.ok(res.text.includes('True to Size') || res.text.includes('true to'), 'Explains true-to-size standards');
+    assert.ok(res.text.includes('complimentary fitting alterations'), 'Mentions 7-day complimentary alterations');
+    assert.ok(res.options.some((o) => o.action === 'open_size_chart'), 'Provides link to size chart');
+  });
+
+  // 42. Bestsellers & New Arrivals
+  test('Scenario 42: Customer asks about bestsellers and new arrivals', () => {
+    let ctx = createInitialConciergeContext(null);
+
+    const bestRes = processConciergeMessage('What are your bestsellers?', ctx, CATALOGUE);
+    assert.equal(bestRes.intent, 'bestsellers_inquiry');
+    assert.ok(bestRes.text.includes('Bestsellers'), 'Mentions signature bestsellers');
+    assert.ok(bestRes.products && bestRes.products.length > 0, 'Returns bestselling products');
+
+    const newRes = processConciergeMessage("What's new in your collection?", ctx, CATALOGUE);
+    assert.equal(newRes.intent, 'new_arrivals_inquiry');
+    assert.ok(newRes.text.includes('Heritage Collection') || newRes.text.includes('release'), 'Mentions latest collection');
+  });
+
+  // 43. Discounts Policy
+  test('Scenario 43: Customer asks for discounts or promo codes -> explains artisan boutique policy', () => {
+    let ctx = createInitialConciergeContext(null);
+
+    const res = processConciergeMessage('Do you have any discounts or promo codes?', ctx, CATALOGUE);
+    assert.equal(res.intent, 'discounts_inquiry');
+    assert.ok(res.text.includes('limited edition') || res.text.includes('artisanal'), 'Explains artisanal boutique policy');
+    assert.ok(res.text.includes('GH₵ 1,000'), 'Mentions complimentary delivery threshold');
+  });
 });

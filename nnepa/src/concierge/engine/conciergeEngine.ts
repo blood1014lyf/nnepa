@@ -132,8 +132,8 @@ function normalizeQuery(text: string): string {
  */
 function matchesAny(normalized: string, phrases: string[]): boolean {
   for (const phrase of phrases) {
-    const pNorm = phrase.toLowerCase();
-    if (normalized.includes(pNorm)) {
+    const pNorm = normalizeQuery(phrase);
+    if (pNorm && normalized.includes(pNorm)) {
       return true;
     }
   }
@@ -147,13 +147,17 @@ const RESERVED_NON_NAME_WORDS = new Set([
   'hi', 'hello', 'hey', 'greetings', 'good morning', 'good afternoon', 'good evening',
   'yes', 'yeah', 'yep', 'sure', 'ok', 'okay', 'fine', 'alright',
   'dress', 'gown', 'boubou', 'kaftan', 'agbada', 'smock', 'suit', 'peplum', 'bag',
-  'tote', 'clutch', 'size', 'sizing', 'order', 'cart', 'buy', 'price', 'cost',
+  'tote', 'clutch', 'size', 'sizing', 'sizes', 'order', 'cart', 'buy', 'price', 'cost',
   'shipping', 'delivery', 'return', 'exchange', 'fitting', 'alteration', 'alterations',
   'help', 'question', 'support', 'human', 'agent', 'person', 'stylist', 'rep',
   'whatsapp', 'call', 'email', 'boutique', 'shop', 'store', 'collection', 'collections',
   'accra', 'ghana', 'london', 'uk', 'us', 'usa', 'america', 'europe', 'world',
   'dhl', 'tracking', 'order status', 'payment', 'money', 'momo', 'cedis', 'dollars',
-  'material', 'fabric', 'silk', 'kente', 'brocade', 'cotton', 'linen', 'care', 'wash'
+  'material', 'fabric', 'silk', 'kente', 'brocade', 'cotton', 'linen', 'care', 'wash',
+  'woman', 'women', 'female', 'lady', 'ladies', 'girl', 'girls', 'womenswear',
+  'man', 'men', 'male', 'gentleman', 'gentlemen', 'boy', 'boys', 'guy', 'guys', 'menswear',
+  'client', 'shopper', 'customer', 'someone', 'anyone', 'wedding', 'gala', 'church',
+  'outfit', 'outfits', 'clothes', 'clothing'
 ]);
 
 /**
@@ -190,6 +194,13 @@ export function extractCustomerName(rawInput: string): string {
 
   const nameNorm = name.toLowerCase();
   if (RESERVED_NON_NAME_WORDS.has(nameNorm)) {
+    return '';
+  }
+
+  // Reject demographic, gender, role, or non-name phrases
+  if (
+    /^(?:a\s+)?(?:woman|women|man|men|female|male|lady|ladies|girl|boy|guy|gentleman|gentlemen|shopper|customer|human|person|client)\b/i.test(nameNorm)
+  ) {
     return '';
   }
 
@@ -601,9 +612,54 @@ export function classifyCustomerIntent(
     return 'connect_human';
   }
 
+  // Occasion & Event styling inquiries (e.g. wedding guest, gala, church, dinner, black tie)
+  if (
+    matchesAny(norm, SYNONYM_DICTIONARIES.occasions) ||
+    norm.includes('wedding guest') ||
+    norm.includes('what to wear to a wedding') ||
+    norm.includes('what should i wear to a wedding') ||
+    norm.includes('dress for wedding') ||
+    norm.includes('outfit for wedding') ||
+    norm.includes('black tie') ||
+    norm.includes('gala') ||
+    norm.includes('church') ||
+    norm.includes('dinner date')
+  ) {
+    return 'occasion_styling';
+  }
+
   // Bespoke & Bridal commissions
   if (matchesAny(norm, SYNONYM_DICTIONARIES.bespokeBridal)) {
     return 'bespoke_bridal_inquiry';
+  }
+
+  // Bestsellers & Popular items
+  if (matchesAny(norm, SYNONYM_DICTIONARIES.bestsellers)) {
+    return 'bestsellers_inquiry';
+  }
+
+  // New arrivals & Latest collection
+  if (matchesAny(norm, SYNONYM_DICTIONARIES.newArrivals)) {
+    return 'new_arrivals_inquiry';
+  }
+
+  // Discounts & Promo codes
+  if (matchesAny(norm, SYNONYM_DICTIONARIES.discounts)) {
+    return 'discounts_inquiry';
+  }
+
+  // General sizing run & true-to-size inquiries (when not referencing a specific item)
+  if (matchesAny(norm, SYNONYM_DICTIONARIES.generalFitRun)) {
+    return 'general_fit_inquiry';
+  }
+
+  // Explicit customer size declaration (e.g. "I'm a size 12", "I wear size M", "I am a size 10")
+  if (
+    /\b(?:i\s*m|i\s*am|my\s+size\s+is|i\s+wear)\s+(?:a\s+)?(?:size\s+)?(?:\d{1,2}|xs|s|m|l|xl|xxl|small|medium|large|extra large)\b/i.test(norm) ||
+    /\bsize\s+(?:is\s+)?(?:\d{1,2}|xs|s|m|l|xl|xxl)\b/i.test(norm) ||
+    /\b(?:uk|us|eu)\s+\d{1,2}\b/i.test(norm)
+  ) {
+    return 'customer_size_declaration';
   }
 
   // Currencies & Foreign payments
@@ -773,14 +829,39 @@ export function classifyCustomerIntent(
     return 'greeting';
   }
 
-  // Check category explorations
-  if (norm.includes('women') || norm.includes('gown') || norm.includes('boubou') || norm.includes('dress')) {
+  // Check category explorations and gender preferences
+  if (
+    matchesAny(norm, SYNONYM_DICTIONARIES.women) ||
+    /\b(woman|women|female|lady|ladies|girl|girls|womenswear|womens)\b/i.test(norm) ||
+    norm.includes('for her') ||
+    norm.includes('for my wife') ||
+    norm.includes('for my girlfriend') ||
+    norm.includes('for my mother') ||
+    norm.includes('for my sister')
+  ) {
     return 'explore_women';
   }
-  if (norm.includes('men') || norm.includes('kaftan') || norm.includes('agbada') || norm.includes('smock')) {
+
+  if (
+    matchesAny(norm, SYNONYM_DICTIONARIES.men) ||
+    /\b(man|men|male|gentleman|gentlemen|guy|guys|menswear|mens)\b/i.test(norm) ||
+    norm.includes('for him') ||
+    norm.includes('for my husband') ||
+    norm.includes('for my boyfriend') ||
+    norm.includes('for my brother') ||
+    norm.includes('for my father')
+  ) {
     return 'explore_men';
   }
-  if (norm.includes('bag') || norm.includes('clutch') || norm.includes('tote')) {
+
+  if (
+    norm.includes('bag') ||
+    norm.includes('clutch') ||
+    norm.includes('tote') ||
+    norm.includes('handbag') ||
+    norm.includes('accessories') ||
+    norm.includes('accessory')
+  ) {
     return 'explore_bags';
   }
 
@@ -2173,16 +2254,194 @@ export function processConciergeMessage(
     };
   }
 
+  // ─── INTENT: OCCASION & EVENT STYLING ────────────────────────────────────
+  if (classifiedIntent === 'occasion_styling') {
+    let occasionAdvice = '';
+    let curated: Product[] = [];
+
+    if (norm.includes('wedding') || norm.includes('engagement') || norm.includes('marriage')) {
+      occasionAdvice =
+        `For weddings and traditional engagements, we recommend celebratory pieces crafted from authentic heritage textiles:\n\n` +
+        `• **Plum & Emerald Sovereign Kente Gown**: Regal handwoven Bonwire Kente for an unforgettable presence.\n` +
+        `• **Royal Gold Silk Boubou**: Graceful, breathable luxury in pure silk-cotton with hand-embroidered neckline.\n` +
+        `• **Ivory & Gold Regal Agbada**: Three-piece ceremonial ensemble in heavy damask brocade for gentlemen.\n\n` +
+        `Every piece is crafted in our Accra atelier with 7-day complimentary alterations. Are you shopping as a wedding guest, or planning custom bridal attire?`;
+      curated = catalogue.filter((p) => /kente|boubou|agbada/i.test(p.name)).slice(0, 3);
+    } else if (norm.includes('gala') || norm.includes('black tie') || norm.includes('formal') || norm.includes('dinner') || norm.includes('awards') || norm.includes('banquet')) {
+      occasionAdvice =
+        `For galas, black-tie banquets, and formal evening events, our architectural silhouettes offer captivating presence:\n\n` +
+        `• **Organza Puff Sleeve Ball Dress**: Voluminous couture drama with romantic sheer sleeves.\n` +
+        `• **Burgundy Corset & Cape**: Structured boning paired with a flowing cape.\n` +
+        `• **Royal Gold Silk Boubou**: Effortless floor-sweeping opulence.\n\n` +
+        `Would you like to explore these evening silhouettes or check measurements on our size chart?`;
+      curated = catalogue.filter((p) => /organza|corset|boubou/i.test(p.name)).slice(0, 3);
+    } else if (norm.includes('church') || norm.includes('thanksgiving') || norm.includes('sunday')) {
+      occasionAdvice =
+        `For church services, thanksgiving ceremonies, and Sunday worship, refined silhouettes bring regal grace and respectful elegance:\n\n` +
+        `• **Ivory & Gold Wrap Ensemble**: Tailored modesty with subtle metallic accents.\n` +
+        `• **Royal Gold Silk Boubou**: Pure silk-cotton with an elegant high neckline.\n` +
+        `• **Indigo Kente Kaftan**: Distinguished tailoring in artisanal indigo linen.\n\n` +
+        `Would you like to view these pieces in detail?`;
+      curated = catalogue.filter((p) => /wrap|boubou|kaftan/i.test(p.name)).slice(0, 3);
+    } else {
+      occasionAdvice =
+        `For special occasions and celebrations, Nnepa Foriwaa offers distinct hand-tailored pieces combining West African textile heritage with contemporary elegance.\n\n` +
+        `Here are our most celebrated event pieces:`;
+      curated = catalogue.slice(0, 3);
+    }
+
+    if (curated.length === 0) curated = catalogue.slice(0, 3);
+
+    return {
+      text: occasionAdvice,
+      options: [
+        { label: 'Explore Womenswear', action: 'filter_women' },
+        { label: 'Explore Menswear', action: 'filter_men' },
+        { label: 'Size & Length Guide', action: 'size_guide' },
+        { label: 'Chat on WhatsApp', action: 'contact_whatsapp' }
+      ],
+      products: curated,
+      intent: 'occasion_styling',
+      updatedContext
+    };
+  }
+
+  // ─── INTENT: CUSTOMER SIZE DECLARATION ────────────────────────────────────
+  if (classifiedIntent === 'customer_size_declaration') {
+    const resolved = resolveLabelSize(userInput, updatedContext.activeCategory || 'women');
+    if (resolved && resolved.targetSize) {
+      profile.usualSize = resolved.targetSize;
+      profile.selectedSize = resolved.targetSize;
+      profile.onboardingStage = 'onboarded';
+
+      const spec = getSizeSpecificationSummary(resolved.targetSize, updatedContext.activeCategory || 'women');
+      const text =
+        `I’ve recorded your size as **Size ${resolved.targetSize}** (referenced from ${resolved.matchedLabel}).\n\n` +
+        (spec ? `• Calibrated measurements: ${spec}\n\n` : '') +
+        `Every Nnepa Foriwaa piece is individually cut and tailored in our Accra atelier, and we provide **complimentary fitting alterations within 7 days** of delivery.\n\n` +
+        `Would you like to explore garments available in Size ${resolved.targetSize}, or check specific measurements?`;
+
+      return {
+        text,
+        options: [
+          { label: 'Explore Womenswear', action: 'filter_women' },
+          { label: 'Explore Menswear', action: 'filter_men' },
+          { label: 'Size & Length Guide', action: 'size_guide' },
+          { label: 'Chat on WhatsApp', action: 'contact_whatsapp' }
+        ],
+        intent: 'customer_size_declaration',
+        updatedContext
+      };
+    }
+  }
+
+  // ─── INTENT: GENERAL FIT & SIZING RUN ─────────────────────────────────────
+  if (classifiedIntent === 'general_fit_inquiry') {
+    const text =
+      `**Sizing & Fit at Nnepa Foriwaa:**\n\n` +
+      `• **True to Size**: Our garments are cut true to standard international sizing: **US 2–14 / UK 6–18 / EU 34–46**, corresponding to alpha sizes XS through XXL.\n` +
+      `• **Silhouettes**: Structured peplum suits and corset gowns are tailored to skim and contour, while our silk-cotton Boubous and Kaftans feature relaxed, flowing cuts designed for effortless elegance.\n` +
+      `• **Between Sizes?**: For structured or fitted garments, we recommend selecting the larger size. For loose boubous or wrap ensembles, your standard size is ideal.\n` +
+      `• **Complimentary Alterations**: Every tailored piece includes **7 days complimentary fitting alterations** at our Accra atelier to ensure a flawless fit.`;
+
+    return {
+      text,
+      options: [
+        { label: 'Open Size Chart', action: 'open_size_chart' },
+        { label: 'Find My Best Fit', action: 'sizing_path_select' },
+        { label: 'Browse Collections', action: 'filter_all' },
+        { label: 'Chat on WhatsApp', action: 'contact_whatsapp' }
+      ],
+      intent: 'general_fit_inquiry',
+      updatedContext
+    };
+  }
+
+  // ─── INTENT: BESTSELLERS & POPULAR ITEMS ──────────────────────────────────
+  if (classifiedIntent === 'bestsellers_inquiry') {
+    const bestsellers = catalogue.filter((p) => /boubou|kente|agbada/i.test(p.name)).slice(0, 3);
+    const text =
+      `**Signature Bestsellers at Nnepa Foriwaa:**\n\n` +
+      `Our most sought-after signature creations showcase authentic West African heritage with couture craftsmanship:\n\n` +
+      `1. **Royal Gold Silk Boubou** (GH₵ 1,850) — Floor-sweeping, breathable silk-cotton luxury with artisanal neck embroidery.\n` +
+      `2. **Plum & Emerald Sovereign Kente Gown** (GH₵ 3,200) — Handwoven Bonwire Kente designed for monumental celebrations.\n` +
+      `3. **Ivory & Gold Regal Agbada** (GH₵ 2,800) — Heavy damask brocade three-piece ceremonial ensemble.\n\n` +
+      `Would you like to explore one of these pieces, or view the complete boutique collection?`;
+
+    return {
+      text,
+      options: [
+        { label: 'Explore Womenswear', action: 'filter_women' },
+        { label: 'Explore Menswear', action: 'filter_men' },
+        { label: 'View All Pieces', action: 'filter_all' },
+        { label: 'Chat on WhatsApp', action: 'contact_whatsapp' }
+      ],
+      products: bestsellers.length > 0 ? bestsellers : catalogue.slice(0, 3),
+      intent: 'bestsellers_inquiry',
+      updatedContext
+    };
+  }
+
+  // ─── INTENT: NEW ARRIVALS & LATEST COLLECTION ─────────────────────────────
+  if (classifiedIntent === 'new_arrivals_inquiry') {
+    const newPieces = catalogue.slice(0, 3);
+    const text =
+      `**Latest Heritage Collection:**\n\n` +
+      `Our latest atelier release highlights contemporary West African luxury—featuring rich damask brocades, hand-loomed Asante Kente, and structured organza silhouettes tailored fresh from our Accra atelier.\n\n` +
+      `Here are highlights from our latest arrivals:`;
+
+    return {
+      text,
+      options: [
+        { label: 'View All Pieces', action: 'filter_all' },
+        { label: 'Womenswear', action: 'filter_women' },
+        { label: 'Menswear', action: 'filter_men' },
+        { label: 'Size & Length Guide', action: 'size_guide' }
+      ],
+      products: newPieces,
+      intent: 'new_arrivals_inquiry',
+      updatedContext
+    };
+  }
+
+  // ─── INTENT: DISCOUNTS & PROMO CODES ──────────────────────────────────────
+  if (classifiedIntent === 'discounts_inquiry') {
+    const text =
+      `**Pricing & Boutique Policy:**\n\n` +
+      `As an artisanal luxury house, every Nnepa Foriwaa garment is individually tailored in limited edition runs using authentic heritage textiles, and we do not run mass seasonal discounts or promo codes.\n\n` +
+      `However, we offer several client courtesies:\n` +
+      `• **Complimentary Accra Delivery** on orders of GH₵ 1,000 or more.\n` +
+      `• **Complimentary Fitting Alterations** within 7 days of delivery at our Accra atelier.\n` +
+      `• **Direct Styling Advice** and consultation with our design team.\n\n` +
+      `Would you like to explore our pieces or check delivery information?`;
+
+    return {
+      text,
+      options: [
+        { label: 'Explore Collections', action: 'filter_all' },
+        { label: 'Delivery Details', action: 'delivery_info' },
+        { label: 'Chat on WhatsApp', action: 'contact_whatsapp' }
+      ],
+      intent: 'discounts_inquiry',
+      updatedContext
+    };
+  }
+
   // ─── INTENT: CATEGORY EXPLORATIONS ───────────────────────────────────────
   if (classifiedIntent === 'explore_women') {
+    updatedContext.activeCategory = 'women';
     const womenProds = catalogue.filter((p) => p.category === 'women').slice(0, 3);
-    const text = `Navigating you to our **Womenswear** collection, featuring silk-cotton boubous, handwoven Kente gowns, and structured peplum silhouettes.`;
+    const text =
+      `Welcome to our **Womenswear** collection${customerName}. Our pieces merge contemporary silhouettes with authentic Ghanaian textile heritage—featuring handwoven Kente gowns, pure silk-cotton boubous, organza puff dresses, and structured peplum suits.\n\n` +
+      `Here are some of our signature womenswear pieces. What would you like to explore?`;
 
     return {
       text,
       options: [
         { label: 'View All Womenswear', action: 'filter_women' },
-        { label: 'Sizing & Length Guide', action: 'size_guide' }
+        { label: 'Find My Size', action: 'sizing_path_select' },
+        { label: 'Size & Length Guide', action: 'size_guide' },
+        { label: 'Chat on WhatsApp', action: 'contact_whatsapp' }
       ],
       products: womenProds,
       intent: classifiedIntent,
@@ -2191,14 +2450,19 @@ export function processConciergeMessage(
   }
 
   if (classifiedIntent === 'explore_men') {
+    updatedContext.activeCategory = 'men';
     const menProds = catalogue.filter((p) => p.category === 'men').slice(0, 3);
-    const text = `Navigating you to our **Menswear** collection, featuring three-piece brocade Agbadas, Kente-yoke linen kaftans, and Northern Fugu smocks.`;
+    const text =
+      `Welcome to our **Menswear** collection${customerName}. Handcrafted in our Accra atelier, our pieces feature heavy damask brocade Agbadas, handwoven Kente-yoke linen kaftans, and traditional Northern Fugu smocks.\n\n` +
+      `Here are signature menswear pieces from the collection:`;
 
     return {
       text,
       options: [
         { label: 'View All Menswear', action: 'filter_men' },
-        { label: 'Men’s Size Guide', action: 'size_guide' }
+        { label: 'Men’s Size Guide', action: 'size_guide' },
+        { label: 'Find My Size', action: 'sizing_path_select' },
+        { label: 'Chat on WhatsApp', action: 'contact_whatsapp' }
       ],
       products: menProds,
       intent: classifiedIntent,
@@ -2207,6 +2471,7 @@ export function processConciergeMessage(
   }
 
   if (classifiedIntent === 'explore_bags') {
+    updatedContext.activeCategory = 'bags';
     const bagProds = catalogue.filter((p) => p.category === 'bags').slice(0, 3);
     const text = `Navigating you to our **Bags & Accessories** collection, featuring hand-plaited Bolgatanga leather totes, brass Adinkra velvet clutches, and raffia shoulder pieces.`;
 
