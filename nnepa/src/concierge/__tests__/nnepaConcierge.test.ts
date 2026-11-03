@@ -186,14 +186,18 @@ describe('NNEPA Shopping Concierge — Core Knowledge & Intelligence Test Suite'
       path.resolve(process.cwd(), 'src/components/ShoppingConcierge.tsx'),
       'utf8'
     );
-    // Verifies responsive viewport styling
+    // Verifies responsive mobile bottom sheet and desktop floating card constraints
     assert.ok(
-      componentSource.includes('w-[calc(100vw-2rem)] sm:w-[390px]'),
-      'Component contains responsive mobile width constraint'
+      componentSource.includes('inset-x-2 bottom-2') && componentSource.includes('sm:w-[380px]'),
+      'Component contains responsive mobile bottom sheet and desktop width constraints'
     );
     assert.ok(
-      componentSource.includes('max-h-[85vh]') || componentSource.includes('max-h-[80vh]'),
-      'Component contains responsive max height'
+      componentSource.includes('max-h-[76dvh]') && componentSource.includes('sm:max-h-[82vh]'),
+      'Component contains responsive max heights for mobile and desktop'
+    );
+    assert.ok(
+      componentSource.includes('safe-area-inset-bottom'),
+      'Component respects mobile safe area insets'
     );
     assert.ok(
       componentSource.includes('role="dialog"'),
@@ -201,24 +205,29 @@ describe('NNEPA Shopping Concierge — Core Knowledge & Intelligence Test Suite'
     );
   });
 
-  // 13. Closing the chatbot (clears temporary in-memory conversation state)
-  test('Scenario 13: Closing chatbot clears temporary in-memory state', () => {
+  // 13. Closing the chatbot preserves session; explicit new chat resets state
+  test('Scenario 13: Closing chatbot hides window and preserves session; new chat resets', () => {
     const componentSource = fs.readFileSync(
       path.resolve(process.cwd(), 'src/components/ShoppingConcierge.tsx'),
       'utf8'
     );
-    // Verify that handleCloseConcierge resets context and messages
+    // Verify that handleCloseConcierge exists and closes the window
     assert.ok(
       componentSource.includes('handleCloseConcierge'),
       'Component has handleCloseConcierge handler'
     );
+    // Verify intentional new chat reset handler exists
+    assert.ok(
+      componentSource.includes('handleStartNewChat'),
+      'Component provides handleStartNewChat handler for intentional reset'
+    );
     assert.ok(
       componentSource.includes('createInitialConciergeContext'),
-      'Clears engine context back to initial state on close'
+      'Resets engine context when starting new chat'
     );
     assert.ok(
       componentSource.includes('getInitialWelcomeMessage'),
-      'Resets messages array to initial welcome message on close'
+      'Resets messages array when starting new chat'
     );
   });
 
