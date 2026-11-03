@@ -18,6 +18,7 @@ import SearchModal from './components/SearchModal.tsx';
 import Toast from './components/Toast.tsx';
 import CookieBanner from './components/CookieBanner.tsx';
 import CollectionShopView from './components/CollectionShopView.tsx';
+import ShoppingConcierge from './components/ShoppingConcierge.tsx';
 
 // Code-split auxiliary multi-page views with React.lazy
 const AboutView = React.lazy(() => import('./components/AboutView.tsx'));
@@ -764,6 +765,30 @@ export default function App() {
 
       {/* ═══ TOAST FEEDBACK PANE ═══ */}
       <Toast message={toastMessage} />
+
+      {/* ═══ PROACTIVE PRIVACY-FIRST SHOPPING CONCIERGE ═══ */}
+      <ShoppingConcierge
+        currentPage={page}
+        activeProduct={activeProduct}
+        products={allCatalogProducts}
+        cartItemsCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)}
+        onNavigate={(targetPage, targetCategory, targetProduct) => {
+          if (targetCategory) {
+            setActiveCategory(targetCategory);
+          }
+          if (targetProduct) {
+            handleViewDetails(targetProduct);
+          } else {
+            setPageWithHash(targetPage);
+          }
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+        onOpenCart={() => setIsCartOpen(true)}
+        onOpenSizeChart={() => {
+          setPageWithHash('size-chart');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+      />
     </div>
   );
 }
