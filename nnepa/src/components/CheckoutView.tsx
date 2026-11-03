@@ -200,10 +200,10 @@ export default function CheckoutView({
               Order Confirmed & Logged
             </span>
             <h1 className="font-serif text-3xl md:text-4xl text-plum-dark mt-2 font-light">
-              Medasi! Your Royal Commission is Placed
+              Medasi — Your Order is Placed
             </h1>
             <p className="text-sm text-text-muted mt-3 max-w-md mx-auto leading-relaxed">
-              Order <strong className="text-plum-dark font-mono font-semibold">{completedOrder.id}</strong> has been assigned to our team in Accra.
+              Order <strong className="text-plum-dark font-mono font-semibold">{completedOrder.id}</strong> has been registered with our Accra atelier.
             </p>
 
             {/* Receipt Summary Card */}
@@ -260,7 +260,7 @@ export default function CheckoutView({
           <ShoppingBag className="w-16 h-16 text-lilac mx-auto mb-4 stroke-1" />
           <h2 className="font-serif text-2xl text-plum-dark">Your Bag is Empty</h2>
           <p className="text-xs text-text-muted mt-2 mb-6 leading-relaxed">
-            Please add bespoke handcrafted African pieces to your bag before checking out.
+            Your shopping bag is currently empty. Explore our collections to add pieces.
           </p>
           <button
             type="button"
@@ -311,7 +311,7 @@ export default function CheckoutView({
                       type="text"
                       name="fullName"
                       required
-                      placeholder="Nana Yaa Asantewaa"
+                      placeholder="e.g. Nana Yaa Asantewaa"
                       value={formData.fullName}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 bg-pearl/60 border border-lilac/30 rounded-[3px] text-sm text-plum-dark outline-none focus:border-lavender focus:bg-white transition-all"
@@ -326,7 +326,7 @@ export default function CheckoutView({
                       type="email"
                       name="email"
                       required
-                      placeholder="client@luxury.gh"
+                      placeholder="e.g. yaa@example.com"
                       value={formData.email}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 bg-pearl/60 border border-lilac/30 rounded-[3px] text-sm text-plum-dark outline-none focus:border-lavender focus:bg-white transition-all"
@@ -531,7 +531,7 @@ export default function CheckoutView({
 
                 {discountAmount > 0 && (
                   <div className="flex justify-between text-emerald-600 font-semibold">
-                    <span>Royal Voucher ({discountPercent}%)</span>
+                    <span>Promo Discount ({discountPercent}%)</span>
                     <span>-GH₵ {discountAmount.toLocaleString()}</span>
                   </div>
                 )}

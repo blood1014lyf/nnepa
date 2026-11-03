@@ -42,7 +42,7 @@ export default function Navbar({
   const navLinks = [
     { label: 'Home', page: 'home' },
     { label: 'Shop', page: 'shop' },
-    { label: 'About Brand', page: 'about' },
+    { label: 'About', page: 'about' },
     { label: 'Contact', page: 'contact' },
   ];
 

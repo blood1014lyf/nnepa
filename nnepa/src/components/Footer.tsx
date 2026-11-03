@@ -139,7 +139,7 @@ export default function Footer({ currentPage, onNavigate, onScrollToSection, adm
                     onClick={() => onNavigate('about')}
                     className="bg-transparent border-none p-0 text-[0.65rem] sm:text-xs text-pearl-2/50 hover:text-lilac cursor-pointer font-light transition-colors text-left block"
                   >
-                    About Brand
+                    About
                   </button>
                 </li>
                 <li>
@@ -212,11 +212,12 @@ export default function Footer({ currentPage, onNavigate, onScrollToSection, adm
                   </li>
                 )}
                 <li>
-                  <span
-                    className="text-[0.65rem] sm:text-xs text-pearl-2/50 font-light block cursor-default select-none"
+                  <button
+                    onClick={() => onNavigate('terms')}
+                    className="bg-transparent border-none p-0 text-[0.65rem] sm:text-xs text-pearl-2/50 hover:text-lilac cursor-pointer font-light transition-colors text-left block"
                   >
-                    Alterations & Fees
-                  </span>
+                    Alterations Service
+                  </button>
                 </li>
                 <li>
                   <button

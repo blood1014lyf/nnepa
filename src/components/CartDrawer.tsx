@@ -75,7 +75,7 @@ export default function CartDrawer({
                 <div className="h-full flex flex-col items-center justify-center gap-4 text-text-light text-center select-none">
                   <ShoppingBag className="w-16 h-16 stroke-1 text-lilac" />
                   <div className="text-[0.9rem] font-medium tracking-wide">
-                    Your cart is beautifully empty
+                    Your shopping bag is empty
                   </div>
                   <a
                     href="#/shop"
@@ -155,7 +155,7 @@ export default function CartDrawer({
                 <div className="mb-4 bg-lavender/10 p-3 rounded-[3px] border border-lilac/20">
                   <div className="flex justify-between items-center text-[0.6rem] font-bold uppercase tracking-wider text-plum-dark mb-1.5">
                     <span>Complimentary Accra Delivery</span>
-                    <span>{subtotal >= 1000 ? 'Unlocked 🎉' : `GH₵ ${(1000 - subtotal).toLocaleString()} away`}</span>
+                    <span>{subtotal >= 1000 ? 'Unlocked' : `GH₵ ${(1000 - subtotal).toLocaleString()} away`}</span>
                   </div>
                   <div className="w-full h-1.5 bg-lilac/20 rounded-full overflow-hidden">
                     <div
@@ -166,7 +166,7 @@ export default function CartDrawer({
                 </div>
 
                 <div className="text-[0.62rem] text-mauve-deep bg-pearl px-3 py-2 rounded mb-4 font-medium flex items-center gap-1.5 border border-lilac/10">
-                  <span>⏱️ 3–7 working days for bespoke handcrafted tailoring.</span>
+                  <span>Tailoring requires 3–7 working days before dispatch.</span>
                 </div>
                 <div className="flex justify-between items-center mb-6">
                   <span className="text-[0.62rem] font-bold tracking-[0.2em] uppercase text-text-muted">
@@ -182,7 +182,7 @@ export default function CartDrawer({
                     className="w-full py-4 bg-gradient-to-br from-lavender to-mauve-deep text-white text-[0.65rem] font-semibold tracking-[0.22em] uppercase border-none cursor-pointer rounded-[4px] shadow-[0_8px_28px_rgba(155,132,204,0.35)] active:translate-y-[1px] hover:opacity-95 duration-200"
                     id="btn-drawer-checkout"
                   >
-                    Proceed to Checkout →
+                    Proceed to Checkout
                   </button>
                   <a
                     href={`https://wa.me/233538795669?text=${encodeURIComponent(

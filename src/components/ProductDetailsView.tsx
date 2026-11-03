@@ -107,14 +107,14 @@ Please confirm tailoring and delivery details.`;
             <div>
               <h3 className="text-[0.58rem] font-bold tracking-[0.2em] uppercase text-plum-dark mb-2.5">Product Details</h3>
               <p className="text-xs md:text-sm text-text-light leading-relaxed">
-                {product.description || `${product.name} is handcrafted in Accra using authentic fabrics and tailored with precise stitching. Designed for celebrations and daily elegance.`}
+                {product.description || `${product.name} is tailored to order in Accra with authentic West African textiles.`}
               </p>
             </div>
 
             {/* Sizing Picker Option */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-[0.58rem] font-bold tracking-[0.2em] uppercase text-plum-dark">Select Gown Size</h3>
+                <h3 className="text-[0.58rem] font-bold tracking-[0.2em] uppercase text-plum-dark">Select Size</h3>
               </div>
               <div className="flex gap-2.5">
                 {(product.sizes || ['S', 'M', 'L', 'XL', 'XXL']).map((sz) => (
@@ -147,7 +147,7 @@ Please confirm tailoring and delivery details.`;
 
             {/* Pre-order Delivery Notice / Disclaimer */}
             <div className="text-[0.62rem] text-mauve-deep bg-lavender/10 px-3.5 py-2.5 rounded border border-lavender/20 font-medium flex items-center gap-2">
-              <span>⏱️ Pre-order takes 3–7 working days for handcrafted bespoke tailoring.</span>
+              <span>Tailoring requires 3–7 working days before dispatch.</span>
             </div>
 
             {/* Signature Actions */}

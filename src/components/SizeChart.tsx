@@ -95,7 +95,7 @@ export default function SizeChart({
           {/* Collection Filter (Women / Men) */}
           <div className="flex flex-col gap-1.5">
             <label className="text-[0.58rem] font-bold tracking-[0.2em] uppercase text-text-light">
-              Collection Gender
+              Collection
             </label>
             <div className="inline-flex p-1 bg-zinc-100 rounded-[3px] border border-zinc-200">
               <button
@@ -442,7 +442,7 @@ export default function SizeChart({
             Click any row to select your tailored fitting coordinate.
           </span>
           <span className="font-mono text-text-muted">
-            All garments cut with bespoke comfort ease. Inseam measured crotch-to-hem; Outseam measured waist-to-hem.
+            All garments are cut with tailored comfort. Inseam is measured from crotch to hem; outseam is measured from waistband to hem.
           </span>
         </div>
       </div>
@@ -453,7 +453,7 @@ export default function SizeChart({
           <div>
             <div className="flex items-center gap-2">
               <span className="text-[0.58rem] font-bold tracking-[0.2em] uppercase text-text-light">
-                Atelier Proportions & Silhouette Standards
+                Silhouette & Length Standards
               </span>
             </div>
             <h3 className="font-serif text-lg sm:text-xl text-plum-dark font-light flex items-center gap-2 mt-0.5">
@@ -677,7 +677,7 @@ export default function SizeChart({
               Because Nnepa Foriwaa specializes in authentic Ghanaian handcrafted luxury, we understand that standard sizes do not fit everyone identically.
             </p>
             <ul className="text-[0.7rem] text-text-light space-y-1.5 list-disc pl-4 mb-4">
-              <li>Our Boubous, Kaftans, and Agbadas are cut with majestic, comfortable ease.</li>
+              <li>Our boubous, kaftans, and agbadas are cut with relaxed, comfortable ease.</li>
               <li>Fitted gowns and wedding suits feature tailored darting and internal facings.</li>
               <li>Free length and hem alteration consultations available directly with our master tailors in Accra.</li>
             </ul>

@@ -71,7 +71,7 @@ const DEFAULT_TOP_OUTFIT: Product = {
   imageUrl: DEFAULT_PRODUCTS[1]?.imageUrl || '/assets/images/lookbook_02_plum_emerald_gown.jpg',
   badge: 'Exclusive',
   inStock: true,
-  description: 'Handcrafted luxury silhouette sculpted from authentic Ghanaian handwoven silk Kente and regal brocade. Designed for high occasions, weddings, and royal galas with signature precision darting.',
+  description: 'Full-length evening gown cut from handwoven Ghanaian silk Kente and weighty brocade, tailored for weddings and celebrations.',
   sizes: ['S', 'M', 'L', 'XL', 'XXL']
 };
 

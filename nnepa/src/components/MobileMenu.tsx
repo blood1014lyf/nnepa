@@ -18,9 +18,9 @@ interface MobileMenuProps {
 
 export default function MobileMenu({ isOpen, onClose, currentPage, onPageChange, adminToken }: MobileMenuProps) {
   const menuLinks = [
-    { label: 'Home Feed', page: 'home' },
+    { label: 'Home', page: 'home' },
     { label: 'Shop', page: 'shop' },
-    { label: 'About Brand', page: 'about' },
+    { label: 'About', page: 'about' },
     { label: 'Contact', page: 'contact' },
   ];
 
