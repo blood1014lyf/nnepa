@@ -140,26 +140,66 @@ function matchesAny(normalized: string, phrases: string[]): boolean {
   return false;
 }
 
+const RESERVED_NON_NAME_WORDS = new Set([
+  'no', 'nope', 'nah', 'skip', 'pass', 'none', 'nothing', 'nevermind', 'never mind',
+  'anonymous', 'secret', 'idk', 'dont know', "don't know", 'not sure', 'unsure',
+  'just browsing', 'just looking', 'later', 'whatever', 'na', 'n/a', 'neither',
+  'hi', 'hello', 'hey', 'greetings', 'good morning', 'good afternoon', 'good evening',
+  'yes', 'yeah', 'yep', 'sure', 'ok', 'okay', 'fine', 'alright',
+  'dress', 'gown', 'boubou', 'kaftan', 'agbada', 'smock', 'suit', 'peplum', 'bag',
+  'tote', 'clutch', 'size', 'sizing', 'order', 'cart', 'buy', 'price', 'cost',
+  'shipping', 'delivery', 'return', 'exchange', 'fitting', 'alteration', 'alterations',
+  'help', 'question', 'support', 'human', 'agent', 'person', 'stylist', 'rep',
+  'whatsapp', 'call', 'email', 'boutique', 'shop', 'store', 'collection', 'collections',
+  'accra', 'ghana', 'london', 'uk', 'us', 'usa', 'america', 'europe', 'world',
+  'dhl', 'tracking', 'order status', 'payment', 'money', 'momo', 'cedis', 'dollars',
+  'material', 'fabric', 'silk', 'kente', 'brocade', 'cotton', 'linen', 'care', 'wash'
+]);
+
 /**
  * Extracts a customer's preferred name naturally from input text.
  * Handles "Ama", "Call me Ama", "My name is Ama Mensah", "I'm Kofi", etc.
+ * Strictly ignores non-names, skips, questions, numbers, and e-commerce vocabulary.
  */
 export function extractCustomerName(rawInput: string): string {
   let cleaned = rawInput.trim();
   cleaned = cleaned.replace(/[.!?]+$/, '').trim();
 
-  if (/^(how|what|where|who|when|why|can|is|do|does|will|tell|show|explore|browse)\b/i.test(cleaned)) {
+  // Reject questions, urls, emails, digits, or commands
+  if (
+    cleaned.includes('?') ||
+    /\d/.test(cleaned) ||
+    /@/.test(cleaned) ||
+    /^(how|what|where|who|when|why|can|could|would|is|are|do|does|did|will|tell|show|explore|browse|help|order|buy|ship|deliver)\b/i.test(cleaned)
+  ) {
     return '';
   }
 
-  const regex = /^(?:hello|hi|hey|good\s+(?:morning|afternoon|evening))?[,\s]*(?:please\s+)?(?:call\s+me|you\s+can\s+call\s+me|my\s+name\s+is|i\s*['’]m|i\s+am|it\s*['’]s)?\s*(.+)$/i;
-  const match = cleaned.match(regex);
-  let name = match && match[1] ? match[1].trim() : cleaned;
+  const norm = cleaned.toLowerCase();
+  if (RESERVED_NON_NAME_WORDS.has(norm)) {
+    return '';
+  }
 
-  name = name.replace(/^(?:hello|hi|hey|greetings|warm greetings|my name is|i am|i'm)\s+/i, '').trim();
+  let name = cleaned;
+  // Cleanly strip common introductions and greetings
+  name = name.replace(/^(?:hello|hi|hey|good\s+(?:morning|afternoon|evening))[,\s]*/i, '').trim();
+  name = name.replace(/^(?:please\s+)?(?:you\s+can\s+)?(?:call\s+me|my\s+name\s+is|i\s*['’]m|i\s+am|it\s*['’]s)\s+/i, '').trim();
+  name = name.replace(/^(?:my\s+name\s+is|call\s+me|i\s*['’]m|i\s+am)\s+/i, '').trim();
 
-  if (!name || name.length > 40) return '';
-  if (/^(how|what|where|who|when|why|can|is|do|does|will|tell|show|explore|browse)\b/i.test(name)) {
+  if (!name || name.length < 2 || name.length > 35) return '';
+
+  const nameNorm = name.toLowerCase();
+  if (RESERVED_NON_NAME_WORDS.has(nameNorm)) {
+    return '';
+  }
+
+  // Reject if any word in the name is a reserved term (e.g. "Shipping To Uk" or "I Want Dress")
+  const tokens = nameNorm.split(/\s+/);
+  if (tokens.some((t) => RESERVED_NON_NAME_WORDS.has(t))) {
+    return '';
+  }
+
+  if (/^(how|what|where|who|when|why|can|could|would|is|are|do|does|will|tell|show|explore|browse|help|order|buy|ship|deliver)\b/i.test(name)) {
     return '';
   }
 
@@ -541,6 +581,67 @@ export function classifyCustomerIntent(
   const norm = normalizeQuery(query);
   if (!norm) return 'empty';
 
+  // Human agent / customer support escalation
+  const isSelfIntro = /^(?:please\s+)?(?:you\s+can\s+)?call\s+me\s+[a-z]{2,}/i.test(query.trim());
+  if (
+    !isSelfIntro &&
+    (matchesAny(norm, SYNONYM_DICTIONARIES.humanAgent) ||
+      norm.includes('human') ||
+      norm.includes('real person') ||
+      norm.includes('talk to someone') ||
+      norm.includes('speak to someone') ||
+      norm.includes('speak to human') ||
+      norm.includes('live agent') ||
+      norm.includes('customer service') ||
+      /^(?:please\s+)?call\s+me\s*$/i.test(norm) ||
+      norm.includes('call my phone') ||
+      norm.includes('call me back') ||
+      norm.includes('call me directly'))
+  ) {
+    return 'connect_human';
+  }
+
+  // Bespoke & Bridal commissions
+  if (matchesAny(norm, SYNONYM_DICTIONARIES.bespokeBridal)) {
+    return 'bespoke_bridal_inquiry';
+  }
+
+  // Currencies & Foreign payments
+  if (matchesAny(norm, SYNONYM_DICTIONARIES.currencies)) {
+    return 'currency_payment_info';
+  }
+
+  // Atelier location & studio visit
+  if (matchesAny(norm, SYNONYM_DICTIONARIES.location)) {
+    return 'location_atelier_info';
+  }
+
+  // Brand story & founder
+  if (matchesAny(norm, SYNONYM_DICTIONARIES.brandStory)) {
+    return 'brand_story_info';
+  }
+
+  // Specific International delivery inquiries (UK, US, Canada, DHL, etc.)
+  if (
+    norm.includes('ship to uk') ||
+    norm.includes('shipping to uk') ||
+    norm.includes('deliver to uk') ||
+    norm.includes('london') ||
+    norm.includes('ship to us') ||
+    norm.includes('ship to usa') ||
+    norm.includes('shipping to us') ||
+    norm.includes('shipping to usa') ||
+    norm.includes('deliver to us') ||
+    norm.includes('deliver to usa') ||
+    norm.includes('international delivery') ||
+    norm.includes('international shipping') ||
+    norm.includes('deliver worldwide') ||
+    norm.includes('ship worldwide') ||
+    norm.includes('ship abroad')
+  ) {
+    return 'international_delivery_info';
+  }
+
   // 1. Comparison Intent
   if (matchesAny(norm, SYNONYM_DICTIONARIES.compare)) {
     return 'compare_products';
@@ -717,6 +818,9 @@ export function processConciergeMessage(
   const activeProd = updatedContext.focusedProduct;
   const prodKnowledge = activeProd ? buildProductKnowledge(activeProd) : null;
 
+  // ─── INTENT CLASSIFICATION ───────────────────────────────────────────────
+  const classifiedIntent = classifyCustomerIntent(userInput, updatedContext);
+
   // ─── DIRECT ACTION PAYLOAD & SIZING PATH DISPATCH ─────────────────────────
 
   // 1. Direct size selection (e.g. set_size_m or user selects specific size)
@@ -741,19 +845,217 @@ export function processConciergeMessage(
     };
   }
 
+  // ─── SIZING PATH SELECTION (MULTI-PATH SIZING ASSISTANCE) ──────────────────
+  if (
+    userInput === 'sizing_path_select' ||
+    userInput === 'start_size_assistance' ||
+    userInput === 'sizing_options' ||
+    (classifiedIntent === 'sizing_help' &&
+      userInput !== 'size_not_sure' &&
+      norm !== 'not sure' &&
+      profile.onboardingStage !== 'sizing_label_inquiry' &&
+      profile.onboardingStage !== 'sizing_garment_inquiry')
+  ) {
+    profile.onboardingStage = 'sizing_path_select';
+    const text =
+      `We want you to feel completely confident in your fit. How would you like us to determine your size?\n\n` +
+      `• **Guided Measurements**: Enter your bust, waist, or hips (inches or cm)\n` +
+      `• **International Size**: Convert from UK (6–18), US (2–14), or EU (34–46)\n` +
+      `• **Comfortable Garment**: Compare with a piece you already own\n` +
+      `• **Stylist Consultation**: WhatsApp assistance or private atelier fitting`;
+
+    return {
+      text,
+      options: [
+        { label: 'Enter Measurements (in/cm)', action: 'sizing_guided_start' },
+        { label: 'UK / US / EU Conversion', action: 'sizing_intl_start' },
+        { label: 'Compare Existing Garment', action: 'garment_dress' },
+        { label: 'View Full Size Chart', action: 'open_size_chart' },
+        { label: 'Chat with Stylist on WhatsApp', action: 'contact_whatsapp' },
+        { label: 'Book Accra Atelier Fitting', action: 'book_fitting_yes' }
+      ],
+      intent: 'sizing_path_select',
+      updatedContext
+    };
+  }
+
+  // ─── INTERNATIONAL SIZE CONVERSION SUB-FLOW ──────────────────────────────
+  if (userInput === 'sizing_intl_start') {
+    return {
+      text: `Which sizing system are you most familiar with?`,
+      options: [
+        { label: 'UK Sizes (6 to 18)', action: 'intl_sys_uk' },
+        { label: 'US Sizes (2 to 14)', action: 'intl_sys_us' },
+        { label: 'EU Sizes (34 to 46)', action: 'intl_sys_eu' },
+        { label: 'Back to Sizing', action: 'sizing_path_select' }
+      ],
+      intent: 'sizing_intl_system',
+      updatedContext
+    };
+  }
+
+  if (userInput === 'intl_sys_uk') {
+    return {
+      text: `Please choose your usual UK size:`,
+      options: [
+        { label: 'UK 6 (XS)', action: 'label_size_xs' },
+        { label: 'UK 8 (S)', action: 'label_size_s' },
+        { label: 'UK 10 (S)', action: 'label_size_s' },
+        { label: 'UK 12 (M)', action: 'label_size_m' },
+        { label: 'UK 14 (L)', action: 'label_size_l' },
+        { label: 'UK 16 (XL)', action: 'label_size_xl' },
+        { label: 'UK 18 (XXL)', action: 'label_size_xxl' }
+      ],
+      intent: 'sizing_intl_pick',
+      updatedContext
+    };
+  }
+
+  if (userInput === 'intl_sys_us') {
+    return {
+      text: `Please choose your usual US size:`,
+      options: [
+        { label: 'US 0–2 (XS)', action: 'label_size_xs' },
+        { label: 'US 4 (S)', action: 'label_size_s' },
+        { label: 'US 6 (S)', action: 'label_size_s' },
+        { label: 'US 8 (M)', action: 'label_size_m' },
+        { label: 'US 10 (M)', action: 'label_size_m' },
+        { label: 'US 12 (L)', action: 'label_size_l' },
+        { label: 'US 14 (XL)', action: 'label_size_xl' }
+      ],
+      intent: 'sizing_intl_pick',
+      updatedContext
+    };
+  }
+
+  if (userInput === 'intl_sys_eu') {
+    return {
+      text: `Please choose your usual EU size:`,
+      options: [
+        { label: 'EU 34 (XS)', action: 'label_size_xs' },
+        { label: 'EU 36 (S)', action: 'label_size_s' },
+        { label: 'EU 38 (S)', action: 'label_size_s' },
+        { label: 'EU 40 (M)', action: 'label_size_m' },
+        { label: 'EU 42 (L)', action: 'label_size_l' },
+        { label: 'EU 44 (XL)', action: 'label_size_xl' },
+        { label: 'EU 46 (XXL)', action: 'label_size_xxl' }
+      ],
+      intent: 'sizing_intl_pick',
+      updatedContext
+    };
+  }
+
+  // ─── GUIDED BODY MEASUREMENTS SUB-FLOW ────────────────────────────────────
+  if (userInput === 'sizing_guided_start') {
+    profile.onboardingStage = 'sizing_path_guided_unit';
+    return {
+      text: `Would you prefer to enter your measurements in inches or centimetres?`,
+      options: [
+        { label: 'Inches', action: 'guided_unit_in' },
+        { label: 'Centimetres', action: 'guided_unit_cm' },
+        { label: 'Back to Sizing', action: 'sizing_path_select' }
+      ],
+      intent: 'sizing_path_guided_unit',
+      updatedContext
+    };
+  }
+
+  if (userInput === 'guided_unit_in' || userInput === 'guided_unit_cm') {
+    const unit = userInput === 'guided_unit_cm' ? 'cm' : 'in';
+    profile.preferredUnit = unit;
+    profile.measurements = { unit };
+    profile.onboardingStage = 'sizing_assistant_bust';
+
+    const unitWord = unit === 'cm' ? 'centimetres' : 'inches';
+    return {
+      text: `What is your bust or chest measurement in ${unitWord}? (Measure around the fullest part of your chest)\n\nEnter a number, or choose "Skip Bust".`,
+      options: [
+        { label: 'Skip Bust', action: 'skip_guided_bust' },
+        { label: 'Back to Sizing', action: 'sizing_path_select' }
+      ],
+      intent: 'sizing_assistant_bust',
+      updatedContext
+    };
+  }
+
+  if (profile.onboardingStage === 'sizing_assistant_bust' && userInput !== 'guided_unit_in' && userInput !== 'guided_unit_cm') {
+    if (userInput !== 'skip_guided_bust') {
+      const numMatch = userInput.match(/(\d+(?:\.\d+)?)/);
+      if (numMatch) {
+        const val = parseFloat(numMatch[1]);
+        if (profile.measurements) profile.measurements.bust = val;
+      }
+    }
+    profile.onboardingStage = 'sizing_assistant_waist';
+    const unitWord = profile.preferredUnit === 'cm' ? 'centimetres' : 'inches';
+    return {
+      text: `Thank you. What is your natural waist measurement in ${unitWord}? (Measure around the narrowest part of your waist, just above the navel)`,
+      options: [
+        { label: 'Skip Waist', action: 'skip_guided_waist' },
+        { label: 'Back to Sizing', action: 'sizing_path_select' }
+      ],
+      intent: 'sizing_assistant_waist',
+      updatedContext
+    };
+  }
+
+  if (profile.onboardingStage === 'sizing_assistant_waist') {
+    if (userInput !== 'skip_guided_waist') {
+      const numMatch = userInput.match(/(\d+(?:\.\d+)?)/);
+      if (numMatch) {
+        const val = parseFloat(numMatch[1]);
+        if (profile.measurements) profile.measurements.waist = val;
+      }
+    }
+    profile.onboardingStage = 'sizing_assistant_hips';
+    const unitWord = profile.preferredUnit === 'cm' ? 'centimetres' : 'inches';
+    return {
+      text: `And what is your hip measurement in ${unitWord}? (Measure around the fullest part of your hips and seat)`,
+      options: [
+        { label: 'Skip Hips', action: 'skip_guided_hips' },
+        { label: 'Calculate Best Size', action: 'calc_guided_size' }
+      ],
+      intent: 'sizing_assistant_hips',
+      updatedContext
+    };
+  }
+
+  if (profile.onboardingStage === 'sizing_assistant_hips' || userInput === 'calc_guided_size') {
+    if (userInput !== 'skip_guided_hips' && userInput !== 'calc_guided_size') {
+      const numMatch = userInput.match(/(\d+(?:\.\d+)?)/);
+      if (numMatch) {
+        const val = parseFloat(numMatch[1]);
+        if (profile.measurements) profile.measurements.hips = val;
+      }
+    }
+    profile.onboardingStage = 'onboarded';
+    const evalResult = evaluateSizing(profile.measurements || { unit: profile.preferredUnit }, updatedContext.activeCategory === 'men' ? 'men' : 'women');
+    profile.usualSize = evalResult.recommendedSize;
+
+    const text =
+      `Based on your measurements (${evalResult.customerMeasurementsSummary}), our closest ready-to-wear match is **Size ${evalResult.recommendedSize}**.\n\n` +
+      `${evalResult.fitExplanation}\n\n` +
+      `Would you like to explore pieces in Size ${evalResult.recommendedSize}, or would you prefer a personalized fitting consultation?`;
+
+    return {
+      text,
+      options: [
+        { label: `View Size ${evalResult.recommendedSize} Pieces`, action: 'filter_all' },
+        { label: 'Check Garment Fit', action: 'check_garment_fit' },
+        { label: 'View Size Chart', action: 'open_size_chart' },
+        { label: 'Chat on WhatsApp', action: 'contact_whatsapp' }
+      ],
+      intent: 'sizing_reference_matched',
+      updatedContext
+    };
+  }
+
   // ─── STEP 1: ASK ABOUT AN EXISTING GARMENT ─────────────────────────────────
   const isSizingStart =
     userInput === 'size_not_sure' ||
-    userInput === 'start_size_assistance' ||
-    userInput === 'sizing_path_select' ||
-    userInput === 'sizing_help' ||
     norm === 'not sure' ||
     norm === 'i m not sure' ||
-    norm === 'im not sure' ||
-    norm === 'help me with my size' ||
-    norm === 'help with size' ||
-    norm === 'size help' ||
-    norm === 'sizing help';
+    norm === 'im not sure';
 
   if (isSizingStart) {
     profile.onboardingStage = 'sizing_garment_inquiry';
@@ -838,7 +1140,10 @@ export function processConciergeMessage(
       text,
       options: [
         { label: 'Book a Fitting', action: 'book_fitting_yes' },
-        { label: 'No thank you, continue shopping', action: 'book_fitting_no' }
+        { label: 'No thank you, continue shopping', action: 'book_fitting_no' },
+        { label: 'Enter Measurements Instead', action: 'sizing_guided_start' },
+        { label: 'UK / US / EU Conversion', action: 'sizing_intl_start' },
+        { label: 'Chat on WhatsApp', action: 'contact_whatsapp' }
       ],
       intent: 'sizing_fitting_offer',
       updatedContext
@@ -1002,35 +1307,44 @@ export function processConciergeMessage(
     };
   }
 
-  // ─── INTENT CLASSIFICATION ───────────────────────────────────────────────
-  const classifiedIntent = classifyCustomerIntent(userInput, updatedContext);
-
   // ─── ACTIVE MEASUREMENT STAGE MACHINE ─────────────────────────────────────
 
   // 1. Stage: awaiting_name
   if (profile.onboardingStage === 'awaiting_name') {
-    const isDirectQuestion = [
-      'product_price',
-      'size_availability',
-      'product_color',
-      'product_material',
-      'product_care',
-      'compare_products',
-      'similar_products',
-      'delivery_info',
-      'returns_info',
-      'exchanges_info',
-      'alterations_info',
-      'payment_info',
-      'how_to_order',
-      'order_assistance',
-      'contact_boutique',
-      'explore_women',
-      'explore_men',
-      'explore_bags'
-    ].includes(classifiedIntent);
+    // If the customer explicitly declines or skips giving their name
+    if (
+      norm === 'skip' ||
+      norm === 'no' ||
+      norm === 'nope' ||
+      norm === 'nah' ||
+      norm === 'none' ||
+      norm === 'pass' ||
+      norm.includes('just browsing') ||
+      norm.includes('just looking') ||
+      norm.includes('anonymous') ||
+      norm.includes('prefer not') ||
+      norm.includes('no name')
+    ) {
+      profile.onboardingStage = 'onboarded';
+      return {
+        text: `Welcome to Nnepa Foriwaa! Feel free to explore our collections or ask any question about fabrics, sizing, and orders. How can I help you today?`,
+        options: [
+          { label: 'Explore Collections', action: 'explore_collections' },
+          { label: 'Find My Size', action: 'sizing_path_select' },
+          { label: 'Delivery & Shipping', action: 'delivery_info' },
+          { label: 'Chat on WhatsApp', action: 'contact_whatsapp' }
+        ],
+        intent: 'onboarding_skipped',
+        updatedContext
+      };
+    }
 
-    if (!isDirectQuestion) {
+    // If the customer asks ANY direct question or known intent, answer it immediately!
+    const isDirectQuestion = classifiedIntent !== 'unknown' && classifiedIntent !== 'greeting';
+    if (isDirectQuestion) {
+      profile.onboardingStage = 'onboarded';
+      // Fall through to intent handlers below to answer the user's question directly
+    } else {
       const extractedName = extractCustomerName(userInput);
       if (extractedName && classifiedIntent !== 'greeting') {
         profile.preferredName = extractedName;
@@ -1607,6 +1921,133 @@ export function processConciergeMessage(
         { label: 'Size & Fit Guide', action: 'size_guide' }
       ],
       intent: classifiedIntent,
+      updatedContext
+    };
+  }
+
+  // ─── INTENT: CONNECT WITH HUMAN STYLIST ──────────────────────────────────
+  if (classifiedIntent === 'connect_human' || userInput === 'connect_human') {
+    const text =
+      `**Connect with Our Boutique Stylist:**\n\n` +
+      `Our personal stylists and master tailors in Accra are delighted to assist you directly with custom tailoring, bespoke bridal consultations, international sizing, or order inquiries.\n\n` +
+      `• **WhatsApp**: [+233 53 879 5669](https://wa.me/233538795669) (Fastest personal response)\n` +
+      `• **Phone**: +233 53 879 5669\n` +
+      `• **Email**: sales@nnepaforiwaa.com\n` +
+      `• **Boutique Hours**: Monday – Saturday, 9:00 AM – 6:00 PM GMT\n` +
+      `• **Private Studio Fittings**: Accra atelier by appointment.`;
+
+    return {
+      text,
+      options: [
+        { label: 'Chat on WhatsApp', action: 'contact_whatsapp' },
+        { label: 'Book Atelier Fitting', action: 'book_fitting' },
+        { label: 'Browse Collections', action: 'filter_all' },
+        { label: 'Start Over', action: 'main_menu' }
+      ],
+      intent: 'connect_human',
+      updatedContext
+    };
+  }
+
+  // ─── INTENT: BESPOKE & BRIDAL COMMISSIONS ─────────────────────────────────
+  if (classifiedIntent === 'bespoke_bridal_inquiry') {
+    const text =
+      `**Bespoke & Bridal Tailoring:**\n\n` +
+      `In addition to our ready-to-wear collections, Nnepa Foriwaa crafts made-to-measure ensembles for brides, grooms, wedding parties, and formal ceremonies.\n\n` +
+      `• **Textiles**: Authentic handwoven Asante Kente, Aso-Oke, damask brocade, raw silk, and artisanal embroideries.\n` +
+      `• **Timeline**: Custom commissions typically take 3 to 6 weeks from measurement confirmation to completion.\n` +
+      `• **Consultation**: Message our stylist on WhatsApp (+233 53 879 5669) with your wedding date and inspiration, or schedule an atelier fitting in Accra.`;
+
+    return {
+      text,
+      options: [
+        { label: 'Consult on WhatsApp', action: 'contact_whatsapp' },
+        { label: 'Book Atelier Fitting', action: 'book_fitting' },
+        { label: 'Explore Collections', action: 'filter_all' }
+      ],
+      intent: 'bespoke_bridal_inquiry',
+      updatedContext
+    };
+  }
+
+  // ─── INTENT: CURRENCY & FOREIGN PAYMENTS ──────────────────────────────────
+  if (classifiedIntent === 'currency_payment_info') {
+    const text =
+      `**Currency & Payment Information:**\n\n` +
+      `• **Displayed Currency**: Prices on our website are shown in Ghana Cedis (GH₵ / GHS).\n` +
+      `• **International Orders**: We accept international credit and debit cards (Visa, Mastercard) and direct bank transfers. We can also provide a direct invoice in USD, GBP, or EUR via WhatsApp.\n` +
+      `• **Domestic Orders**: Ghana Mobile Money (MTN MoMo, Vodafone Cash) and local bank transfers are fully supported upon order confirmation.\n` +
+      `• **Payment Timing**: No payment is charged immediately online; our boutique team contacts you with your order specifications before payment is finalized.`;
+
+    return {
+      text,
+      options: [
+        { label: 'Chat on WhatsApp', action: 'contact_whatsapp' },
+        { label: 'Delivery Details', action: 'delivery_info' },
+        { label: 'Browse Collections', action: 'filter_all' }
+      ],
+      intent: 'currency_payment_info',
+      updatedContext
+    };
+  }
+
+  // ─── INTENT: INTERNATIONAL DELIVERY (UK, US, WORLDWIDE) ───────────────────
+  if (classifiedIntent === 'international_delivery_info') {
+    const text =
+      `**Worldwide Express Shipping (UK, US, Europe & Worldwide):**\n\n` +
+      `We ship internationally to the United Kingdom, United States, Canada, Europe, Nigeria, and worldwide via **DHL Express**.\n\n` +
+      `• **Transit Time**: **3 to 7 business days** from dispatch.\n` +
+      `• **Tracking**: An official DHL Express tracking link is provided as soon as your garment departs our Accra atelier.\n` +
+      `• **Packaging**: Each piece is individually wrapped, boxed, and sealed in boutique packaging.\n` +
+      `• **Tailoring Timeline**: Standard ready-to-wear pieces prepare in 1–3 business days; tailored pieces take 3–7 business days before dispatch.`;
+
+    return {
+      text,
+      options: [
+        { label: 'Browse Collections', action: 'filter_all' },
+        { label: 'Size & Length Guide', action: 'size_guide' },
+        { label: 'Chat on WhatsApp', action: 'contact_whatsapp' }
+      ],
+      intent: 'international_delivery_info',
+      updatedContext
+    };
+  }
+
+  // ─── INTENT: ATELIER LOCATION & STUDIO VISIT ─────────────────────────────
+  if (classifiedIntent === 'location_atelier_info') {
+    const text =
+      `**Our Studio & Atelier Location:**\n\n` +
+      `Nnepa Foriwaa is headquartered and handcrafted in **Accra, Ghana**.\n\n` +
+      `Our creative atelier welcomes clients for private styling appointments, custom fittings, and bespoke measurements from Monday through Saturday, 9:00 AM to 6:00 PM GMT.\n\n` +
+      `To schedule a private visit to our Accra studio, please request an appointment on our Contact page or message us directly on WhatsApp (+233 53 879 5669).`;
+
+    return {
+      text,
+      options: [
+        { label: 'Book a Fitting', action: 'book_fitting' },
+        { label: 'Message on WhatsApp', action: 'contact_whatsapp' },
+        { label: 'Explore Collections', action: 'filter_all' }
+      ],
+      intent: 'location_atelier_info',
+      updatedContext
+    };
+  }
+
+  // ─── INTENT: BRAND STORY & DESIGNER ──────────────────────────────────────
+  if (classifiedIntent === 'brand_story_info') {
+    const text =
+      `**About Nnepa Foriwaa:**\n\n` +
+      `Founded in 2015 by Ghanaian designer **Josepha Boham-Yawson**, Nnepa Foriwaa merges modern tailoring with authentic West African textile heritage.\n\n` +
+      `Every garment and accessory is individually cut, tailored, and hand-finished in Accra using textiles sourced from artisan weaving communities across Ghana, Nigeria, and Senegal.`;
+
+    return {
+      text,
+      options: [
+        { label: 'Explore Womenswear', action: 'filter_women' },
+        { label: 'Explore Menswear', action: 'filter_men' },
+        { label: 'Chat with Boutique', action: 'contact_whatsapp' }
+      ],
+      intent: 'brand_story_info',
       updatedContext
     };
   }

@@ -598,4 +598,52 @@ describe('NNEPA Shopping Concierge — Core Knowledge & Intelligence Test Suite'
       }
     }
   });
+
+  // 33. Anti-Random-Name Safeguard: "no", "skip", "just browsing", "none" do NOT set fake names
+  test('Scenario 33: Non-name phrases never assign random or absurd customer names', () => {
+    const nonNamePhrases = ['skip', 'no', 'none', 'pass', 'just browsing', 'not sure', 'idk'];
+    for (const phrase of nonNamePhrases) {
+      let ctx = createInitialConciergeContext(null);
+      assert.equal(ctx.profile.onboardingStage, 'awaiting_name');
+
+      const res = processConciergeMessage(phrase, ctx, CATALOGUE);
+      assert.equal(res.updatedContext.profile.preferredName, undefined, `Must not assign "${phrase}" as customer name`);
+      assert.ok(!res.text.toLowerCase().includes(`lovely to meet you, ${phrase}`), `Must not greet customer as "${phrase}"`);
+    }
+  });
+
+  // 34. Direct Question on Turn 1 Answers Immediately Without Trapping in Name Onboarding
+  test('Scenario 34: Asking direct questions on turn 1 answers immediately without demanding name', () => {
+    let ctx = createInitialConciergeContext(null);
+    assert.equal(ctx.profile.onboardingStage, 'awaiting_name');
+
+    // Customer asks about shipping to UK
+    const res = processConciergeMessage('Do you ship to London and the UK?', ctx, CATALOGUE);
+    assert.equal(res.intent, 'international_delivery_info');
+    assert.ok(res.text.includes('DHL Express'), 'Answers DHL Express transit');
+    assert.ok(res.text.includes('United Kingdom') || res.text.includes('UK'), 'Answers UK delivery details');
+    assert.equal(res.updatedContext.profile.preferredName, undefined, 'Did not mistake query for customer name');
+  });
+
+  // 35. Human Connection / Hard Question Escalation Bridge
+  test('Scenario 35: Asking for human agent or complex inquiry provides clear WhatsApp boutique handoff', () => {
+    let ctx = createInitialConciergeContext(null);
+
+    const res = processConciergeMessage('Can I talk to a real person or stylist?', ctx, CATALOGUE);
+    assert.equal(res.intent, 'connect_human');
+    assert.ok(res.text.includes('+233 53 879 5669'), 'Provides official phone/WhatsApp number');
+    assert.ok(res.options.some((o) => o.action === 'contact_whatsapp'), 'Provides WhatsApp option button');
+  });
+
+  // 36. Multi-path Sizing Assistance (Measurements, International conversion, Garment, Chart)
+  test('Scenario 36: Sizing options provide multiple practical pathways to find size', () => {
+    let ctx = createInitialConciergeContext(null);
+
+    const res = processConciergeMessage('sizing_path_select', ctx, CATALOGUE);
+    assert.equal(res.intent, 'sizing_path_select');
+    assert.ok(res.options.some((o) => o.action === 'sizing_guided_start'), 'Offers guided measurements path');
+    assert.ok(res.options.some((o) => o.action === 'sizing_intl_start'), 'Offers international conversion path');
+    assert.ok(res.options.some((o) => o.action === 'open_size_chart'), 'Offers size chart path');
+    assert.ok(res.options.some((o) => o.action === 'contact_whatsapp'), 'Offers WhatsApp stylist consultation');
+  });
 });

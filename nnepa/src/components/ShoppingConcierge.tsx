@@ -88,11 +88,17 @@ export default function ShoppingConcierge({
     text: `Hello! I’m NNEPA, your personal shopping assistant. It’s lovely to have you here. What would you like me to call you?`,
     timestamp: getTimeString(),
     options: [
-      { label: 'Browse Collections Directly', action: 'skip_onboarding' }
+      { label: 'Browse Collections', action: 'explore_collections' },
+      { label: 'Find My Size', action: 'sizing_path_select' },
+      { label: 'Delivery & Shipping', action: 'delivery_info' },
+      { label: 'Chat with Stylist', action: 'connect_human' },
+      { label: 'Skip / Just Browsing', action: 'skip_onboarding' }
     ]
   });
 
   const [messages, setMessages] = useState<ChatMessage[]>([getInitialWelcomeMessage()]);
+  const [isThinking, setIsThinking] = useState(false);
+  const thinkingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Keep engine context updated with storefront product navigation
   useEffect(() => {
@@ -134,7 +140,7 @@ export default function ShoppingConcierge({
     if (isOpen) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
-  }, [messages, isOpen]);
+  }, [messages, isOpen, isThinking]);
 
   // Lock background body scrolling on mobile when chat is actively open
   useEffect(() => {
@@ -157,6 +163,11 @@ export default function ShoppingConcierge({
 
   // Separate, intentional action to start a fresh new conversation
   const handleStartNewChat = () => {
+    if (thinkingTimerRef.current) {
+      clearTimeout(thinkingTimerRef.current);
+      thinkingTimerRef.current = null;
+    }
+    setIsThinking(false);
     contextRef.current = createInitialConciergeContext(activeProduct ?? null);
     setMessages([getInitialWelcomeMessage()]);
     setInputValue('');
@@ -304,6 +315,11 @@ export default function ShoppingConcierge({
 
   // ═══ DISPATCH USER INQUIRY TO CONCIERGE ENGINE ═══
   const dispatchToEngine = (userText: string, displayLabel?: string) => {
+    if (thinkingTimerRef.current) {
+      clearTimeout(thinkingTimerRef.current);
+      thinkingTimerRef.current = null;
+    }
+
     const userMsg: ChatMessage = {
       id: 'usr_' + Date.now(),
       sender: 'user',
@@ -311,166 +327,184 @@ export default function ShoppingConcierge({
       timestamp: getTimeString()
     };
 
-    const engineResponse = processConciergeMessage(
-      userText,
-      contextRef.current,
-      products
-    );
+    setMessages((prev) => [...prev, userMsg]);
+    setIsThinking(true);
 
-    // Update in-memory context reference
-    contextRef.current = engineResponse.updatedContext;
+    // Natural 1.8-second thinking delay to simulate thoughtful personal shopping concierge
+    thinkingTimerRef.current = setTimeout(() => {
+      const engineResponse = processConciergeMessage(
+        userText,
+        contextRef.current,
+        products
+      );
 
-    const botMsg: ChatMessage = {
-      id: 'bot_' + (Date.now() + 1),
-      sender: 'concierge',
-      text: engineResponse.text,
-      timestamp: getTimeString(),
-      options: engineResponse.options,
-      products: engineResponse.products
+      // Update in-memory context reference
+      contextRef.current = engineResponse.updatedContext;
+
+      const botMsg: ChatMessage = {
+        id: 'bot_' + (Date.now() + 1),
+        sender: 'concierge',
+        text: engineResponse.text,
+        timestamp: getTimeString(),
+        options: engineResponse.options,
+        products: engineResponse.products
+      };
+
+      setMessages((prev) => [...prev, botMsg]);
+      setIsThinking(false);
+      thinkingTimerRef.current = null;
+    }, 1800);
+  };
+
+  const dispatchCustomBotResponse = (
+    userLabel: string,
+    botText: string,
+    botOptions?: ConciergeActionOption[],
+    sideEffect?: () => void
+  ) => {
+    if (thinkingTimerRef.current) {
+      clearTimeout(thinkingTimerRef.current);
+      thinkingTimerRef.current = null;
+    }
+
+    const userMsg: ChatMessage = {
+      id: 'usr_' + Date.now(),
+      sender: 'user',
+      text: userLabel,
+      timestamp: getTimeString()
     };
 
-    setMessages((prev) => [...prev, userMsg, botMsg]);
+    setMessages((prev) => [...prev, userMsg]);
+    setIsThinking(true);
+    if (sideEffect) sideEffect();
+
+    thinkingTimerRef.current = setTimeout(() => {
+      const botMsg: ChatMessage = {
+        id: 'bot_' + (Date.now() + 1),
+        sender: 'concierge',
+        text: botText,
+        timestamp: getTimeString(),
+        options: botOptions
+      };
+
+      setMessages((prev) => [...prev, botMsg]);
+      setIsThinking(false);
+      thinkingTimerRef.current = null;
+    }, 1500);
   };
 
   // ═══ INTERACTIVE ACTIONS & PREDEFINED OPTIONS ═══
   const handleOptionClick = (action: string, payload?: any, label?: string) => {
     switch (action) {
       case 'main_menu':
-        dispatchToEngine('Show main menu');
+        dispatchToEngine('Show main menu', 'Main Menu');
+        break;
+
+      case 'connect_human':
+        dispatchToEngine('connect_human', label || 'Chat with Stylist');
+        break;
+
+      case 'start_size_assistance':
+      case 'sizing_path_select':
+        dispatchToEngine('sizing_path_select', label || 'Find My Size');
+        break;
+
+      case 'sizing_guided_start':
+        dispatchToEngine('sizing_guided_start', label || 'Enter Measurements');
+        break;
+
+      case 'sizing_intl_start':
+        dispatchToEngine('sizing_intl_start', label || 'UK / US / EU Conversion');
         break;
 
       case 'explore_collections':
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: 'usr_' + Date.now(),
-            sender: 'user',
-            text: 'Explore Collections',
-            timestamp: getTimeString()
-          },
-          {
-            id: 'bot_' + (Date.now() + 1),
-            sender: 'concierge',
-            text: 'Which collection would you like to view?',
-            timestamp: getTimeString(),
-            options: [
-              { label: 'Womenswear', action: 'filter_women' },
-              { label: 'Menswear', action: 'filter_men' },
-              { label: 'Bags & Accessories', action: 'filter_bags' },
-              { label: 'All Items', action: 'filter_all' }
-            ]
-          }
-        ]);
+        dispatchCustomBotResponse(
+          'Explore Collections',
+          'Which collection would you like to view?',
+          [
+            { label: 'Womenswear', action: 'filter_women' },
+            { label: 'Menswear', action: 'filter_men' },
+            { label: 'Bags & Accessories', action: 'filter_bags' },
+            { label: 'All Items', action: 'filter_all' }
+          ]
+        );
         break;
 
       case 'filter_women':
         onNavigate('shop', 'women');
-        dispatchToEngine('Explore womenswear');
+        dispatchToEngine('Explore womenswear', 'Womenswear');
         break;
 
       case 'filter_men':
         onNavigate('shop', 'men');
-        dispatchToEngine('Explore menswear');
+        dispatchToEngine('Explore menswear', 'Menswear');
         break;
 
       case 'filter_bags':
         onNavigate('shop', 'bags');
-        dispatchToEngine('Explore bags');
+        dispatchToEngine('Explore bags', 'Bags & Accessories');
         break;
 
       case 'filter_all':
         onNavigate('shop', 'all');
-        dispatchToEngine('Show all boutique garments');
+        dispatchToEngine('Show all boutique garments', 'All Items');
         break;
 
       case 'find_product':
-        dispatchToEngine('Help me find a garment');
+        dispatchToEngine('Help me find a garment', 'Find a Garment');
         break;
 
       case 'size_guide':
-        dispatchToEngine('Size and length guide');
+        dispatchToEngine('Size and length guide', 'Size Guide');
         break;
 
       case 'open_size_chart':
-        onOpenSizeChart();
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: 'usr_' + Date.now(),
-            sender: 'user',
-            text: 'Open Size Chart',
-            timestamp: getTimeString()
-          },
-          {
-            id: 'bot_' + (Date.now() + 1),
-            sender: 'concierge',
-            text: 'I have opened the Size Chart and Length Guide for you. You can review measurements across US, UK, and EU standards.',
-            timestamp: getTimeString(),
-            options: [
-              { label: 'Return to Shopping', action: 'filter_all' },
-              { label: 'Chat on WhatsApp', action: 'contact_whatsapp' }
-            ]
-          }
-        ]);
+        dispatchCustomBotResponse(
+          'Open Size Chart',
+          'I have opened the Size Chart and Length Guide for you. You can review measurements across US, UK, and EU standards.',
+          [
+            { label: 'Return to Shopping', action: 'filter_all' },
+            { label: 'Chat on WhatsApp', action: 'contact_whatsapp' }
+          ],
+          () => onOpenSizeChart()
+        );
         break;
 
       case 'delivery_info':
-        dispatchToEngine('Tell me about delivery and shipping');
+        dispatchToEngine('Tell me about delivery and shipping', 'Delivery Info');
         break;
 
       case 'how_to_order':
-        dispatchToEngine('How to place an order');
+        dispatchToEngine('How to place an order', 'How to Order');
         break;
 
       case 'open_bag':
-        onOpenCart();
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: 'usr_' + Date.now(),
-            sender: 'user',
-            text: 'Open Shopping Bag',
-            timestamp: getTimeString()
-          },
-          {
-            id: 'bot_' + (Date.now() + 1),
-            sender: 'concierge',
-            text: 'I have opened your shopping bag. You can review your selected pieces, verify quantities, and proceed to checkout.',
-            timestamp: getTimeString(),
-            options: [
-              { label: 'Proceed to Checkout', action: 'go_to_checkout' },
-              { label: 'Continue Shopping', action: 'explore_collections' },
-              { label: 'Chat on WhatsApp', action: 'contact_whatsapp' }
-            ]
-          }
-        ]);
+        dispatchCustomBotResponse(
+          'Open Shopping Bag',
+          'I have opened your shopping bag. You can review your selected pieces, verify quantities, and proceed to checkout.',
+          [
+            { label: 'Proceed to Checkout', action: 'go_to_checkout' },
+            { label: 'Continue Shopping', action: 'explore_collections' },
+            { label: 'Chat on WhatsApp', action: 'contact_whatsapp' }
+          ],
+          () => onOpenCart()
+        );
         break;
 
       case 'track_order':
-        dispatchToEngine('How do I track my order?');
+        dispatchToEngine('How do I track my order?', 'Track Order');
         break;
 
       case 'book_fitting':
-        onNavigate('contact');
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: 'usr_' + Date.now(),
-            sender: 'user',
-            text: 'Book a Fitting',
-            timestamp: getTimeString()
-          },
-          {
-            id: 'bot_' + (Date.now() + 1),
-            sender: 'concierge',
-            text: 'I have navigated you to our Contact page. You can schedule a studio fitting in Accra or connect directly with our tailoring team.',
-            timestamp: getTimeString(),
-            options: [
-              { label: 'Chat on WhatsApp', action: 'contact_whatsapp' },
-              { label: 'Main Menu', action: 'main_menu' }
-            ]
-          }
-        ]);
+        dispatchCustomBotResponse(
+          'Book a Fitting',
+          'I have navigated you to our Contact page. You can schedule a studio fitting in Accra or connect directly with our tailoring team.',
+          [
+            { label: 'Chat on WhatsApp', action: 'contact_whatsapp' },
+            { label: 'Main Menu', action: 'main_menu' }
+          ],
+          () => onNavigate('contact')
+        );
         break;
 
       case 'navigate_product':
@@ -478,27 +512,16 @@ export default function ShoppingConcierge({
           onNavigate('details', undefined, payload);
           contextRef.current.focusedProduct = payload;
           contextRef.current.activeCategory = payload.category;
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: 'usr_' + Date.now(),
-              sender: 'user',
-              text: `View ${payload.name}`,
-              timestamp: getTimeString()
-            },
-            {
-              id: 'bot_' + (Date.now() + 1),
-              sender: 'concierge',
-              text: `Navigated to the **${payload.name}** (GH₵ ${payload.price.toLocaleString()}). What would you like to know about its cut, fabrics, or sizing?`,
-              timestamp: getTimeString(),
-              options: [
-                { label: 'Add to Bag', action: 'order_assistance' },
-                { label: 'Size Guide', action: 'size_guide' },
-                { label: 'Delivery Details', action: 'delivery_info' },
-                { label: 'Chat on WhatsApp', action: 'contact_whatsapp' }
-              ]
-            }
-          ]);
+          dispatchCustomBotResponse(
+            `View ${payload.name}`,
+            `Navigated to the **${payload.name}** (GH₵ ${payload.price.toLocaleString()}). What would you like to know about its cut, fabrics, or sizing?`,
+            [
+              { label: 'Add to Bag', action: 'order_assistance' },
+              { label: 'Size Guide', action: 'size_guide' },
+              { label: 'Delivery Details', action: 'delivery_info' },
+              { label: 'Chat on WhatsApp', action: 'contact_whatsapp' }
+            ]
+          );
         }
         break;
 
@@ -630,7 +653,7 @@ export default function ShoppingConcierge({
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     const query = inputValue.trim();
-    if (!query) return;
+    if (!query || isThinking) return;
 
     setInputValue('');
     dispatchToEngine(query);
@@ -767,19 +790,21 @@ export default function ShoppingConcierge({
                   {NNEPA_IDENTITY.name}
                 </h3>
                 <span className="text-[10px] text-lavender/90 flex items-center gap-1 font-light">
-                  <span>{NNEPA_IDENTITY.title}</span>
+                  <span className={`w-1.5 h-1.5 rounded-full ${isThinking ? 'bg-gold animate-ping' : 'bg-emerald-400 animate-pulse'}`} />
+                  <span>{isThinking ? 'Thinking...' : NNEPA_IDENTITY.title}</span>
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={handleStartNewChat}
-                aria-label="Start new conversation"
+                aria-label="Start over with a fresh conversation"
                 title="Start a new conversation"
-                className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center border-none cursor-pointer transition-colors"
+                className="px-2.5 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-white flex items-center gap-1.5 border border-white/20 cursor-pointer transition-colors text-[10.5px] font-medium"
               >
-                <RotateCcw className="w-3.5 h-3.5 text-lavender hover:text-white" />
+                <RotateCcw className="w-3 h-3 text-lavender" />
+                <span>Start Over</span>
               </button>
               <button
                 type="button"
@@ -868,8 +893,9 @@ export default function ShoppingConcierge({
                       <button
                         key={idx}
                         type="button"
+                        disabled={isThinking}
                         onClick={() => handleOptionClick(opt.action, opt.payload, opt.label)}
-                        className="px-3 py-1.5 bg-white border border-lilac/40 hover:border-plum-dark hover:bg-lavender/10 text-plum-dark rounded-full text-[10.5px] font-medium transition-all cursor-pointer shadow-xs text-left break-words max-w-full leading-snug min-h-[30px] flex items-center"
+                        className="px-3 py-1.5 bg-white border border-lilac/40 hover:border-plum-dark hover:bg-lavender/10 text-plum-dark rounded-full text-[10.5px] font-medium transition-all cursor-pointer shadow-xs text-left break-words max-w-full leading-snug min-h-[30px] flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {opt.label}
                       </button>
@@ -878,6 +904,23 @@ export default function ShoppingConcierge({
                 )}
               </div>
             ))}
+
+            {/* ═══ NATURAL CONCIERGE THINKING INDICATOR ═══ */}
+            {isThinking && (
+              <div className="flex flex-col items-start animate-in fade-in duration-200">
+                <div className="bg-white text-zinc-700 border border-zinc-200/90 rounded-2xl rounded-bl-xs px-3.5 py-2.5 shadow-xs flex items-center gap-2.5">
+                  <div className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-plum-dark animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-plum-dark animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-plum-dark animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                  <span className="text-[11px] text-zinc-500 font-sans font-medium">
+                    NNEPA is thinking...
+                  </span>
+                </div>
+              </div>
+            )}
+
             <div ref={messagesEndRef} />
           </div>
 
@@ -885,27 +928,38 @@ export default function ShoppingConcierge({
           <div className="px-3 py-1.5 bg-white border-t border-zinc-100 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0 text-[10px]">
             <button
               type="button"
+              disabled={isThinking}
               onClick={() => handleOptionClick('size_guide')}
-              className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1 transition-colors"
+              className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1 transition-colors disabled:opacity-50"
             >
               <Ruler className="w-3 h-3 text-lavender" />
               <span>Size Guide</span>
             </button>
             <button
               type="button"
+              disabled={isThinking}
               onClick={() => handleOptionClick('delivery_info')}
-              className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1 transition-colors"
+              className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1 transition-colors disabled:opacity-50"
             >
               <Truck className="w-3 h-3 text-lavender" />
               <span>Delivery</span>
             </button>
             <button
               type="button"
+              disabled={isThinking}
               onClick={() => handleOptionClick('contact_whatsapp')}
-              className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1 transition-colors"
+              className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1 transition-colors disabled:opacity-50"
             >
               <MessageSquare className="w-3 h-3 text-lavender" />
               <span>WhatsApp</span>
+            </button>
+            <button
+              type="button"
+              disabled={isThinking}
+              onClick={() => handleOptionClick('connect_human')}
+              className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1 transition-colors disabled:opacity-50"
+            >
+              <span>Stylist</span>
             </button>
             <button
               type="button"
@@ -914,7 +968,7 @@ export default function ShoppingConcierge({
               className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1 transition-colors"
             >
               <RotateCcw className="w-3 h-3 text-lavender" />
-              <span>New Chat</span>
+              <span>Start Over</span>
             </button>
           </div>
 
@@ -926,19 +980,22 @@ export default function ShoppingConcierge({
             <input
               type="text"
               value={inputValue}
+              disabled={isThinking}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder={
-                contextRef.current.profile.onboardingStage === 'awaiting_name'
-                  ? 'What would you like me to call you? (e.g. Ama)'
+                isThinking
+                  ? 'NNEPA is thinking...'
+                  : contextRef.current.profile.onboardingStage === 'awaiting_name'
+                  ? 'Ask a question or enter your name...'
                   : contextRef.current.profile.onboardingStage === 'sizing_label_inquiry'
                   ? 'Enter label size (e.g. M, UK 12, or US 8)...'
                   : 'Ask NNEPA about sizes, fabrics, delivery...'
               }
-              className="flex-1 px-3 py-2 bg-zinc-100 border border-zinc-200 rounded-full text-xs text-zinc-800 placeholder-zinc-400 outline-none focus:border-plum-dark focus:bg-white transition-all"
+              className="flex-1 px-3 py-2 bg-zinc-100 border border-zinc-200 rounded-full text-xs text-zinc-800 placeholder-zinc-400 outline-none focus:border-plum-dark focus:bg-white transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             />
             <button
               type="submit"
-              disabled={!inputValue.trim()}
+              disabled={!inputValue.trim() || isThinking}
               aria-label="Send question to NNEPA"
               className="w-8 h-8 rounded-full bg-plum-dark text-white flex items-center justify-center shrink-0 border-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-plum transition-colors shadow-xs"
             >
