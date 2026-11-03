@@ -23,7 +23,8 @@ import {
   Camera,
   Image as ImageIcon,
   CheckCircle2,
-  PackageOpen
+  PackageOpen,
+  ShieldCheck
 } from 'lucide-react';
 import { Product } from '../types.ts';
 import { optimizeImageFile, formatFileSize } from '../utils/imageOptimizer.ts';
@@ -109,13 +110,15 @@ export default function AdminDashboardView({
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadPreview, setUploadPreview] = useState<ImagePreviewState | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const addFileInputRef = useRef<HTMLInputElement | null>(null);
+  const addGalleryInputRef = useRef<HTMLInputElement | null>(null);
+  const addCameraInputRef = useRef<HTMLInputElement | null>(null);
 
   // Edit Product Upload State
   const [editUploadFile, setEditUploadFile] = useState<File | null>(null);
   const [editUploadPreview, setEditUploadPreview] = useState<ImagePreviewState | null>(null);
   const [editUploadingImage, setEditUploadingImage] = useState(false);
-  const editFileInputRef = useRef<HTMLInputElement | null>(null);
+  const editGalleryInputRef = useRef<HTMLInputElement | null>(null);
+  const editCameraInputRef = useRef<HTMLInputElement | null>(null);
 
   const getEffectiveToken = () => {
     return adminToken || localStorage.getItem('nnepa_foriwaa_token') || '';
@@ -221,7 +224,7 @@ export default function AdminDashboardView({
     }
   };
 
-  // ═══ IMAGE PROCESSING ═══
+  // ═══ IMAGE PROCESSING & PRIVACY SANDBOX ═══
   const processImageSelection = async (file: File): Promise<ImagePreviewState> => {
     try {
       const result = await optimizeImageFile(file, 1280, 0.82);
@@ -231,37 +234,43 @@ export default function AdminDashboardView({
         originalSize: result.originalSize,
         optimizedSize: result.optimizedSize
       };
-    } catch {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          resolve({
-            url: reader.result as string,
-            name: file.name,
-            originalSize: file.size,
-            optimizedSize: file.size
-          });
-        };
-        reader.readAsDataURL(file);
-      });
+    } catch (err: any) {
+      showToast(err?.message || 'Error validating image file.');
+      throw err;
     }
   };
 
   const handleAddFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      setUploadFile(file);
-      const preview = await processImageSelection(file);
-      setUploadPreview(preview);
+      try {
+        setUploadFile(file);
+        const preview = await processImageSelection(file);
+        setUploadPreview(preview);
+        showToast('Photo secured and added from device');
+      } catch (err: any) {
+        setUploadFile(null);
+        setUploadPreview(null);
+      } finally {
+        e.target.value = ''; // Reset input to allow re-selection
+      }
     }
   };
 
   const handleEditFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      setEditUploadFile(file);
-      const preview = await processImageSelection(file);
-      setEditUploadPreview(preview);
+      try {
+        setEditUploadFile(file);
+        const preview = await processImageSelection(file);
+        setEditUploadPreview(preview);
+        showToast('New photo secured and ready to save');
+      } catch (err: any) {
+        setEditUploadFile(null);
+        setEditUploadPreview(null);
+      } finally {
+        e.target.value = ''; // Reset input to allow re-selection
+      }
     }
   };
 
@@ -854,50 +863,113 @@ export default function AdminDashboardView({
               </div>
 
               <form onSubmit={handleAddProduct} className="flex flex-col gap-4 text-xs">
-                {/* Upload Section */}
-                <div className="flex flex-col gap-2">
+                {/* Upload Section with Camera Roll & Camera Options */}
+                <div className="flex flex-col gap-2.5">
                   <label className="font-bold text-zinc-700 uppercase tracking-wider text-[11px]">
-                    Garment Photo (Camera / Gallery / File) *
+                    Garment Photo *
                   </label>
+
+                  {/* Dual hidden inputs: Gallery/Roll (no capture) vs Camera (capture="environment") */}
                   <input
                     type="file"
-                    ref={addFileInputRef}
+                    ref={addGalleryInputRef}
+                    accept="image/png, image/jpeg, image/jpg, image/webp, image/heic, image/heif, image/*"
+                    onChange={handleAddFileChange}
+                    className="hidden"
+                  />
+                  <input
+                    type="file"
+                    ref={addCameraInputRef}
                     accept="image/*"
                     capture="environment"
                     onChange={handleAddFileChange}
                     className="hidden"
                   />
-                  <div
-                    onClick={() => addFileInputRef.current?.click()}
-                    className="border-2 border-dashed border-zinc-300 hover:border-plum-dark rounded-lg p-5 flex flex-col items-center justify-center gap-2 cursor-pointer bg-zinc-50/70 hover:bg-zinc-100/50 transition-colors"
-                  >
-                    {uploadPreview ? (
-                      <div className="flex flex-col items-center gap-2">
-                        <img
-                          src={uploadPreview.url}
-                          alt="Preview"
-                          className="w-28 h-36 object-cover rounded shadow-xs"
-                        />
-                        <span className="text-zinc-600 text-[11px]">
-                          Photo ready ({formatFileSize(uploadPreview.optimizedSize)})
-                        </span>
-                        <span className="text-plum-dark underline text-[11px] font-semibold">
-                          Tap to choose another photo
-                        </span>
+
+                  {uploadPreview ? (
+                    <div className="border border-zinc-200 rounded-lg p-4 bg-zinc-50 flex flex-col sm:flex-row items-center gap-4">
+                      <img
+                        src={uploadPreview.url}
+                        alt="Preview"
+                        className="w-24 h-32 object-cover rounded shadow-xs shrink-0"
+                      />
+                      <div className="flex flex-col gap-2 w-full text-left">
+                        <div className="flex items-center gap-1.5 text-emerald-700 font-semibold text-xs">
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>Photo secured & ready ({formatFileSize(uploadPreview.optimizedSize)})</span>
+                        </div>
+                        <p className="text-zinc-500 text-[11px] leading-relaxed">
+                          Original: {formatFileSize(uploadPreview.originalSize)} → Optimized for web. EXIF & GPS location tags stripped.
+                        </p>
+                        <div className="flex flex-wrap gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => addGalleryInputRef.current?.click()}
+                            className="px-3 py-1.5 bg-white border border-zinc-300 rounded font-semibold text-zinc-700 hover:bg-zinc-100 flex items-center gap-1.5 transition-colors cursor-pointer text-xs"
+                          >
+                            <ImageIcon className="w-3.5 h-3.5 text-plum-dark" />
+                            Choose from Camera Roll
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => addCameraInputRef.current?.click()}
+                            className="px-3 py-1.5 bg-white border border-zinc-300 rounded font-semibold text-zinc-700 hover:bg-zinc-100 flex items-center gap-1.5 transition-colors cursor-pointer text-xs"
+                          >
+                            <Camera className="w-3.5 h-3.5 text-plum-dark" />
+                            Retake with Camera
+                          </button>
+                        </div>
                       </div>
-                    ) : (
-                      <>
+                    </div>
+                  ) : (
+                    <div className="border-2 border-dashed border-zinc-300 rounded-lg p-5 flex flex-col items-center justify-center gap-3 bg-zinc-50/70">
+                      <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 rounded-full bg-plum-dark/10 text-plum-dark flex items-center justify-center">
+                          <ImageIcon className="w-5 h-5" />
+                        </div>
                         <div className="w-10 h-10 rounded-full bg-plum-dark/10 text-plum-dark flex items-center justify-center">
                           <Camera className="w-5 h-5" />
                         </div>
-                        <p className="font-semibold text-zinc-800 text-center">
-                          Tap to Take Photo or Upload from Device
+                      </div>
+                      <div className="text-center">
+                        <p className="font-semibold text-zinc-800 text-sm">
+                          Add Garment Photo
                         </p>
-                        <p className="text-[11px] text-zinc-500 text-center">
-                          Works on iPhones, Android phones, tablets, and computers. Auto-optimized.
+                        <p className="text-[11px] text-zinc-500 max-w-sm mt-0.5">
+                          Upload from your phone's camera roll/gallery or take a new picture directly.
                         </p>
-                      </>
-                    )}
+                      </div>
+
+                      <div className="flex flex-wrap justify-center gap-2.5 w-full pt-1">
+                        <button
+                          type="button"
+                          onClick={() => addGalleryInputRef.current?.click()}
+                          className="px-4 py-2 bg-plum-dark text-white rounded font-semibold hover:bg-plum flex items-center gap-2 transition-colors cursor-pointer shadow-xs text-xs"
+                        >
+                          <ImageIcon className="w-4 h-4" />
+                          Choose from Camera Roll / Gallery
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => addCameraInputRef.current?.click()}
+                          className="px-4 py-2 bg-white border border-zinc-300 text-zinc-800 rounded font-semibold hover:bg-zinc-100 flex items-center gap-2 transition-colors cursor-pointer text-xs"
+                        >
+                          <Camera className="w-4 h-4 text-plum-dark" />
+                          Take Photo with Camera
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Privacy & Sandbox Security Guarantee */}
+                  <div className="bg-emerald-50/90 border border-emerald-200/90 rounded-lg p-2.5 text-[11px] text-emerald-950 flex items-start gap-2">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-semibold block text-emerald-900">Protected Camera Roll Sandbox</span>
+                      <span className="text-emerald-800/90 leading-relaxed block mt-0.5">
+                        Your camera roll is sandboxed by your phone's OS. The website cannot access or see any other photos on your device. Only the single photo you select is loaded into memory, and all GPS location and EXIF metadata are automatically scrubbed before saving.
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -1063,40 +1135,65 @@ export default function AdminDashboardView({
               </div>
 
               <form onSubmit={handleEditSave} className="flex flex-col gap-4 text-xs">
-                {/* Photo Update Section */}
-                <div className="flex flex-col gap-2">
+                {/* Photo Update Section with Camera Roll & Camera Options */}
+                <div className="flex flex-col gap-2.5">
                   <label className="font-bold text-zinc-700 uppercase tracking-wider text-[11px]">
                     Garment Photo
                   </label>
                   <input
                     type="file"
-                    ref={editFileInputRef}
+                    ref={editGalleryInputRef}
+                    accept="image/png, image/jpeg, image/jpg, image/webp, image/heic, image/heif, image/*"
+                    onChange={handleEditFileChange}
+                    className="hidden"
+                  />
+                  <input
+                    type="file"
+                    ref={editCameraInputRef}
                     accept="image/*"
                     capture="environment"
                     onChange={handleEditFileChange}
                     className="hidden"
                   />
-                  <div className="flex items-center gap-4 p-3 bg-zinc-50 rounded-lg border border-zinc-200">
+                  <div className="flex flex-col sm:flex-row items-center gap-4 p-3.5 bg-zinc-50 rounded-lg border border-zinc-200">
                     <img
                       src={editUploadPreview ? editUploadPreview.url : editingProduct.imageUrl}
                       alt={editingProduct.name}
                       className="w-20 h-28 object-cover rounded shadow-xs shrink-0"
                     />
-                    <div className="flex-1 space-y-2">
-                      <p className="text-zinc-600">
+                    <div className="flex-1 space-y-2 w-full text-left">
+                      <p className="text-zinc-600 text-xs">
                         {editUploadPreview
-                          ? `New photo ready (${formatFileSize(editUploadPreview.optimizedSize)})`
+                          ? `New photo ready (${formatFileSize(editUploadPreview.optimizedSize)}) • EXIF & GPS stripped`
                           : 'Currently using the active boutique image.'}
                       </p>
-                      <button
-                        type="button"
-                        onClick={() => editFileInputRef.current?.click()}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-plum-dark text-white rounded font-semibold cursor-pointer hover:bg-plum transition-colors"
-                      >
-                        <Camera className="w-3.5 h-3.5" />
-                        Upload New Photo
-                      </button>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => editGalleryInputRef.current?.click()}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-plum-dark text-white rounded font-semibold cursor-pointer hover:bg-plum transition-colors text-xs"
+                        >
+                          <ImageIcon className="w-3.5 h-3.5" />
+                          Choose from Camera Roll
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => editCameraInputRef.current?.click()}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-zinc-300 text-zinc-700 rounded font-semibold cursor-pointer hover:bg-zinc-100 transition-colors text-xs"
+                        >
+                          <Camera className="w-3.5 h-3.5 text-plum-dark" />
+                          Take New Photo
+                        </button>
+                      </div>
                     </div>
+                  </div>
+
+                  {/* Security Guarantee */}
+                  <div className="bg-emerald-50/80 border border-emerald-200/80 rounded-lg p-2.5 text-[11px] text-emerald-950 flex items-start gap-2">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                    <span className="text-emerald-800/90 leading-tight">
+                      Camera roll protected in OS sandbox. GPS coordinates and personal metadata automatically stripped.
+                    </span>
                   </div>
                 </div>
 
