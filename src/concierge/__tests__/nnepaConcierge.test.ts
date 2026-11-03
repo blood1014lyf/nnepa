@@ -304,82 +304,63 @@ describe('NNEPA Shopping Concierge — Core Knowledge & Intelligence Test Suite'
     assert.ok(res.text.includes('Thank you, Ama. I’ve noted that you usually wear size M.'), 'Confirms size M for Ama');
   });
 
-  // 18. Interactive Sizing Assistant: Full measurement journey (inches)
-  test('Scenario 18: Interactive Sizing Assistant step-by-step measurement (inches)', () => {
+  // 18. New Natural Size Assistance Flow: Existing garment label reference
+  test('Scenario 18: Size assistance step 1 and 2 — customer selects garment and provides label size', () => {
     let ctx = createInitialConciergeContext(gownProduct);
     ctx.profile.preferredName = 'Ama';
     ctx.profile.onboardingStage = 'awaiting_size';
 
-    // Step 1: Customer selects "Not sure" -> Sizing Discovery Hub
+    // Customer triggers size assistance ("Not sure")
     const step1 = processConciergeMessage('size_not_sure', ctx, CATALOGUE);
     ctx = step1.updatedContext;
-    assert.equal(ctx.profile.onboardingStage, 'sizing_path_select');
-    assert.ok(step1.text.includes('best fit'));
+    assert.equal(ctx.profile.onboardingStage, 'sizing_garment_inquiry');
+    assert.ok(
+      step1.text.includes('Do you have a dress, shirt or pair of trousers that fits you comfortably?'),
+      'Step 1 asks about an existing comfortable garment'
+    );
+    assert.ok(step1.options.some((o) => o.action === 'garment_dress'), 'Offers Dress option');
+    assert.ok(step1.options.some((o) => o.action === 'garment_top'), 'Offers Shirt / Top option');
+    assert.ok(step1.options.some((o) => o.action === 'garment_trousers'), 'Offers Trousers option');
 
-    // Step 2: Customer selects Path 2 ("I don’t know my measurements")
-    const step1b = processConciergeMessage('sizing_path_guided', ctx, CATALOGUE);
-    ctx = step1b.updatedContext;
-    assert.equal(ctx.profile.onboardingStage, 'sizing_path_guided_unit');
-    assert.ok(step1b.text.includes('inches or centimetres'));
-
-    // Step 3: Customer selects Inches
-    const step2 = processConciergeMessage('choose_unit_in', ctx, CATALOGUE);
+    // Customer selects "Dress"
+    const step2 = processConciergeMessage('garment_dress', ctx, CATALOGUE);
     ctx = step2.updatedContext;
-    assert.equal(ctx.profile.preferredUnit, 'in');
-    assert.equal(ctx.profile.onboardingStage, 'sizing_assistant_bust');
-    assert.ok(step2.text.includes('bust'));
+    assert.equal(ctx.profile.onboardingStage, 'sizing_label_inquiry');
+    assert.ok(
+      step2.text.includes('Lovely! What size is written on its label?'),
+      'Step 2 asks for label size'
+    );
+    assert.ok(step2.options.some((o) => o.action === 'label_size_m'), 'Offers Size M');
+    assert.ok(step2.options.some((o) => o.action === 'label_size_unknown'), 'Offers cannot find label option');
 
-    // Step 4: Customer provides bust 37"
-    const step3 = processConciergeMessage('37', ctx, CATALOGUE);
+    // Customer provides size "M" from label
+    const step3 = processConciergeMessage('label_size_m', ctx, CATALOGUE);
     ctx = step3.updatedContext;
-    assert.equal(ctx.profile.measurements?.bust, 37);
-    assert.equal(ctx.profile.onboardingStage, 'sizing_assistant_waist');
-    assert.ok(step3.text.includes('waist'));
-
-    // Step 5: Customer provides waist 30"
-    const step4 = processConciergeMessage('30', ctx, CATALOGUE);
-    ctx = step4.updatedContext;
-    assert.equal(ctx.profile.measurements?.waist, 30);
-    assert.equal(ctx.profile.onboardingStage, 'sizing_assistant_hips');
-    assert.ok(step4.text.includes('hip'));
-
-    // Step 6: Customer provides hips 40"
-    const step5 = processConciergeMessage('40', ctx, CATALOGUE);
-    ctx = step5.updatedContext;
-    assert.equal(ctx.profile.measurements?.hips, 40);
     assert.equal(ctx.profile.usualSize, 'M');
     assert.equal(ctx.profile.onboardingStage, 'onboarded');
-
-    // Section 9 verification: Check response presentation
-    assert.ok(step5.text.includes('Bust: 37", Waist: 30", Hips: 40"'), 'Displays customer measurements');
-    assert.ok(step5.text.includes('Size M'), 'Recommends Size M');
-    assert.ok(step5.text.includes('36–38"') || step5.text.includes('36-38"'), 'Displays Size M bust spec from published size chart');
+    assert.ok(step3.text.includes('Size M'), 'Identifies Size M as closest reference');
+    assert.ok(step3.text.includes('36') && step3.text.includes('38'), 'Compares with brand size chart bust');
+    assert.ok(step3.text.includes('different brands') || step3.text.includes('vary between'), 'Notes that cuts vary between brands');
+    assert.ok(step3.options.some((o) => o.action === 'book_fitting_yes'), 'Offers fitting option');
   });
 
-  // 19. Sizing between sizes: Asks about fit preference
-  test('Scenario 19: Interactive sizing between sizes prompts for fit preference', () => {
+  // 19. Customer cannot find label: Moves directly to fitting offer
+  test('Scenario 19: Customer cannot find label -> moves directly to fitting offer', () => {
     let ctx = createInitialConciergeContext(gownProduct);
     ctx.profile.preferredName = 'Ama';
-    ctx.profile.preferredUnit = 'in';
-    ctx.profile.measurements = { bust: 35.5, waist: 28.5, unit: 'in' };
-    ctx.profile.onboardingStage = 'sizing_assistant_hips';
+    ctx.profile.onboardingStage = 'sizing_label_inquiry';
 
-    // Bust 35.5 sits between S (max 35) and M (min 36)
-    const res = processConciergeMessage('38.5', ctx, CATALOGUE);
+    // Customer selects "I can’t find the label"
+    const res = processConciergeMessage('label_size_unknown', ctx, CATALOGUE);
     ctx = res.updatedContext;
 
-    assert.equal(ctx.profile.onboardingStage, 'sizing_assistant_fit_preference');
+    assert.equal(ctx.profile.onboardingStage, 'sizing_fitting_offer');
     assert.ok(
-      res.text.includes('Based on your measurements, size M looks like the closest match. Would you prefer a closer fit or a little more room?'),
-      'Matches brief prompt for between sizes'
+      res.text.includes('That’s alright! We can arrange a fitting to help you find the right size. Would you like to book one?'),
+      'Step 4 offers fitting without asking for measurements'
     );
-    assert.ok(res.options.some((o) => o.action === 'fit_closer'));
-    assert.ok(res.options.some((o) => o.action === 'fit_relaxed'));
-
-    // Customer chooses closer fit
-    const fitRes = processConciergeMessage('fit_closer', ctx, CATALOGUE);
-    assert.equal(fitRes.updatedContext.profile.fitPreference, 'closer');
-    assert.equal(fitRes.updatedContext.profile.onboardingStage, 'onboarded');
+    assert.ok(res.options.some((o) => o.action === 'book_fitting_yes'), 'Offers to book fitting');
+    assert.ok(res.options.some((o) => o.action === 'book_fitting_no'), 'Offers polite decline');
   });
 
   // 20. Contextual inquiry: "Will this dress fit me?" using saved profile
@@ -469,115 +450,70 @@ describe('NNEPA Shopping Concierge — Core Knowledge & Intelligence Test Suite'
     assert.ok(!rendererSource.includes('dangerouslySetInnerHTML'), 'Zero dangerouslySetInnerHTML (100% injection-safe)');
   });
 
-  // 24. Sizing Path 1: International usual clothing size mapping
-  test('Scenario 24: Sizing Path 1 maps international sizing (US/UK/EU) to brand size', () => {
+  // 24. Free-form / regional label input (UK 12, US 8, etc.)
+  test('Scenario 24: Customer enters international size (UK 12) -> maps to brand Size M', () => {
     let ctx = createInitialConciergeContext(gownProduct);
     ctx.profile.preferredName = 'Ama';
-    ctx.profile.onboardingStage = 'awaiting_size';
+    ctx.profile.onboardingStage = 'sizing_label_inquiry';
+    ctx.profile.garmentType = 'dress';
 
-    // Customer opens sizing discovery hub
-    const hub = processConciergeMessage('size_not_sure', ctx, CATALOGUE);
-    ctx = hub.updatedContext;
-    assert.equal(ctx.profile.onboardingStage, 'sizing_path_select');
-
-    // Customer selects Path 1: "I know my usual clothing size"
-    const path1 = processConciergeMessage('sizing_path_usual', ctx, CATALOGUE);
-    ctx = path1.updatedContext;
-    assert.equal(ctx.profile.onboardingStage, 'sizing_path_usual');
-    assert.ok(path1.options.some((o) => o.action === 'set_size_m'));
-
-    // Customer selects US 8-10 / UK 12-14 (M)
-    const selectM = processConciergeMessage('set_size_m', ctx, CATALOGUE);
-    assert.equal(selectM.updatedContext.profile.usualSize, 'M');
-    assert.equal(selectM.updatedContext.profile.onboardingStage, 'onboarded');
+    const res = processConciergeMessage('UK 12', ctx, CATALOGUE);
+    assert.equal(res.intent, 'sizing_reference_matched');
+    assert.equal(res.updatedContext.profile.usualSize, 'M');
+    assert.ok(res.text.includes('Size M'), 'Maps UK 12 to Size M');
+    assert.ok(res.text.includes('36') && res.text.includes('38'), 'Provides Size M measurements');
   });
 
-  // 25. Sizing Path 2: Validation, correction, and no-tape guidance
-  test('Scenario 25: Sizing Path 2 validates bounds, explains string/ruler, and supports skipping', () => {
+  // 25. Customer is unsure or enters ambiguous size -> moves directly to fitting offer
+  test('Scenario 25: Customer enters uncertain/unclear label -> moves directly to fitting offer', () => {
     let ctx = createInitialConciergeContext(gownProduct);
     ctx.profile.preferredName = 'Ama';
-    ctx.profile.onboardingStage = 'sizing_path_guided_unit';
+    ctx.profile.onboardingStage = 'sizing_label_inquiry';
+    ctx.profile.garmentType = 'top';
 
-    // Customer asks what to do without a measuring tape
-    const noTape = processConciergeMessage('sizing_no_tape', ctx, CATALOGUE);
-    assert.ok(noTape.text.includes('string') || noTape.text.includes('ruler'), 'Explains string/ruler method');
-
-    // Customer picks inches
-    const unitRes = processConciergeMessage('choose_unit_in', ctx, CATALOGUE);
-    ctx = unitRes.updatedContext;
-    assert.equal(ctx.profile.onboardingStage, 'sizing_assistant_bust');
-
-    // Customer enters invalid alphanumeric text
-    const invalidRes = processConciergeMessage('about seventy-five', ctx, CATALOGUE);
-    assert.equal(invalidRes.intent, 'sizing_assistant_validation_error');
-    assert.equal(invalidRes.updatedContext.profile.onboardingStage, 'sizing_assistant_bust');
-    assert.ok(invalidRes.text.includes('enter a numeric measurement'));
-
-    // Customer enters physically unrealistic number (120 inches)
-    const unrealisticRes = processConciergeMessage('120', ctx, CATALOGUE);
-    assert.equal(unrealisticRes.intent, 'sizing_assistant_validation_error');
-    assert.ok(
-      unrealisticRes.text.includes('Please enter a measurement between') ||
-      unrealisticRes.text.includes('Please enter a realistic measurement'),
-      'Validates physical upper bounds'
-    );
-
-    // Customer chooses to skip bust
-    const skipRes = processConciergeMessage('skip_bust', ctx, CATALOGUE);
-    ctx = skipRes.updatedContext;
-    assert.equal(ctx.profile.onboardingStage, 'sizing_assistant_waist');
-    assert.ok(skipRes.text.includes('waist'));
+    const res = processConciergeMessage('The tag is faded and I’m not sure', ctx, CATALOGUE);
+    assert.equal(res.intent, 'sizing_fitting_offer');
+    assert.equal(res.updatedContext.profile.onboardingStage, 'sizing_fitting_offer');
+    assert.ok(res.text.includes('We can arrange a fitting to help you find the right size'), 'Offers fitting');
   });
 
-  // 26. Sizing Path 3: Existing garment comparison (tag & flat measurement)
-  test('Scenario 26: Sizing Path 3 evaluates existing garment flat chest measurement', () => {
+  // 26. Customer accepts fitting booking
+  test('Scenario 26: Customer accepts fitting booking -> provides Accra atelier and WhatsApp handoff', () => {
     let ctx = createInitialConciergeContext(gownProduct);
     ctx.profile.preferredName = 'Ama';
-    ctx.profile.onboardingStage = 'sizing_path_select';
+    ctx.profile.onboardingStage = 'sizing_fitting_offer';
 
-    // Customer picks Path 3
-    const path3 = processConciergeMessage('sizing_path_garment', ctx, CATALOGUE);
-    ctx = path3.updatedContext;
-    assert.equal(ctx.profile.onboardingStage, 'sizing_path_garment_type');
-
-    // Customer selects lay-flat measurement
-    const measureGuide = processConciergeMessage('garment_measure_flat', ctx, CATALOGUE);
-    ctx = measureGuide.updatedContext;
-    assert.equal(ctx.profile.onboardingStage, 'sizing_path_garment_measure');
-
-    // Customer enters 18.5" armpit to armpit
-    const flatRes = processConciergeMessage('18.5', ctx, CATALOGUE);
-    assert.equal(flatRes.intent, 'garment_measurement_evaluated');
-    assert.ok(flatRes.text.includes('Size M'), 'Maps 18.5 flat (37 circumference) to Size M');
-    assert.ok(flatRes.text.includes('ease'), 'Mentions tailoring ease');
+    const res = processConciergeMessage('book_fitting_yes', ctx, CATALOGUE);
+    assert.equal(res.intent, 'book_fitting_accepted');
+    assert.equal(res.updatedContext.profile.onboardingStage, 'onboarded');
+    assert.ok(res.text.includes('+233 53 879 5669'), 'Provides official WhatsApp number');
+    assert.ok(res.text.includes('Accra atelier'), 'Mentions Accra atelier fitting');
+    assert.ok(res.options.some((o) => o.action === 'contact_whatsapp'), 'Offers WhatsApp link');
   });
 
-  // 27. Interactive Sizing in Centimetres
-  test('Scenario 27: Interactive Sizing full journey in Centimetres', () => {
+  // 27. Customer declines fitting booking
+  test('Scenario 27: Customer declines fitting booking -> returns to shopping without pressure', () => {
     let ctx = createInitialConciergeContext(gownProduct);
-    ctx.profile.preferredName = 'Kofi';
-    ctx.profile.onboardingStage = 'sizing_path_guided_unit';
+    ctx.profile.preferredName = 'Ama';
+    ctx.profile.onboardingStage = 'sizing_fitting_offer';
 
-    // Customer selects Centimetres
-    const unitRes = processConciergeMessage('choose_unit_cm', ctx, CATALOGUE);
-    ctx = unitRes.updatedContext;
-    assert.equal(ctx.profile.preferredUnit, 'cm');
+    const res = processConciergeMessage('book_fitting_no', ctx, CATALOGUE);
+    assert.equal(res.intent, 'book_fitting_declined');
+    assert.equal(res.updatedContext.profile.onboardingStage, 'onboarded');
+    assert.ok(res.text.includes('No problem at all! Feel free to take your time'), 'Polite, zero-pressure message');
+    assert.ok(res.options.some((o) => o.action === 'filter_all'), 'Returns to browse collection');
+  });
 
-    // Bust: 94 cm
-    const bustRes = processConciergeMessage('94', ctx, CATALOGUE);
-    ctx = bustRes.updatedContext;
-    assert.equal(ctx.profile.measurements?.bust, 94);
+  // 28. Customer cannot identify a suitable existing garment in Step 1
+  test('Scenario 28: Customer has no suitable existing garment -> offers fitting immediately', () => {
+    let ctx = createInitialConciergeContext(gownProduct);
+    ctx.profile.preferredName = 'Ama';
+    ctx.profile.onboardingStage = 'sizing_garment_inquiry';
 
-    // Waist: 76 cm
-    const waistRes = processConciergeMessage('76', ctx, CATALOGUE);
-    ctx = waistRes.updatedContext;
-    assert.equal(ctx.profile.measurements?.waist, 76);
-
-    // Hips: 101 cm
-    const hipsRes = processConciergeMessage('101', ctx, CATALOGUE);
-    ctx = hipsRes.updatedContext;
-    assert.equal(ctx.profile.measurements?.hips, 101);
-    assert.equal(ctx.profile.usualSize, 'M');
-    assert.ok(hipsRes.text.includes('91.5–96.5 cm') || hipsRes.text.includes('91.5-96.5 cm'), 'Displays metric size spec');
+    // Customer says "I don't have one" or selects label_size_unknown
+    const res = processConciergeMessage('label_size_unknown', ctx, CATALOGUE);
+    assert.equal(res.intent, 'sizing_fitting_offer');
+    assert.equal(res.updatedContext.profile.onboardingStage, 'sizing_fitting_offer');
+    assert.ok(res.text.includes('We can arrange a fitting to help you find the right size'));
   });
 });

@@ -801,14 +801,8 @@ export default function ShoppingConcierge({
               placeholder={
                 contextRef.current.profile.onboardingStage === 'awaiting_name'
                   ? 'What would you like me to call you? (e.g. Ama)'
-                  : contextRef.current.profile.onboardingStage === 'sizing_assistant_bust'
-                  ? `Enter your ${contextRef.current.activeCategory === 'men' ? 'chest' : 'bust'} measurement (e.g. 36)...`
-                  : contextRef.current.profile.onboardingStage === 'sizing_assistant_waist'
-                  ? 'Enter your waist measurement (e.g. 28)...'
-                  : contextRef.current.profile.onboardingStage === 'sizing_assistant_hips'
-                  ? 'Enter your hip measurement (e.g. 40)...'
-                  : contextRef.current.profile.onboardingStage === 'sizing_path_garment_measure'
-                  ? 'Enter garment chest width or tag size...'
+                  : contextRef.current.profile.onboardingStage === 'sizing_label_inquiry'
+                  ? 'Enter label size (e.g. M, UK 12, or US 8)...'
                   : 'Ask NNEPA about sizes, fabrics, delivery...'
               }
               className="flex-1 px-3 py-2 bg-zinc-100 border border-zinc-200 rounded-full text-xs text-zinc-800 placeholder-zinc-400 outline-none focus:border-plum-dark focus:bg-white transition-all"
