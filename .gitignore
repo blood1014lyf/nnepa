@@ -9,3 +9,6 @@ coverage/
 
 uploads/
 sessions.json
+
+.vercel
+.env*.local

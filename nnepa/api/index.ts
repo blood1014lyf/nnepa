@@ -7,7 +7,7 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
-import { lookupProductPrice } from '../server/priceList.ts';
+import { lookupProductPrice, registerProductPrice, removeProductPrice } from '../server/priceList.ts';
 import {
   createOrder,
   getOrderByPublicId,
@@ -441,6 +441,7 @@ app.post(['/api/products', '/products'], requireAdmin, (req, res) => {
   };
   products.push(newProduct);
   saveProducts(products);
+  registerProductPrice(newProduct.id, newProduct.name, newProduct.price);
   res.status(201).json({ success: true, product: newProduct });
 });
 
@@ -470,6 +471,7 @@ app.put(['/api/products/:id', '/products/:id'], requireAdmin, (req, res) => {
   };
   products[pIndex] = updatedProduct;
   saveProducts(products);
+  registerProductPrice(updatedProduct.id, updatedProduct.name, updatedProduct.price);
   res.json({ success: true, product: updatedProduct });
 });
 
@@ -483,6 +485,7 @@ app.delete(['/api/products/:id', '/products/:id'], requireAdmin, (req, res) => {
   }
   products = products.filter((p) => p.id !== id);
   saveProducts(products);
+  removeProductPrice(id);
   res.json({ success: true, message: 'Product deleted successfully' });
 });
 
