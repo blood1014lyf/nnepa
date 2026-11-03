@@ -285,11 +285,11 @@ export default function ShoppingConcierge({
   };
 
   // ═══ DISPATCH USER INQUIRY TO CONCIERGE ENGINE ═══
-  const dispatchToEngine = (userText: string) => {
+  const dispatchToEngine = (userText: string, displayLabel?: string) => {
     const userMsg: ChatMessage = {
       id: 'usr_' + Date.now(),
       sender: 'user',
-      text: userText,
+      text: displayLabel || userText,
       timestamp: getTimeString()
     };
 
@@ -315,7 +315,7 @@ export default function ShoppingConcierge({
   };
 
   // ═══ INTERACTIVE ACTIONS & PREDEFINED OPTIONS ═══
-  const handleOptionClick = (action: string, payload?: any) => {
+  const handleOptionClick = (action: string, payload?: any, label?: string) => {
     switch (action) {
       case 'main_menu':
         dispatchToEngine('Show main menu');
@@ -539,7 +539,7 @@ export default function ShoppingConcierge({
         break;
 
       default:
-        dispatchToEngine(action.replace(/_/g, ' '));
+        dispatchToEngine(action, label);
         break;
     }
   };
@@ -655,7 +655,7 @@ export default function ShoppingConcierge({
         <div
           role="dialog"
           aria-label={`${NNEPA_IDENTITY.name} — ${NNEPA_IDENTITY.title}`}
-          className="fixed bottom-24 right-4 sm:right-6 z-[85] w-[calc(100vw-2rem)] sm:w-[390px] h-[550px] max-h-[80vh] bg-white rounded-2xl shadow-2xl border border-zinc-200/90 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200"
+          className="fixed bottom-24 right-4 sm:right-6 z-[85] w-[calc(100vw-2rem)] sm:w-[390px] h-[calc(100dvh-7rem)] sm:h-[590px] max-h-[85vh] bg-white rounded-2xl shadow-2xl border border-zinc-200/90 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200 overscroll-contain"
         >
           {/* Concierge Header */}
           <div className="bg-gradient-to-r from-plum-dark via-plum to-plum-dark text-white p-4 flex items-center justify-between shrink-0 border-b border-plum/40 shadow-xs">
@@ -744,8 +744,8 @@ export default function ShoppingConcierge({
                     {msg.options.map((opt, idx) => (
                       <button
                         key={idx}
-                        onClick={() => handleOptionClick(opt.action, opt.payload)}
-                        className="px-3 py-1.5 bg-white border border-lilac/40 hover:border-plum-dark hover:bg-lavender/10 text-plum-dark rounded-full text-[10.5px] font-medium transition-all cursor-pointer shadow-xs text-left"
+                        onClick={() => handleOptionClick(opt.action, opt.payload, opt.label)}
+                        className="px-3 py-1.5 bg-white border border-lilac/40 hover:border-plum-dark hover:bg-lavender/10 text-plum-dark rounded-full text-[10.5px] font-medium transition-all cursor-pointer shadow-xs text-left break-words max-w-full leading-snug"
                       >
                         {opt.label}
                       </button>
@@ -802,11 +802,13 @@ export default function ShoppingConcierge({
                 contextRef.current.profile.onboardingStage === 'awaiting_name'
                   ? 'What would you like me to call you? (e.g. Ama)'
                   : contextRef.current.profile.onboardingStage === 'sizing_assistant_bust'
-                  ? `Enter your ${contextRef.current.activeCategory === 'men' ? 'chest' : 'bust'} measurement...`
+                  ? `Enter your ${contextRef.current.activeCategory === 'men' ? 'chest' : 'bust'} measurement (e.g. 36)...`
                   : contextRef.current.profile.onboardingStage === 'sizing_assistant_waist'
-                  ? 'Enter your waist measurement...'
+                  ? 'Enter your waist measurement (e.g. 28)...'
                   : contextRef.current.profile.onboardingStage === 'sizing_assistant_hips'
-                  ? 'Enter your hip measurement...'
+                  ? 'Enter your hip measurement (e.g. 40)...'
+                  : contextRef.current.profile.onboardingStage === 'sizing_path_garment_measure'
+                  ? 'Enter garment chest width or tag size...'
                   : 'Ask NNEPA about sizes, fabrics, delivery...'
               }
               className="flex-1 px-3 py-2 bg-zinc-100 border border-zinc-200 rounded-full text-xs text-zinc-800 placeholder-zinc-400 outline-none focus:border-plum-dark focus:bg-white transition-all"

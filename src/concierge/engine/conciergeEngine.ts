@@ -25,6 +25,7 @@ import {
   UNCONFIRMED_FALLBACK_TEXT,
   SYNONYM_DICTIONARIES
 } from '../knowledge/index.ts';
+import { WOMEN_SIZE_CHART, MEN_SIZE_CHART } from '../../sizeChartData.ts';
 
 export interface ConciergeActionOption {
   label: string;
@@ -53,11 +54,15 @@ export type OnboardingStage =
   | 'unstarted'
   | 'awaiting_name'
   | 'awaiting_size'
-  | 'sizing_assistant_unit'
+  | 'sizing_path_select'
+  | 'sizing_path_usual'
+  | 'sizing_path_guided_unit'
   | 'sizing_assistant_bust'
   | 'sizing_assistant_waist'
   | 'sizing_assistant_hips'
   | 'sizing_assistant_fit_preference'
+  | 'sizing_path_garment_type'
+  | 'sizing_path_garment_measure'
   | 'onboarded';
 
 export type OrderAssistanceStage =
@@ -81,6 +86,7 @@ export interface CustomerShoppingProfile {
   selectedSize?: string;
   selectedColor?: string;
   selectedQuantity?: number;
+  garmentType?: 'dress' | 'top' | 'pants';
 }
 
 export interface ConversationContext {
@@ -134,18 +140,15 @@ function matchesAny(normalized: string, phrases: string[]): boolean {
 /**
  * Extracts a customer's preferred name naturally from input text.
  * Handles "Ama", "Call me Ama", "My name is Ama Mensah", "I'm Kofi", etc.
- * Returns empty string if the input looks like a question rather than a name.
  */
 export function extractCustomerName(rawInput: string): string {
   let cleaned = rawInput.trim();
   cleaned = cleaned.replace(/[.!?]+$/, '').trim();
 
-  // If input starts with clear question or command words, it's an inquiry, not a name
   if (/^(how|what|where|who|when|why|can|is|do|does|will|tell|show|explore|browse)\b/i.test(cleaned)) {
     return '';
   }
 
-  // Regex to strip common introductory phrases
   const regex = /^(?:hello|hi|hey|good\s+(?:morning|afternoon|evening))?[,\s]*(?:please\s+)?(?:call\s+me|you\s+can\s+call\s+me|my\s+name\s+is|i\s*['’]m|i\s+am|it\s*['’]s)?\s*(.+)$/i;
   const match = cleaned.match(regex);
   let name = match && match[1] ? match[1].trim() : cleaned;
@@ -157,11 +160,71 @@ export function extractCustomerName(rawInput: string): string {
     return '';
   }
 
-  // Capitalize each word up to 3 words
   const words = name.split(/\s+/).slice(0, 3);
   return words
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
     .join(' ');
+}
+
+export interface InputValidationResult {
+  isValid: boolean;
+  value?: number;
+  unit: 'in' | 'cm';
+  errorMessage?: string;
+}
+
+/**
+ * Validates numeric measurement entries within realistic anatomical bounds.
+ * Prevents typos, negatives, and unrealistic inputs while allowing corrections.
+ */
+export function validateMeasurementInput(
+  rawInput: string,
+  type: 'bust' | 'waist' | 'hips' | 'chest',
+  defaultUnit: 'in' | 'cm' = 'in'
+): InputValidationResult {
+  const norm = rawInput.toLowerCase().trim();
+  const numMatch = norm.match(/([0-9]+(?:\.[0-9]+)?)/);
+
+  if (!numMatch) {
+    return {
+      isValid: false,
+      unit: defaultUnit,
+      errorMessage: 'Please enter a numeric measurement (e.g. 36 or 91 cm), or choose "Skip this measurement".'
+    };
+  }
+
+  const rawVal = parseFloat(numMatch[1]);
+  const detectedUnit: 'in' | 'cm' = norm.includes('cm') ? 'cm' : defaultUnit;
+  const valInches = detectedUnit === 'cm' ? rawVal / 2.54 : rawVal;
+
+  let minIn = 20;
+  let maxIn = 65;
+
+  if (type === 'waist') {
+    minIn = 18;
+    maxIn = 60;
+  } else if (type === 'hips') {
+    minIn = 25;
+    maxIn = 70;
+  }
+
+  if (valInches < minIn || valInches > maxIn) {
+    const minVal = detectedUnit === 'cm' ? Math.round(minIn * 2.54) : minIn;
+    const maxVal = detectedUnit === 'cm' ? Math.round(maxIn * 2.54) : maxIn;
+    const unitLabel = detectedUnit === 'cm' ? 'cm' : 'inches';
+
+    return {
+      isValid: false,
+      unit: detectedUnit,
+      errorMessage: `Please enter a measurement between ${minVal} and ${maxVal} ${unitLabel}, or choose "Skip this measurement".`
+    };
+  }
+
+  return {
+    isValid: true,
+    value: rawVal,
+    unit: detectedUnit
+  };
 }
 
 export interface SizingEvaluationResult {
@@ -175,8 +238,9 @@ export interface SizingEvaluationResult {
 }
 
 /**
- * Compares customer measurements against authentic brand size charts.
- * Accurately supports inches and centimeters with zero hallucination.
+ * Real Sizing Engine:
+ * Compares customer measurements against the brand's authentic published size chart.
+ * Normalizes units, handles missing values, detects between-size fits, and returns clear explanations.
  */
 export function evaluateSizing(
   measurements: CustomerMeasurements,
@@ -191,8 +255,8 @@ export function evaluateSizing(
   const hipsIn = toInches(measurements.hips);
 
   if (category === 'men') {
-    const chestVal = chestIn ?? bustIn ?? 38;
-    const waistVal = waistIn ?? 32;
+    const chestVal = chestIn ?? bustIn;
+    const waistVal = waistIn;
 
     const ranges = [
       { alpha: 'XS', chest: [34, 35], waist: [28, 29], chestSpec: isCm ? '86–89 cm' : '34–35"', waistSpec: isCm ? '71–74 cm' : '28–29"' },
@@ -207,10 +271,19 @@ export function evaluateSizing(
     let minDistance = Infinity;
 
     for (const r of ranges) {
-      const chestMid = (r.chest[0] + r.chest[1]) / 2;
-      const waistMid = (r.waist[0] + r.waist[1]) / 2;
-      const dist = Math.abs(chestVal - chestMid) * 1.5 + Math.abs(waistVal - waistMid);
-      if (dist < minDistance) {
+      let dist = 0;
+      let count = 0;
+      if (chestVal !== undefined) {
+        const chestMid = (r.chest[0] + r.chest[1]) / 2;
+        dist += Math.abs(chestVal - chestMid) * 1.5;
+        count++;
+      }
+      if (waistVal !== undefined) {
+        const waistMid = (r.waist[0] + r.waist[1]) / 2;
+        dist += Math.abs(waistVal - waistMid);
+        count++;
+      }
+      if (count > 0 && dist < minDistance) {
         minDistance = dist;
         best = r;
       }
@@ -220,10 +293,13 @@ export function evaluateSizing(
     let isBetween = false;
     let altSize: string | undefined = undefined;
 
-    if (idx > 0 && chestVal < best.chest[0]) {
+    const primaryVal = chestVal ?? waistVal ?? 38;
+    const primaryRange = chestVal !== undefined ? best.chest : best.waist;
+
+    if (idx > 0 && primaryVal < primaryRange[0]) {
       isBetween = true;
       altSize = ranges[idx - 1].alpha;
-    } else if (idx < ranges.length - 1 && chestVal > best.chest[1]) {
+    } else if (idx < ranges.length - 1 && primaryVal > primaryRange[1]) {
       isBetween = true;
       altSize = ranges[idx + 1].alpha;
     }
@@ -235,10 +311,14 @@ export function evaluateSizing(
       secondarySize = best.alpha;
     }
 
-    const primaryRange = ranges.find((r) => r.alpha === primarySize) || best;
+    const targetRange = ranges.find((r) => r.alpha === primarySize) || best;
     const unitStr = isCm ? 'cm' : '"';
-    const customerSummary = `Chest: ${measurements.chest ?? measurements.bust}${unitStr}, Waist: ${measurements.waist}${unitStr}`;
-    const brandSummary = `Chest ${primaryRange.chestSpec}, Waist ${primaryRange.waistSpec}`;
+    const customerParts: string[] = [];
+    if (measurements.chest || measurements.bust) customerParts.push(`Chest: ${measurements.chest ?? measurements.bust}${unitStr}`);
+    if (measurements.waist) customerParts.push(`Waist: ${measurements.waist}${unitStr}`);
+
+    const customerSummary = customerParts.join(', ') || 'Standard Proportions';
+    const brandSummary = `Chest ${targetRange.chestSpec}, Waist ${targetRange.waistSpec}`;
 
     return {
       recommendedSize: primarySize,
@@ -248,7 +328,7 @@ export function evaluateSizing(
       brandMeasurementsSummary: brandSummary,
       fitExplanation: isBetween
         ? `Your measurements sit between Size ${secondarySize} and Size ${primarySize}. Size ${primarySize} provides comfortable, traditional ease through the chest, while Size ${secondarySize} offers a closer tailored line.`
-        : `Your measurements align naturally with our Size ${best.alpha} tailoring proportions for a dignified, well-structured drape.`,
+        : `Your measurements align naturally with our Size ${primarySize} tailoring proportions for a dignified, well-structured drape.`,
       inquiryForFitPreference: isBetween
         ? `Based on your measurements, size ${primarySize} looks like the closest match. Would you prefer a closer fit or a little more room?`
         : undefined
@@ -256,9 +336,9 @@ export function evaluateSizing(
   }
 
   // Womenswear sizing
-  const bustVal = bustIn ?? 36;
-  const waistVal = waistIn ?? 29;
-  const hipsVal = hipsIn ?? 39;
+  const bustVal = bustIn;
+  const waistVal = waistIn;
+  const hipsVal = hipsIn;
 
   const ranges = [
     { alpha: 'XS', bust: [31, 32.5], waist: [23, 25], hips: [33, 35], bustSpec: isCm ? '78–82 cm' : '31–32.5"', waistSpec: isCm ? '58–63.5 cm' : '23–25"', hipsSpec: isCm ? '84–89 cm' : '33–35"' },
@@ -273,11 +353,24 @@ export function evaluateSizing(
   let minDistance = Infinity;
 
   for (const r of ranges) {
-    const bustMid = (r.bust[0] + r.bust[1]) / 2;
-    const waistMid = (r.waist[0] + r.waist[1]) / 2;
-    const hipsMid = (r.hips[0] + r.hips[1]) / 2;
-    const dist = Math.abs(bustVal - bustMid) * 1.3 + Math.abs(waistVal - waistMid) * 1.2 + Math.abs(hipsVal - hipsMid);
-    if (dist < minDistance) {
+    let dist = 0;
+    let count = 0;
+    if (bustVal !== undefined) {
+      const bustMid = (r.bust[0] + r.bust[1]) / 2;
+      dist += Math.abs(bustVal - bustMid) * 1.3;
+      count++;
+    }
+    if (waistVal !== undefined) {
+      const waistMid = (r.waist[0] + r.waist[1]) / 2;
+      dist += Math.abs(waistVal - waistMid) * 1.2;
+      count++;
+    }
+    if (hipsVal !== undefined) {
+      const hipsMid = (r.hips[0] + r.hips[1]) / 2;
+      dist += Math.abs(hipsVal - hipsMid);
+      count++;
+    }
+    if (count > 0 && dist < minDistance) {
       minDistance = dist;
       best = r;
     }
@@ -287,10 +380,13 @@ export function evaluateSizing(
   let isBetween = false;
   let altSize: string | undefined = undefined;
 
-  if (idx > 0 && bustVal < best.bust[0]) {
+  const primaryVal = bustVal ?? waistVal ?? hipsVal ?? 36;
+  const primaryRange = bustVal !== undefined ? best.bust : (waistVal !== undefined ? best.waist : best.hips);
+
+  if (idx > 0 && primaryVal < primaryRange[0]) {
     isBetween = true;
     altSize = ranges[idx - 1].alpha;
-  } else if (idx < ranges.length - 1 && bustVal > best.bust[1]) {
+  } else if (idx < ranges.length - 1 && primaryVal > primaryRange[1]) {
     isBetween = true;
     altSize = ranges[idx + 1].alpha;
   }
@@ -302,10 +398,15 @@ export function evaluateSizing(
     secondarySize = best.alpha;
   }
 
-  const primaryRange = ranges.find((r) => r.alpha === primarySize) || best;
+  const targetRange = ranges.find((r) => r.alpha === primarySize) || best;
   const unitStr = isCm ? 'cm' : '"';
-  const customerSummary = `Bust: ${measurements.bust}${unitStr}, Waist: ${measurements.waist}${unitStr}, Hips: ${measurements.hips}${unitStr}`;
-  const brandSummary = `Bust ${primaryRange.bustSpec}, Waist ${primaryRange.waistSpec}, Hips ${primaryRange.hipsSpec}`;
+  const customerParts: string[] = [];
+  if (measurements.bust) customerParts.push(`Bust: ${measurements.bust}${unitStr}`);
+  if (measurements.waist) customerParts.push(`Waist: ${measurements.waist}${unitStr}`);
+  if (measurements.hips) customerParts.push(`Hips: ${measurements.hips}${unitStr}`);
+
+  const customerSummary = customerParts.join(', ') || 'Custom Proportions';
+  const brandSummary = `Bust ${targetRange.bustSpec}, Waist ${targetRange.waistSpec}, Hips ${targetRange.hipsSpec}`;
 
   return {
     recommendedSize: primarySize,
@@ -398,9 +499,13 @@ export function classifyCustomerIntent(
   if (
     norm.includes('not sure') ||
     norm.includes('help with my size') ||
+    norm.includes('help me with my size') ||
+    norm.includes('help with sizing') ||
     norm.includes('find my size') ||
     norm.includes('calculate size') ||
-    norm.includes('measure me')
+    norm.includes('measure me') ||
+    norm.includes('best fit') ||
+    norm.includes('find my fit')
   ) {
     return 'sizing_help';
   }
@@ -466,8 +571,8 @@ export function classifyCustomerIntent(
 
 /**
  * Main engine processing function.
- * Manages conversational reasoning, customer onboarding, sizing calculations,
- * and order assistance in 100% private in-browser memory.
+ * Manages conversational reasoning, customer onboarding, 3-path size discovery,
+ * real sizing calculations, and order assistance in 100% private in-browser memory.
  */
 export function processConciergeMessage(
   userInput: string,
@@ -495,7 +600,9 @@ export function processConciergeMessage(
   const activeProd = updatedContext.focusedProduct;
   const prodKnowledge = activeProd ? buildProductKnowledge(activeProd) : null;
 
-  // ─── DIRECT ACTION PAYLOAD HANDLING ──────────────────────────────────────
+  // ─── DIRECT ACTION PAYLOAD & SIZING PATH DISPATCH ─────────────────────────
+
+  // 1. Direct size selection (e.g. set_size_m or user selects specific size)
   if (userInput.startsWith('set_size_')) {
     const chosenSize = userInput.replace('set_size_', '').toUpperCase();
     profile.usualSize = chosenSize;
@@ -503,80 +610,295 @@ export function processConciergeMessage(
 
     const text =
       `Thank you${customerName}. I’ve noted that you usually wear size ${chosenSize}.\n\n` +
-      `Would you like to explore our latest pieces, check the fit of a specific garment, or find something for an upcoming occasion?`;
+      `Our ready-to-wear is tailored true to international proportions. Would you like to explore our latest pieces or check the fit of a specific garment?`;
 
     return {
       text,
       options: [
-        { label: '✨ Explore Collection', action: 'explore_collections' },
+        { label: '✨ View Suitable Garments', action: 'filter_all' },
         { label: '👗 Check Garment Fit', action: 'check_garment_fit' },
-        { label: '📏 Size & Length Guide', action: 'size_guide' },
-        { label: '💬 WhatsApp Concierge', action: 'contact_whatsapp' }
+        { label: '📏 Size & Length Guide', action: 'size_guide' }
       ],
       intent: 'size_profile_completed',
       updatedContext
     };
   }
 
-  if (userInput === 'size_not_sure') {
-    profile.onboardingStage = 'sizing_assistant_unit';
+  // 2. Customer selects or triggers "Not sure" / Sizing Discovery Hub
+  if (
+    userInput === 'size_not_sure' ||
+    userInput === 'sizing_path_select' ||
+    norm === 'not sure' ||
+    norm === 'i m not sure' ||
+    norm === 'im not sure' ||
+    norm === 'help me with my size'
+  ) {
+    profile.onboardingStage = 'sizing_path_select';
+
     const text =
-      `No problem at all${customerName}. I would be glad to help you determine your size using our brand size chart.\n\n` +
-      `To ensure comfortable accuracy, would you prefer to measure in inches or centimeters?`;
+      `No worries${customerName}! Let’s find your best fit. How would you prefer to do that?`;
 
     return {
       text,
       options: [
-        { label: 'Inches (in)', action: 'choose_unit_in' },
-        { label: 'Centimeters (cm)', action: 'choose_unit_cm' }
+        { label: '1. I know my usual clothing size', action: 'sizing_path_usual' },
+        { label: '2. I don’t know my measurements', action: 'sizing_path_guided' },
+        { label: '3. Help me choose using clothes I already own', action: 'sizing_path_garment' }
       ],
-      intent: 'sizing_assistant_unit_prompt',
+      intent: 'sizing_discovery_hub',
       updatedContext
     };
   }
 
-  if (userInput === 'choose_unit_in' || userInput === 'choose_unit_cm') {
-    const unit = userInput === 'choose_unit_in' ? 'in' : 'cm';
+  // Path 1: Usual clothing size
+  if (userInput === 'sizing_path_usual' || norm === 'usual size' || norm === 'i know my usual clothing size') {
+    profile.onboardingStage = 'sizing_path_usual';
+
+    const text =
+      `What size do you usually wear in international clothing (US, UK, or EU)?`;
+
+    return {
+      text,
+      options: [
+        { label: 'US 0–2 · UK 4–6 (XS)', action: 'set_size_xs' },
+        { label: 'US 4–6 · UK 8–10 (S)', action: 'set_size_s' },
+        { label: 'US 8–10 · UK 12–14 (M)', action: 'set_size_m' },
+        { label: 'US 12–14 · UK 16–18 (L)', action: 'set_size_l' },
+        { label: 'US 16–18 · UK 20–22 (XL)', action: 'set_size_xl' },
+        { label: 'US 20–22 · UK 24–26 (XXL)', action: 'set_size_xxl' },
+        { label: '↩️ Choose another sizing method', action: 'sizing_path_select' }
+      ],
+      intent: 'sizing_path_usual_prompt',
+      updatedContext
+    };
+  }
+
+  // Path 2: Guided measurement flow
+  if (
+    userInput === 'sizing_path_guided' ||
+    norm === 'i don t know my measurements' ||
+    norm === 'guided measurement' ||
+    norm === 'help me measure'
+  ) {
+    profile.onboardingStage = 'sizing_path_guided_unit';
+
+    const text =
+      `Would you prefer to enter your measurements in inches or centimetres?`;
+
+    return {
+      text,
+      options: [
+        { label: 'Inches', action: 'choose_unit_in' },
+        { label: 'Centimetres', action: 'choose_unit_cm' },
+        { label: "I don't have a measuring tape", action: 'sizing_no_tape' },
+        { label: '↩️ Choose another sizing method', action: 'sizing_path_select' }
+      ],
+      intent: 'sizing_path_guided_unit_prompt',
+      updatedContext
+    };
+  }
+
+  // String / Ruler guidance for customers without measuring tape
+  if (userInput === 'sizing_no_tape' || norm.includes('no measuring tape') || norm.includes('no tape')) {
+    const text =
+      `No measuring tape? You can easily use a household item like a phone charging cable, string, or ribbon:\n\n` +
+      `• Wrap it gently around the area, pinch the mark with your fingers, and lay it flat against a standard 12-inch ruler or a phone measurement app.\n\n` +
+      `Would you prefer to enter your measurements in inches or centimetres?`;
+
+    return {
+      text,
+      options: [
+        { label: 'Inches', action: 'choose_unit_in' },
+        { label: 'Centimetres', action: 'choose_unit_cm' },
+        { label: '↩️ Choose another sizing method', action: 'sizing_path_select' }
+      ],
+      intent: 'sizing_no_tape_guidance',
+      updatedContext
+    };
+  }
+
+  // Unit selection: Inches or Centimetres
+  const isUnitIn =
+    userInput === 'choose_unit_in' ||
+    norm === 'inches' ||
+    norm === 'inch' ||
+    norm === 'in' ||
+    norm === 'choose unit in';
+
+  const isUnitCm =
+    userInput === 'choose_unit_cm' ||
+    norm === 'centimetres' ||
+    norm === 'centimeters' ||
+    norm === 'cm' ||
+    norm === 'choose unit cm';
+
+  if (isUnitIn || isUnitCm) {
+    const unit = isUnitCm ? 'cm' : 'in';
     profile.preferredUnit = unit;
     profile.onboardingStage = 'sizing_assistant_bust';
 
     const isMen = updatedContext.activeCategory === 'men';
-    const promptMeasurement = isMen ? 'chest' : 'bust';
-    const unitLabel = unit === 'in' ? 'inches' : 'centimeters';
+    const measurementName = isMen ? 'chest' : 'bust';
+    const unitLabel = unit === 'in' ? 'inches' : 'cm';
 
     const text =
-      `Understood, we’ll use ${unitLabel}.\n\n` +
-      `First, may I ask for your **${promptMeasurement}** measurement? (Wrap a soft measuring tape horizontally around the fullest part of your chest).`;
+      `Understood, we’ll use ${unit === 'in' ? 'inches' : 'centimetres'}.\n\n` +
+      `Step 1 of 3 — **${measurementName}** measurement:\n` +
+      `Wrap your tape horizontally around the fullest part of your ${isMen ? 'chest' : 'bust'}, keeping the tape level across your shoulder blades.\n\n` +
+      `What measurement did you get in ${unitLabel}?`;
 
     return {
       text,
-      options: [],
+      options: [
+        { label: 'Skip this measurement', action: 'skip_bust' },
+        { label: '↩️ Change unit', action: 'sizing_path_guided' }
+      ],
       intent: 'sizing_assistant_bust_prompt',
       updatedContext
     };
   }
 
+  // Measurement navigation: Skip bust
+  if (userInput === 'skip_bust' || (profile.onboardingStage === 'sizing_assistant_bust' && norm === 'skip')) {
+    profile.onboardingStage = 'sizing_assistant_waist';
+    const unitLabel = profile.preferredUnit === 'in' ? 'inches' : 'cm';
+
+    const text =
+      `No problem, we can skip that.\n\n` +
+      `Step 2 of 3 — Natural **waist** measurement:\n` +
+      `Measure at the narrowest point of your torso, typically an inch above your navel, while breathing out naturally.\n\n` +
+      `What is your waist measurement in ${unitLabel}?`;
+
+    return {
+      text,
+      options: [
+        { label: 'Skip this measurement', action: 'skip_waist' },
+        { label: '✏️ Enter bust measurement', action: 'sizing_assistant_bust' }
+      ],
+      intent: 'sizing_assistant_waist_prompt',
+      updatedContext
+    };
+  }
+
+  // Measurement navigation: Skip waist
+  if (userInput === 'skip_waist' || (profile.onboardingStage === 'sizing_assistant_waist' && norm === 'skip')) {
+    profile.onboardingStage = 'sizing_assistant_hips';
+    const unitLabel = profile.preferredUnit === 'in' ? 'inches' : 'cm';
+
+    const text =
+      `Step 3 of 3 — **Hip** measurement:\n` +
+      `Stand with your feet together and measure around the fullest curve of your hips and bottom.\n\n` +
+      `What is your hip measurement in ${unitLabel}?`;
+
+    return {
+      text,
+      options: [
+        { label: 'Skip this measurement', action: 'skip_hips' },
+        { label: '✏️ Enter waist measurement', action: 'sizing_assistant_waist' }
+      ],
+      intent: 'sizing_assistant_hips_prompt',
+      updatedContext
+    };
+  }
+
+  // Measurement navigation: Corrections
+  if (userInput === 'correct_to_bust' || userInput === 'sizing_assistant_bust') {
+    profile.onboardingStage = 'sizing_assistant_bust';
+    const isMen = updatedContext.activeCategory === 'men';
+    const unitLabel = profile.preferredUnit === 'in' ? 'inches' : 'cm';
+
+    return {
+      text: `Let’s correct your **${isMen ? 'chest' : 'bust'}** measurement. What is your measurement in ${unitLabel}?`,
+      options: [{ label: 'Skip this measurement', action: 'skip_bust' }],
+      intent: 'sizing_assistant_bust_prompt',
+      updatedContext
+    };
+  }
+
+  if (userInput === 'correct_to_waist' || userInput === 'sizing_assistant_waist') {
+    profile.onboardingStage = 'sizing_assistant_waist';
+    const unitLabel = profile.preferredUnit === 'in' ? 'inches' : 'cm';
+
+    return {
+      text: `Let’s correct your natural **waist** measurement. What is your measurement in ${unitLabel}?`,
+      options: [{ label: 'Skip this measurement', action: 'skip_waist' }],
+      intent: 'sizing_assistant_waist_prompt',
+      updatedContext
+    };
+  }
+
+  // Path 3: Measure an existing garment
+  if (
+    userInput === 'sizing_path_garment' ||
+    norm.includes('clothes i already own') ||
+    norm.includes('existing garment') ||
+    norm.includes('compare clothing')
+  ) {
+    profile.onboardingStage = 'sizing_path_garment_type';
+
+    const text =
+      `Using a favourite piece of clothing from your wardrobe is a wonderful way to find your fit!\n\n` +
+      `Which type of garment would you like to compare?`;
+
+    return {
+      text,
+      options: [
+        { label: 'Dress or Gown', action: 'garment_type_dress' },
+        { label: 'Top or Kaftan', action: 'garment_type_top' },
+        { label: 'Pants or Trousers', action: 'garment_type_pants' },
+        { label: '↩️ Choose another sizing method', action: 'sizing_path_select' }
+      ],
+      intent: 'sizing_path_garment_type_prompt',
+      updatedContext
+    };
+  }
+
+  if (userInput.startsWith('garment_type_') || userInput === 'garment_measure_flat') {
+    const type = userInput.startsWith('garment_type_')
+      ? (userInput.replace('garment_type_', '') as 'dress' | 'top' | 'pants')
+      : 'dress';
+    profile.garmentType = type;
+    profile.onboardingStage = 'sizing_path_garment_measure';
+
+    const text =
+      `1. **Check the Tag**: Look at the label inside your garment. If you see an international size (e.g. US 8, UK 12, or EU 40), you can simply enter that size.\n` +
+      `2. **Or Lay-Flat Measurement**: Lay the garment flat, buttoned or zipped. Measure across the chest from armpit to armpit and double the number for total chest circumference (e.g. 19 inches flat = 38 inches bust).\n\n` +
+      `What tag size or flat measurement did you find?`;
+
+    return {
+      text,
+      options: [
+        { label: '↩️ Back to garment types', action: 'sizing_path_garment' },
+        { label: '↩️ Choose another sizing method', action: 'sizing_path_select' }
+      ],
+      intent: 'sizing_path_garment_measure_prompt',
+      updatedContext
+    };
+  }
+
+  // Handle fit preference selection
   if (userInput === 'fit_closer' || userInput === 'fit_relaxed') {
     profile.fitPreference = userInput === 'fit_closer' ? 'closer' : 'relaxed';
     profile.onboardingStage = 'onboarded';
 
     const fitLabel = profile.fitPreference === 'closer' ? 'closer tailored fit' : 'relaxed, comfortable drape';
     const text =
-      `Understood${customerName}. I have saved your preference for a **${fitLabel}** alongside Size ${profile.usualSize}.\n\n` +
-      `Whenever we evaluate garments together, I will factor this in. What would you like to explore next?`;
+      `Understood${customerName}. I have saved your preference for a **${fitLabel}** in Size ${profile.usualSize} to your session profile.\n\n` +
+      `Where would you like to explore next?`;
 
     return {
       text,
       options: [
-        { label: '✨ Explore Collection', action: 'explore_collections' },
+        { label: '✨ View Suitable Garments', action: 'filter_all' },
         { label: '👗 Find a Garment', action: 'find_product' },
-        { label: '💬 WhatsApp Concierge', action: 'contact_whatsapp' }
+        { label: '🛍️ Return to Collection', action: 'explore_collections' }
       ],
       intent: 'fit_preference_saved',
       updatedContext
     };
   }
 
+  // Order confirmation
   if (userInput === 'confirm_add_to_cart') {
     if (activeProd) {
       profile.orderStage = 'added';
@@ -590,7 +912,7 @@ export function processConciergeMessage(
         `• **Colour**: ${orderColor}\n` +
         `• **Quantity**: ${orderQty}\n` +
         `• **Total**: GH₵ ${(activeProd.price * orderQty).toLocaleString()}\n\n` +
-        `You can proceed to checkout now to finalize your delivery coordinates. Our Accra atelier connects on WhatsApp to confirm your measurements before cutting begins.`;
+        `You can proceed to checkout now to finalize your delivery coordinates. Our Accra atelier connects with you to confirm your measurements before cutting begins.`;
 
       return {
         text,
@@ -608,13 +930,11 @@ export function processConciergeMessage(
   if (userInput === 'skip_onboarding') {
     profile.onboardingStage = 'onboarded';
     return {
-      text:
-        `Welcome${customerNameSalutation} to Nnepa Foriwaa. How may I guide your boutique experience today?`,
+      text: `Welcome${customerNameSalutation} to Nnepa Foriwaa. How may I guide your boutique experience today?`,
       options: [
         { label: '✨ Explore Collections', action: 'explore_collections' },
         { label: '👗 Find a Garment', action: 'find_product' },
-        { label: '📏 Size & Length Guide', action: 'size_guide' },
-        { label: '💬 WhatsApp Concierge', action: 'contact_whatsapp' }
+        { label: '📏 Size & Length Guide', action: 'size_guide' }
       ],
       intent: 'onboarding_skipped',
       updatedContext
@@ -624,31 +944,31 @@ export function processConciergeMessage(
   // ─── INTENT CLASSIFICATION ───────────────────────────────────────────────
   const classifiedIntent = classifyCustomerIntent(userInput, updatedContext);
 
-  // ─── ONBOARDING & MEASUREMENT STATE MACHINE ──────────────────────────────
-  // If user asks a direct informational question, prioritize answering it immediately!
-  const isDirectQuestion = [
-    'product_price',
-    'size_availability',
-    'product_color',
-    'product_material',
-    'product_care',
-    'compare_products',
-    'similar_products',
-    'delivery_info',
-    'returns_info',
-    'exchanges_info',
-    'alterations_info',
-    'payment_info',
-    'how_to_order',
-    'contact_boutique',
-    'explore_women',
-    'explore_men',
-    'explore_bags'
-  ].includes(classifiedIntent);
+  // ─── ACTIVE MEASUREMENT STAGE MACHINE ─────────────────────────────────────
 
-  if (!isDirectQuestion) {
-    // 1. Stage: awaiting_name
-    if (profile.onboardingStage === 'awaiting_name') {
+  // 1. Stage: awaiting_name
+  if (profile.onboardingStage === 'awaiting_name') {
+    const isDirectQuestion = [
+      'product_price',
+      'size_availability',
+      'product_color',
+      'product_material',
+      'product_care',
+      'compare_products',
+      'similar_products',
+      'delivery_info',
+      'returns_info',
+      'exchanges_info',
+      'alterations_info',
+      'payment_info',
+      'how_to_order',
+      'contact_boutique',
+      'explore_women',
+      'explore_men',
+      'explore_bags'
+    ].includes(classifiedIntent);
+
+    if (!isDirectQuestion) {
       const extractedName = extractCustomerName(userInput);
       if (extractedName && classifiedIntent !== 'greeting') {
         profile.preferredName = extractedName;
@@ -674,189 +994,311 @@ export function processConciergeMessage(
         };
       }
     }
+  }
 
-    // 2. Stage: awaiting_size
-    if (profile.onboardingStage === 'awaiting_size') {
-      if (norm.includes('not sure') || norm.includes('help')) {
-        profile.onboardingStage = 'sizing_assistant_unit';
-        const text =
-          `No problem at all${customerName}. I would be glad to help you determine your size using our brand size chart.\n\n` +
-          `To ensure comfortable accuracy, would you prefer to measure in inches or centimeters?`;
+  // 2. Stage: awaiting_size
+  if (profile.onboardingStage === 'awaiting_size') {
+    if (norm.includes('not sure') || norm.includes('help')) {
+      profile.onboardingStage = 'sizing_path_select';
 
+      const text = `No worries${customerName}! Let’s find your best fit. How would you prefer to do that?`;
+      return {
+        text,
+        options: [
+          { label: '1. I know my usual clothing size', action: 'sizing_path_usual' },
+          { label: '2. I don’t know my measurements', action: 'sizing_path_guided' },
+          { label: '3. Help me choose using clothes I already own', action: 'sizing_path_garment' }
+        ],
+        intent: 'sizing_discovery_hub',
+        updatedContext
+      };
+    }
+
+    const requestedSize = parseRequestedSizeFromText(userInput, updatedContext.activeCategory ?? 'women');
+    if (requestedSize) {
+      profile.usualSize = requestedSize.alpha;
+      profile.onboardingStage = 'onboarded';
+
+      const text =
+        `Thank you${customerName}. I’ve noted that you usually wear size ${requestedSize.alpha}.\n\n` +
+        `Would you like to explore our latest pieces, check the fit of a specific garment, or find something for an upcoming occasion?`;
+
+      return {
+        text,
+        options: [
+          { label: '✨ View Suitable Garments', action: 'filter_all' },
+          { label: '👗 Check Garment Fit', action: 'check_garment_fit' },
+          { label: '📏 Size & Length Guide', action: 'size_guide' }
+        ],
+        intent: 'size_profile_completed',
+        updatedContext
+      };
+    }
+  }
+
+  // 3. Stage: sizing_assistant_bust
+  if (profile.onboardingStage === 'sizing_assistant_bust') {
+    const isMen = updatedContext.activeCategory === 'men';
+    const validation = validateMeasurementInput(userInput, isMen ? 'chest' : 'bust', profile.preferredUnit);
+
+    if (!validation.isValid) {
+      return {
+        text: `${validation.errorMessage}\n\nWhat is your ${isMen ? 'chest' : 'bust'} measurement?`,
+        options: [
+          { label: 'Skip this measurement', action: 'skip_bust' },
+          { label: '↩️ Change unit', action: 'sizing_path_guided' }
+        ],
+        intent: 'sizing_assistant_validation_error',
+        updatedContext
+      };
+    }
+
+    profile.preferredUnit = validation.unit;
+    profile.measurements = {
+      ...profile.measurements,
+      bust: validation.value,
+      chest: validation.value,
+      unit: validation.unit
+    };
+    profile.onboardingStage = 'sizing_assistant_waist';
+    const unitLabel = validation.unit === 'in' ? 'inches' : 'cm';
+
+    const text =
+      `Thank you${customerName}.\n\n` +
+      `Step 2 of 3 — Natural **waist** measurement:\n` +
+      `Measure at the narrowest point of your torso, typically an inch above your navel, while breathing out naturally.\n\n` +
+      `What is your waist measurement in ${unitLabel}?`;
+
+    return {
+      text,
+      options: [
+        { label: 'Skip this measurement', action: 'skip_waist' },
+        { label: '✏️ Correct bust measurement', action: 'correct_to_bust' }
+      ],
+      intent: 'sizing_assistant_waist_prompt',
+      updatedContext
+    };
+  }
+
+  // 4. Stage: sizing_assistant_waist
+  if (profile.onboardingStage === 'sizing_assistant_waist') {
+    const validation = validateMeasurementInput(userInput, 'waist', profile.preferredUnit);
+
+    if (!validation.isValid) {
+      return {
+        text: `${validation.errorMessage}\n\nWhat is your natural waist measurement?`,
+        options: [
+          { label: 'Skip this measurement', action: 'skip_waist' },
+          { label: '✏️ Correct bust measurement', action: 'correct_to_bust' }
+        ],
+        intent: 'sizing_assistant_validation_error',
+        updatedContext
+      };
+    }
+
+    profile.preferredUnit = validation.unit;
+    if (profile.measurements) {
+      profile.measurements.waist = validation.value;
+    } else {
+      profile.measurements = { waist: validation.value, unit: validation.unit };
+    }
+    profile.onboardingStage = 'sizing_assistant_hips';
+    const unitLabel = validation.unit === 'in' ? 'inches' : 'cm';
+
+    const isMen = updatedContext.activeCategory === 'men';
+    if (isMen) {
+      // For menswear, chest + waist completes the evaluation
+      profile.onboardingStage = 'onboarded';
+      const evalResult = evaluateSizing(profile.measurements, 'men');
+      profile.usualSize = evalResult.recommendedSize;
+
+      let text =
+        `Here is your personalized sizing recommendation${customerName}:\n\n` +
+        `• **Your Measurements**: ${evalResult.customerMeasurementsSummary}\n` +
+        `• **Brand Size Chart**: Size ${evalResult.recommendedSize} (${evalResult.brandMeasurementsSummary})\n` +
+        `• **Recommended Size**: Size ${evalResult.recommendedSize}\n\n` +
+        `${evalResult.fitExplanation}\n\n`;
+
+      if (evalResult.isBetweenSizes && evalResult.inquiryForFitPreference) {
+        profile.onboardingStage = 'sizing_assistant_fit_preference';
+        text += evalResult.inquiryForFitPreference;
         return {
           text,
           options: [
-            { label: 'Inches (in)', action: 'choose_unit_in' },
-            { label: 'Centimeters (cm)', action: 'choose_unit_cm' }
+            { label: 'Closer fit', action: 'fit_closer' },
+            { label: 'A little more room', action: 'fit_relaxed' },
+            { label: '✏️ Correct a measurement', action: 'correct_to_bust' }
           ],
-          intent: 'sizing_assistant_unit_prompt',
+          intent: 'sizing_recommendation_between_sizes',
           updatedContext
         };
       }
 
-      const requestedSize = parseRequestedSizeFromText(userInput, updatedContext.activeCategory ?? 'women');
-      if (requestedSize) {
-        profile.usualSize = requestedSize.alpha;
-        profile.onboardingStage = 'onboarded';
+      text += `I’ve saved Size ${evalResult.recommendedSize} to your session profile so we can check the fit of any garment as you browse.`;
+      return {
+        text,
+        options: [
+          { label: '✨ View Suitable Garments', action: 'filter_all' },
+          { label: '👔 Menswear Pieces', action: 'filter_men' },
+          { label: '📏 Check Another Size', action: 'sizing_path_select' }
+        ],
+        intent: 'sizing_recommendation_ready',
+        updatedContext
+      };
+    }
 
-        const text =
-          `Thank you${customerName}. I’ve noted that you usually wear size ${requestedSize.alpha}.\n\n` +
-          `Would you like to explore our latest pieces, check the fit of a specific garment, or find something for an upcoming occasion?`;
+    const text =
+      `Thank you.\n\n` +
+      `Step 3 of 3 — **Hip** measurement:\n` +
+      `Stand with your feet together and measure around the fullest curve of your hips and bottom.\n\n` +
+      `What is your hip measurement in ${unitLabel}?`;
 
+    return {
+      text,
+      options: [
+        { label: 'Skip this measurement', action: 'skip_hips' },
+        { label: '✏️ Correct waist measurement', action: 'correct_to_waist' }
+      ],
+      intent: 'sizing_assistant_hips_prompt',
+      updatedContext
+    };
+  }
+
+  // 5. Stage: sizing_assistant_hips
+  if (profile.onboardingStage === 'sizing_assistant_hips') {
+    const isSkip = userInput === 'skip_hips' || norm === 'skip';
+    let val: number | undefined = undefined;
+
+    if (!isSkip) {
+      const validation = validateMeasurementInput(userInput, 'hips', profile.preferredUnit);
+      if (!validation.isValid) {
         return {
-          text,
+          text: `${validation.errorMessage}\n\nWhat is your hip measurement?`,
           options: [
-            { label: '✨ Explore Collection', action: 'explore_collections' },
-            { label: '👗 Check Garment Fit', action: 'check_garment_fit' },
-            { label: '📏 Size & Length Guide', action: 'size_guide' },
-            { label: '💬 WhatsApp Concierge', action: 'contact_whatsapp' }
+            { label: 'Skip this measurement', action: 'skip_hips' },
+            { label: '✏️ Correct waist measurement', action: 'correct_to_waist' }
           ],
-          intent: 'size_profile_completed',
+          intent: 'sizing_assistant_validation_error',
           updatedContext
         };
       }
-    }
-
-    // 3. Stage: sizing_assistant_bust
-    if (profile.onboardingStage === 'sizing_assistant_bust') {
-      const numMatch = userInput.match(/([0-9]+(?:\.[0-9]+)?)/);
-      if (numMatch) {
-        const val = parseFloat(numMatch[1]);
-        if (norm.includes('cm')) profile.preferredUnit = 'cm';
-        if (norm.includes('in') || norm.includes('"')) profile.preferredUnit = 'in';
-
-        profile.measurements = {
-          ...profile.measurements,
-          bust: val,
-          chest: val,
-          unit: profile.preferredUnit
-        };
-        profile.onboardingStage = 'sizing_assistant_waist';
-
-        const text =
-          `Thank you${customerName}. Next, what is your natural **waist** measurement? (Measure at the narrowest point of your torso, typically an inch above your navel).`;
-
-        return {
-          text,
-          options: [],
-          intent: 'sizing_assistant_waist_prompt',
-          updatedContext
-        };
+      val = validation.value;
+      if (profile.measurements) {
+        profile.measurements.hips = val;
       }
     }
 
-    // 4. Stage: sizing_assistant_waist
-    if (profile.onboardingStage === 'sizing_assistant_waist') {
-      const numMatch = userInput.match(/([0-9]+(?:\.[0-9]+)?)/);
-      if (numMatch) {
-        const val = parseFloat(numMatch[1]);
-        if (profile.measurements) {
-          profile.measurements.waist = val;
-        } else {
-          profile.measurements = { waist: val, unit: profile.preferredUnit };
-        }
-        profile.onboardingStage = 'sizing_assistant_hips';
+    profile.onboardingStage = 'onboarded';
+    const evalResult = evaluateSizing(profile.measurements || { hips: val, unit: profile.preferredUnit }, 'women');
+    profile.usualSize = evalResult.recommendedSize;
 
-        const isMen = updatedContext.activeCategory === 'men';
-        if (isMen) {
-          // Men's size calculation can complete with chest + waist
-          profile.onboardingStage = 'onboarded';
-          const evalResult = evaluateSizing(profile.measurements, 'men');
-          profile.usualSize = evalResult.recommendedSize;
+    let text =
+      `Here is your personalized sizing recommendation${customerName}:\n\n` +
+      `• **Your Measurements**: ${evalResult.customerMeasurementsSummary}\n` +
+      `• **Brand Size Chart**: Size ${evalResult.recommendedSize} (${evalResult.brandMeasurementsSummary})\n` +
+      `• **Recommended Size**: Size ${evalResult.recommendedSize}\n\n` +
+      `${evalResult.fitExplanation}\n\n`;
 
-          let text =
-            `Here is your personalized sizing recommendation${customerName}:\n\n` +
-            `• **Your Measurements**: ${evalResult.customerMeasurementsSummary}\n` +
-            `• **Brand Size Chart**: Size ${evalResult.recommendedSize} (${evalResult.brandMeasurementsSummary})\n` +
-            `• **Recommended Size**: Size ${evalResult.recommendedSize}\n\n` +
-            `${evalResult.fitExplanation}\n\n`;
-
-          if (evalResult.isBetweenSizes && evalResult.inquiryForFitPreference) {
-            profile.onboardingStage = 'sizing_assistant_fit_preference';
-            text += evalResult.inquiryForFitPreference;
-            return {
-              text,
-              options: [
-                { label: 'Closer fit', action: 'fit_closer' },
-                { label: 'A little more room', action: 'fit_relaxed' }
-              ],
-              intent: 'sizing_recommendation_between_sizes',
-              updatedContext
-            };
-          }
-
-          text += `I’ve saved Size ${evalResult.recommendedSize} to your temporary session profile so we can check the fit of any garment as you browse.`;
-          return {
-            text,
-            options: [
-              { label: '✨ Explore Collection', action: 'explore_collections' },
-              { label: '👔 Menswear Pieces', action: 'filter_men' },
-              { label: '💬 WhatsApp Concierge', action: 'contact_whatsapp' }
-            ],
-            intent: 'sizing_recommendation_ready',
-            updatedContext
-          };
-        }
-
-        const text =
-          `Thank you. Lastly, what is your **hip** measurement? (Stand with your feet together and measure around the fullest curve of your hips).`;
-
-        return {
-          text,
-          options: [],
-          intent: 'sizing_assistant_hips_prompt',
-          updatedContext
-        };
-      }
+    if (evalResult.isBetweenSizes && evalResult.inquiryForFitPreference) {
+      profile.onboardingStage = 'sizing_assistant_fit_preference';
+      text += evalResult.inquiryForFitPreference;
+      return {
+        text,
+        options: [
+          { label: 'Closer fit', action: 'fit_closer' },
+          { label: 'A little more room', action: 'fit_relaxed' },
+          { label: '✏️ Correct a measurement', action: 'correct_to_bust' }
+        ],
+        intent: 'sizing_recommendation_between_sizes',
+        updatedContext
+      };
     }
 
-    // 5. Stage: sizing_assistant_hips
-    if (profile.onboardingStage === 'sizing_assistant_hips') {
-      const numMatch = userInput.match(/([0-9]+(?:\.[0-9]+)?)/);
-      if (numMatch) {
-        const val = parseFloat(numMatch[1]);
-        if (profile.measurements) {
-          profile.measurements.hips = val;
-        }
+    text += `I’ve saved Size ${evalResult.recommendedSize} to your session profile so we can check the fit of any garment as you browse.`;
+    return {
+      text,
+      options: [
+        { label: '✨ View Suitable Garments', action: 'filter_all' },
+        { label: '👗 Find a Product', action: 'find_product' },
+        { label: '📏 Check Another Size', action: 'sizing_path_select' },
+        { label: '🛍️ Return to Collection', action: 'explore_collections' }
+      ],
+      intent: 'sizing_recommendation_ready',
+      updatedContext
+    };
+  }
 
-        profile.onboardingStage = 'onboarded';
-        const evalResult = evaluateSizing(profile.measurements || { hips: val, unit: profile.preferredUnit }, 'women');
-        profile.usualSize = evalResult.recommendedSize;
+  // 6. Stage: sizing_path_garment_measure
+  if (profile.onboardingStage === 'sizing_path_garment_measure') {
+    // Check if tag size was mentioned (e.g. US 8, UK 12, size M)
+    const tagSize = parseRequestedSizeFromText(userInput, updatedContext.activeCategory ?? 'women');
+    if (tagSize) {
+      profile.usualSize = tagSize.alpha;
+      profile.onboardingStage = 'onboarded';
 
-        let text =
-          `Here is your personalized sizing recommendation${customerName}:\n\n` +
-          `• **Your Measurements**: ${evalResult.customerMeasurementsSummary}\n` +
-          `• **Brand Size Chart**: Size ${evalResult.recommendedSize} (${evalResult.brandMeasurementsSummary})\n` +
-          `• **Recommended Size**: Size ${evalResult.recommendedSize}\n\n` +
-          `${evalResult.fitExplanation}\n\n`;
+      const spec = getSizeSpecificationSummary(tagSize.alpha, updatedContext.activeCategory ?? 'women');
+      const text =
+        `That tag corresponds directly with our **Size ${tagSize.alpha}**!\n\n` +
+        (spec ? `• ${spec}\n\n` : '') +
+        `Our garments are tailored true to international proportions with comfortable ease. I’ve saved Size ${tagSize.alpha} to your session profile so you can check the fit of any garment as you browse.`;
 
-        if (evalResult.isBetweenSizes && evalResult.inquiryForFitPreference) {
-          profile.onboardingStage = 'sizing_assistant_fit_preference';
-          text += evalResult.inquiryForFitPreference;
-          return {
-            text,
-            options: [
-              { label: 'Closer fit', action: 'fit_closer' },
-              { label: 'A little more room', action: 'fit_relaxed' }
-            ],
-            intent: 'sizing_recommendation_between_sizes',
-            updatedContext
-          };
-        }
-
-        text += `I’ve saved Size ${evalResult.recommendedSize} to your temporary session profile so we can check the fit of any garment as you browse.`;
-        return {
-          text,
-          options: [
-            { label: '✨ Explore Collection', action: 'explore_collections' },
-            { label: '👗 Find a Garment', action: 'find_product' },
-            { label: '💬 WhatsApp Concierge', action: 'contact_whatsapp' }
-          ],
-          intent: 'sizing_recommendation_ready',
-          updatedContext
-        };
-      }
+      return {
+        text,
+        options: [
+          { label: '✨ View Suitable Garments', action: 'filter_all' },
+          { label: '👗 Check Garment Fit', action: 'check_garment_fit' },
+          { label: '🛍️ Return to Collection', action: 'explore_collections' }
+        ],
+        intent: 'garment_size_matched',
+        updatedContext
+      };
     }
+
+    // Check if flat measurement was entered
+    const numMatch = userInput.match(/([0-9]+(?:\.[0-9]+)?)/);
+    if (numMatch) {
+      let val = parseFloat(numMatch[1]);
+      if (norm.includes('flat') || norm.includes('across') || val < 28) {
+        val = val * 2; // double flat measure to circumference
+      }
+
+      const evalResult = evaluateSizing({ bust: val, chest: val, unit: profile.preferredUnit }, 'women');
+      profile.usualSize = evalResult.recommendedSize;
+      profile.onboardingStage = 'onboarded';
+
+      const text =
+        `A ${Math.round(val)}" garment chest corresponds to our **Size ${evalResult.recommendedSize}** (${evalResult.brandMeasurementsSummary}).\n\n` +
+        `Since our boubous and gowns include tailored ease for effortless drape, Size ${evalResult.recommendedSize} will match the comfort of your existing piece.\n\n` +
+        `I’ve saved Size ${evalResult.recommendedSize} to your session profile.`;
+
+      return {
+        text,
+        options: [
+          { label: '✨ View Suitable Garments', action: 'filter_all' },
+          { label: '👗 Check Garment Fit', action: 'check_garment_fit' },
+          { label: '🛍️ Return to Collection', action: 'explore_collections' }
+        ],
+        intent: 'garment_measurement_evaluated',
+        updatedContext
+      };
+    }
+  }
+
+  // ─── INTENT: SIZING HELP / NOT SURE ──────────────────────────────────────
+  if (classifiedIntent === 'sizing_help') {
+    profile.onboardingStage = 'sizing_path_select';
+    const text = `No worries${customerName}! Let’s find your best fit. How would you prefer to do that?`;
+
+    return {
+      text,
+      options: [
+        { label: '1. I know my usual clothing size', action: 'sizing_path_usual' },
+        { label: '2. I don’t know my measurements', action: 'sizing_path_guided' },
+        { label: '3. Help me choose using clothes I already own', action: 'sizing_path_garment' }
+      ],
+      intent: 'sizing_discovery_hub',
+      updatedContext
+    };
   }
 
   // ─── INTENT: CONTEXTUAL GARMENT FIT ("Will this dress fit me?") ──────────
@@ -881,7 +1323,7 @@ export function processConciergeMessage(
           options: [
             { label: `🛍️ Help Me Order in Size ${size}`, action: 'order_assistance' },
             { label: '📏 Open Full Size Chart', action: 'open_size_chart' },
-            { label: '💬 WhatsApp Atelier', action: 'contact_whatsapp' }
+            { label: '✨ Explore Other Pieces', action: 'explore_collections' }
           ],
           products: [prodKnowledge.product],
           intent: 'garment_fit_profile_evaluated',
@@ -889,18 +1331,14 @@ export function processConciergeMessage(
         };
       } else {
         const text =
-          `I would be delighted to check the fit for the **${prodKnowledge.name}**${customerName}. May I ask what clothing size you usually wear?`;
+          `I would be delighted to check the fit for the **${prodKnowledge.name}**${customerName}. How would you like to determine your size?`;
 
         return {
           text,
           options: [
-            { label: 'XS', action: 'set_size_xs' },
-            { label: 'S', action: 'set_size_s' },
-            { label: 'M', action: 'set_size_m' },
-            { label: 'L', action: 'set_size_l' },
-            { label: 'XL', action: 'set_size_xl' },
-            { label: 'XXL', action: 'set_size_xxl' },
-            { label: 'Help me determine my size', action: 'size_not_sure' }
+            { label: '1. I know my usual clothing size', action: 'sizing_path_usual' },
+            { label: '2. I don’t know my measurements', action: 'sizing_path_guided' },
+            { label: '3. Help me choose using clothes I already own', action: 'sizing_path_garment' }
           ],
           products: [prodKnowledge.product],
           intent: 'garment_fit_needs_profile',
@@ -948,7 +1386,7 @@ export function processConciergeMessage(
         options: [
           { label: '🛍️ Add to Bag & Proceed', action: 'confirm_add_to_cart' },
           { label: '📏 Change Size', action: 'size_guide' },
-          { label: '💬 Place Order via WhatsApp', action: 'contact_whatsapp' }
+          { label: '💬 Chat on WhatsApp', action: 'contact_whatsapp' }
         ],
         products: [prodKnowledge.product],
         intent: 'order_assistance_summary',
@@ -959,31 +1397,13 @@ export function processConciergeMessage(
         text: `Which piece from our boutique would you like to order today${customerName}?`,
         options: [
           { label: '👗 Browse Collections', action: 'filter_all' },
-          { label: '💬 Order via WhatsApp', action: 'contact_whatsapp' }
+          { label: '💬 Chat on WhatsApp', action: 'contact_whatsapp' }
         ],
         products: catalogue.slice(0, 3),
         intent: 'order_assistance_select_product',
         updatedContext
       };
     }
-  }
-
-  // ─── INTENT: SIZING HELP / NOT SURE ──────────────────────────────────────
-  if (classifiedIntent === 'sizing_help') {
-    profile.onboardingStage = 'sizing_assistant_unit';
-    const text =
-      `No problem at all${customerName}. I would be glad to help you determine your size using our brand size chart.\n\n` +
-      `To ensure comfortable accuracy, would you prefer to measure in inches or centimeters?`;
-
-    return {
-      text,
-      options: [
-        { label: 'Inches (in)', action: 'choose_unit_in' },
-        { label: 'Centimeters (cm)', action: 'choose_unit_cm' }
-      ],
-      intent: 'sizing_assistant_unit_prompt',
-      updatedContext
-    };
   }
 
   // ─── INTENT: COMPARISON ──────────────────────────────────────────────────
@@ -1072,7 +1492,7 @@ export function processConciergeMessage(
             options: [
               { label: `🛍️ Order in Size ${requestedSize.alpha}`, action: 'order_assistance' },
               { label: '📏 Open Size Chart', action: 'open_size_chart' },
-              { label: '💬 Send Measurements on WhatsApp', action: 'contact_whatsapp' }
+              { label: '✨ Explore Other Pieces', action: 'explore_collections' }
             ],
             products: [prodKnowledge.product],
             intent: classifiedIntent,
@@ -1086,8 +1506,8 @@ export function processConciergeMessage(
           return {
             text,
             options: [
-              { label: '💬 Inquire on WhatsApp', action: 'contact_whatsapp' },
-              { label: '📏 View Full Size Chart', action: 'open_size_chart' }
+              { label: '📏 View Full Size Chart', action: 'open_size_chart' },
+              { label: '✨ Explore Available Pieces', action: 'explore_collections' }
             ],
             products: [prodKnowledge.product],
             intent: classifiedIntent,
@@ -1104,7 +1524,7 @@ export function processConciergeMessage(
           options: [
             { label: '📏 Open Size Chart', action: 'open_size_chart' },
             { label: `🛍️ Order ${prodKnowledge.name}`, action: 'order_assistance' },
-            { label: '💬 WhatsApp Atelier', action: 'contact_whatsapp' }
+            { label: '✨ Explore Collection', action: 'explore_collections' }
           ],
           products: [prodKnowledge.product],
           intent: classifiedIntent,
@@ -1141,14 +1561,15 @@ export function processConciergeMessage(
 
       const text =
         `The **${prodKnowledge.name}** is ${primary}. ${countNote}\n\n` +
-        `Because our handwoven textiles and wax-prints are crafted in limited artisan runs, please reach out to our boutique on WhatsApp (+233 53 879 5669) to view current textile swatches and alternate shade availability.`;
+        `Our handwoven textiles and wax-prints are crafted in limited artisan runs. Custom colourways and bespoke textile swatches can be requested directly via our atelier team on WhatsApp (+233 53 879 5669).`;
 
       return {
         text,
         options: [
-          { label: '💬 WhatsApp Colour Swatches', action: 'contact_whatsapp' },
-          { label: `View ${prodKnowledge.name}`, action: 'navigate_product', payload: prodKnowledge.product },
-          { label: '✨ Explore Other Pieces', action: 'explore_collections' }
+          { label: `🛍️ Order ${prodKnowledge.name}`, action: 'order_assistance' },
+          { label: '💬 Chat on WhatsApp', action: 'contact_whatsapp' },
+          { label: '✨ Explore Other Pieces', action: 'explore_collections' },
+          { label: '📏 Size & Fit Advice', action: 'check_garment_fit' }
         ],
         products: [prodKnowledge.product],
         intent: classifiedIntent,
@@ -1156,11 +1577,10 @@ export function processConciergeMessage(
       };
     } else {
       return {
-        text:
-          `Many of our signature boubous, kaftans, and gowns are produced in limited palette variations. Which piece would you like to explore alternative colours for${customerName}?`,
+        text: `Many of our signature boubous, kaftans, and gowns are produced in limited palette variations. Which piece would you like to explore alternative colours for${customerName}?`,
         options: [
           { label: '👗 Browse Collection', action: 'filter_all' },
-          { label: '💬 Ask Atelier on WhatsApp', action: 'contact_whatsapp' }
+          { label: '✨ Explore New Arrivals', action: 'explore_collections' }
         ],
         products: catalogue.slice(0, 3),
         intent: classifiedIntent,
@@ -1184,9 +1604,9 @@ export function processConciergeMessage(
       return {
         text,
         options: [
-          { label: `View ${prodKnowledge.name}`, action: 'navigate_product', payload: prodKnowledge.product },
+          { label: `🛍️ Order ${prodKnowledge.name}`, action: 'order_assistance' },
           { label: '📏 Size & Length Guide', action: 'size_guide' },
-          { label: '💬 Inquire with Atelier', action: 'contact_whatsapp' }
+          { label: '✨ Explore Other Pieces', action: 'explore_collections' }
         ],
         products: [prodKnowledge.product],
         intent: classifiedIntent,
@@ -1194,8 +1614,7 @@ export function processConciergeMessage(
       };
     } else {
       return {
-        text:
-          'We craft using authentic West African heritage textiles: handwoven Asante silk Kente, fine Northern Fugu strip-woven cotton, hand-loomed Nigerian Aso-Oke, damask brocade, washed linen, and breathable silk-cotton blends. Which garment would you like material details on?',
+        text: 'We craft using authentic West African heritage textiles: handwoven Asante silk Kente, fine Northern Fugu strip-woven cotton, hand-loomed Nigerian Aso-Oke, damask brocade, washed linen, and breathable silk-cotton blends. Which garment would you like material details on?',
         options: [
           { label: '👗 Explore Womenswear', action: 'filter_women' },
           { label: '👔 Explore Menswear', action: 'filter_men' }
@@ -1214,7 +1633,7 @@ export function processConciergeMessage(
         text: `**Care Instructions for ${prodKnowledge.name}:**\n${prodKnowledge.careInstructions}`,
         options: [
           { label: `View ${prodKnowledge.name}`, action: 'navigate_product', payload: prodKnowledge.product },
-          { label: '💬 WhatsApp Concierge', action: 'contact_whatsapp' }
+          { label: '✨ Main Menu', action: 'main_menu' }
         ],
         intent: classifiedIntent,
         updatedContext
@@ -1222,13 +1641,12 @@ export function processConciergeMessage(
     }
     const pieceName = prodKnowledge ? ` for the **${prodKnowledge.name}**` : '';
     const text =
-      `Because our garments incorporate delicate handwoven Kente, metallic brocade, and hand-dyed West African textiles, specialist dry cleaning is strongly recommended${pieceName} to preserve its structure and lustre.\n\n` +
-      `For specific garment care confirmation, please feel free to ask our atelier team directly.`;
+      `Because our garments incorporate delicate handwoven Kente, metallic brocade, and hand-dyed West African textiles, specialist dry cleaning is strongly recommended${pieceName} to preserve its structure and lustre.`;
 
     return {
       text,
       options: [
-        { label: '💬 WhatsApp Atelier', action: 'contact_whatsapp' },
+        { label: '📏 Size Guide', action: 'size_guide' },
         { label: '✨ Main Menu', action: 'main_menu' }
       ],
       intent: classifiedIntent,
@@ -1240,8 +1658,7 @@ export function processConciergeMessage(
   if (classifiedIntent === 'similar_products') {
     if (activeProd) {
       const similar = getSimilarProducts(activeProd, catalogue, 3);
-      const text =
-        `Here are curated pieces with similar craftsmanship and aesthetic to the **${activeProd.name}**:`;
+      const text = `Here are curated pieces with similar craftsmanship and aesthetic to the **${activeProd.name}**:`;
 
       return {
         text,
@@ -1275,13 +1692,13 @@ export function processConciergeMessage(
       `• **Dresses & Gowns**: Mini (34–36"), Knee (39–42"), Midi (45–49"), and Floor Gown/Boubou (55–60").\n` +
       `• **Pants & Trousers**: Inseam (27–35") and Outseam (37–45") calibrated for clean breaks.\n` +
       `• **Custom Calibrations**: Complimentary hem adjustments (Petite under 5'3" or Tall 5'8"+) can be requested in your checkout notes.\n\n` +
-      `Would you like to open the interactive Size Chart?`;
+      `Would you like to open our interactive Size Chart or find your personal size?`;
 
     return {
       text,
       options: [
         { label: '📐 Open Full Size Chart', action: 'open_size_chart' },
-        { label: '💬 Send Measurements on WhatsApp', action: 'contact_whatsapp' },
+        { label: '📏 Find My Best Fit', action: 'sizing_path_select' },
         { label: '🛍️ Return to Shopping', action: 'filter_all' }
       ],
       intent: classifiedIntent,
@@ -1297,14 +1714,15 @@ export function processConciergeMessage(
       `2. **Choose Your Size**: Select your standard size (S–XXL) or reference our Size Chart.\n` +
       `3. **Add to Bag**: Click "Add to Bag" (or use "Place order via WhatsApp" on the product page for instant concierge service).\n` +
       `4. **Checkout**: Proceed to checkout (#/checkout) and enter your contact and delivery coordinates.\n` +
-      `5. **Order Confirmation**: Placing your order registers your garment specifications with our Accra boutique. No credit card is charged immediately online; our team connects with you on WhatsApp with your Order Number to confirm measurements and finalize delivery scheduling.`;
+      `5. **Order Confirmation**: Placing your order registers your garment specifications with our Accra boutique. No credit card is charged immediately online; our team connects with you on WhatsApp with your Order Number to confirm measurements and finalize delivery scheduling.\n\n` +
+      `Would you like me to guide your order for a specific piece?`;
 
     return {
       text,
       options: [
         { label: '🛍️ Open Shopping Bag', action: 'open_bag' },
         { label: '👗 Browse Collections', action: 'filter_all' },
-        { label: '💬 Order via WhatsApp', action: 'contact_whatsapp' }
+        { label: '📏 Size & Fit Guide', action: 'size_guide' }
       ],
       intent: classifiedIntent,
       updatedContext
@@ -1317,13 +1735,15 @@ export function processConciergeMessage(
       `**Payment Information:**\n\n` +
       `• **Online Checkout**: No immediate payment is charged at checkout on our website. Submitting your order registers your garment specifications with our Accra boutique.\n` +
       `• **Confirmation & Payment**: Our team connects directly with you via WhatsApp with your private Order Number to confirm measurements and provide payment details (such as Ghana Mobile Money / MoMo or boutique arrangement) before cutting begins.\n` +
-      `• **Currency**: All website prices are listed in Ghanaian Cedis (GH₵).`;
+      `• **Currency**: All website prices are listed in Ghanaian Cedis (GH₵).\n\n` +
+      `Would you like to explore ordering or delivery details?`;
 
     return {
       text,
       options: [
         { label: '🛍️ How to Order', action: 'how_to_order' },
-        { label: '💬 WhatsApp Concierge', action: 'contact_whatsapp' }
+        { label: '📦 Delivery Rates', action: 'delivery_info' },
+        { label: '✨ Explore Collection', action: 'explore_collections' }
       ],
       intent: classifiedIntent,
       updatedContext
@@ -1337,14 +1757,15 @@ export function processConciergeMessage(
       `• **Tailoring Turnaround**: Handcrafted tailoring takes **3 to 7 working days** in our Accra atelier before dispatch.\n` +
       `• **Accra & Greater Accra**: Complimentary delivery on orders of **GH₵ 1,000+**; standard fee of **GH₵ 45** for smaller orders (1–2 business days transit).\n` +
       `• **Regional Ghana**: Trusted domestic couriers to Kumasi, Takoradi, Cape Coast, Tamale, and other regions (2–3 business days transit).\n` +
-      `• **International**: Worldwide door-to-door delivery via **DHL Express** (3–7 business days transit with full tracking).`;
+      `• **International**: Worldwide door-to-door delivery via **DHL Express** (3–7 business days transit with full tracking).\n\n` +
+      `Would you like help calculating transit times for your destination?`;
 
     return {
       text,
       options: [
-        { label: '📦 How to Track Order', action: 'track_order' },
         { label: '🛍️ How to Place an Order', action: 'how_to_order' },
-        { label: '💬 Inquire with Atelier', action: 'contact_whatsapp' }
+        { label: '👗 Browse Collections', action: 'filter_all' },
+        { label: '📏 Size & Fit Guide', action: 'size_guide' }
       ],
       intent: classifiedIntent,
       updatedContext
@@ -1357,13 +1778,15 @@ export function processConciergeMessage(
       `**Returns & Refund Policy:**\n\n` +
       `In accordance with our published boutique policy, all sales and bespoke commissions are final once an order is placed and fabric is cut. We operate a strict **No Refund** policy.\n\n` +
       `**Complimentary Alterations Guarantee:**\n` +
-      `Because we are dedicated to an exquisite fit, we offer a **complimentary fitting alteration service** at our Accra studio within **7 days** of garment delivery for any bespoke commission needing minor adjustments.`;
+      `Because we are dedicated to an exquisite fit, we offer a **complimentary fitting alteration service** at our Accra studio within **7 days** of garment delivery for any bespoke commission needing minor adjustments.\n\n` +
+      `May I assist with sizing or measurement advice before you place an order?`;
 
     return {
       text,
       options: [
         { label: '📏 Size Chart & Lengths', action: 'size_guide' },
-        { label: '💬 Contact Boutique for Alterations', action: 'contact_whatsapp' }
+        { label: '📏 Find My Best Fit', action: 'sizing_path_select' },
+        { label: '🛍️ Browse Collections', action: 'filter_all' }
       ],
       intent: classifiedIntent,
       updatedContext
@@ -1381,7 +1804,7 @@ export function processConciergeMessage(
       text,
       options: [
         { label: '📏 View Size Chart', action: 'open_size_chart' },
-        { label: '💬 WhatsApp Atelier', action: 'contact_whatsapp' }
+        { label: '📏 Find My Best Fit', action: 'sizing_path_select' }
       ],
       intent: classifiedIntent,
       updatedContext
@@ -1398,8 +1821,8 @@ export function processConciergeMessage(
     return {
       text,
       options: [
-        { label: '💬 Contact Atelier for Alterations', action: 'contact_whatsapp' },
-        { label: '📏 View Length Guide', action: 'size_guide' }
+        { label: '📏 View Length Guide', action: 'size_guide' },
+        { label: '📏 Find My Best Fit', action: 'sizing_path_select' }
       ],
       intent: classifiedIntent,
       updatedContext
@@ -1430,8 +1853,7 @@ export function processConciergeMessage(
   // ─── INTENT: CATEGORY EXPLORATIONS ───────────────────────────────────────
   if (classifiedIntent === 'explore_women') {
     const womenProds = catalogue.filter((p) => p.category === 'women').slice(0, 3);
-    const text =
-      `Navigating you to our **Womenswear** collection, featuring silk-cotton boubous, handwoven Kente gowns, and structured peplum silhouettes.`;
+    const text = `Navigating you to our **Womenswear** collection, featuring silk-cotton boubous, handwoven Kente gowns, and structured peplum silhouettes.`;
 
     return {
       text,
@@ -1447,8 +1869,7 @@ export function processConciergeMessage(
 
   if (classifiedIntent === 'explore_men') {
     const menProds = catalogue.filter((p) => p.category === 'men').slice(0, 3);
-    const text =
-      `Navigating you to our **Menswear** collection, featuring three-piece brocade Agbadas, Kente-yoke linen kaftans, and Northern Fugu smocks.`;
+    const text = `Navigating you to our **Menswear** collection, featuring three-piece brocade Agbadas, Kente-yoke linen kaftans, and Northern Fugu smocks.`;
 
     return {
       text,
@@ -1464,8 +1885,7 @@ export function processConciergeMessage(
 
   if (classifiedIntent === 'explore_bags') {
     const bagProds = catalogue.filter((p) => p.category === 'bags').slice(0, 3);
-    const text =
-      `Navigating you to our **Bags & Accessories** collection, featuring hand-plaited Bolgatanga leather totes, brass Adinkra velvet clutches, and raffia shoulder pieces.`;
+    const text = `Navigating you to our **Bags & Accessories** collection, featuring hand-plaited Bolgatanga leather totes, brass Adinkra velvet clutches, and raffia shoulder pieces.`;
 
     return {
       text,
@@ -1489,9 +1909,7 @@ export function processConciergeMessage(
       ? [
           { label: '✨ Explore Collections', action: 'explore_collections' },
           { label: '👗 Find a Garment', action: 'find_product' },
-          { label: '📏 Size & Length Guide', action: 'size_guide' },
-          { label: '📦 Delivery & Ordering', action: 'delivery_info' },
-          { label: '💬 Chat on WhatsApp', action: 'contact_whatsapp' }
+          { label: '📏 Size & Length Guide', action: 'size_guide' }
         ]
       : [];
 
@@ -1511,7 +1929,6 @@ export function processConciergeMessage(
       options.push(matchingFaq.suggestedAction);
     }
     options.push({ label: '✨ Main Menu', action: 'main_menu' });
-    options.push({ label: '💬 WhatsApp Concierge', action: 'contact_whatsapp' });
 
     return {
       text: matchingFaq.answer,
@@ -1528,8 +1945,7 @@ export function processConciergeMessage(
       text: `I discovered ${searchResults.length} piece${searchResults.length > 1 ? 's' : ''} in our boutique corresponding to your inquiry:`,
       options: [
         { label: '👗 View Complete Catalog', action: 'filter_all' },
-        { label: '📏 Size Guide', action: 'size_guide' },
-        { label: '💬 WhatsApp Concierge', action: 'contact_whatsapp' }
+        { label: '📏 Size Guide', action: 'size_guide' }
       ],
       products: searchResults,
       intent: 'catalogue_search',

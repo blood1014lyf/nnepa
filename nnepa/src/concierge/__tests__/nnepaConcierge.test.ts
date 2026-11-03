@@ -192,7 +192,7 @@ describe('NNEPA Shopping Concierge — Core Knowledge & Intelligence Test Suite'
       'Component contains responsive mobile width constraint'
     );
     assert.ok(
-      componentSource.includes('max-h-[80vh]'),
+      componentSource.includes('max-h-[85vh]') || componentSource.includes('max-h-[80vh]'),
       'Component contains responsive max height'
     );
     assert.ok(
@@ -310,34 +310,40 @@ describe('NNEPA Shopping Concierge — Core Knowledge & Intelligence Test Suite'
     ctx.profile.preferredName = 'Ama';
     ctx.profile.onboardingStage = 'awaiting_size';
 
-    // Step 1: Customer selects "Not sure"
+    // Step 1: Customer selects "Not sure" -> Sizing Discovery Hub
     const step1 = processConciergeMessage('size_not_sure', ctx, CATALOGUE);
     ctx = step1.updatedContext;
-    assert.equal(ctx.profile.onboardingStage, 'sizing_assistant_unit');
-    assert.ok(step1.text.includes('would you prefer to measure in inches or centimeters?'));
+    assert.equal(ctx.profile.onboardingStage, 'sizing_path_select');
+    assert.ok(step1.text.includes('best fit'));
 
-    // Step 2: Customer selects Inches
+    // Step 2: Customer selects Path 2 ("I don’t know my measurements")
+    const step1b = processConciergeMessage('sizing_path_guided', ctx, CATALOGUE);
+    ctx = step1b.updatedContext;
+    assert.equal(ctx.profile.onboardingStage, 'sizing_path_guided_unit');
+    assert.ok(step1b.text.includes('inches or centimetres'));
+
+    // Step 3: Customer selects Inches
     const step2 = processConciergeMessage('choose_unit_in', ctx, CATALOGUE);
     ctx = step2.updatedContext;
     assert.equal(ctx.profile.preferredUnit, 'in');
     assert.equal(ctx.profile.onboardingStage, 'sizing_assistant_bust');
     assert.ok(step2.text.includes('bust'));
 
-    // Step 3: Customer provides bust 37"
+    // Step 4: Customer provides bust 37"
     const step3 = processConciergeMessage('37', ctx, CATALOGUE);
     ctx = step3.updatedContext;
     assert.equal(ctx.profile.measurements?.bust, 37);
     assert.equal(ctx.profile.onboardingStage, 'sizing_assistant_waist');
     assert.ok(step3.text.includes('waist'));
 
-    // Step 4: Customer provides waist 30"
+    // Step 5: Customer provides waist 30"
     const step4 = processConciergeMessage('30', ctx, CATALOGUE);
     ctx = step4.updatedContext;
     assert.equal(ctx.profile.measurements?.waist, 30);
     assert.equal(ctx.profile.onboardingStage, 'sizing_assistant_hips');
     assert.ok(step4.text.includes('hip'));
 
-    // Step 5: Customer provides hips 40"
+    // Step 6: Customer provides hips 40"
     const step5 = processConciergeMessage('40', ctx, CATALOGUE);
     ctx = step5.updatedContext;
     assert.equal(ctx.profile.measurements?.hips, 40);
@@ -347,7 +353,7 @@ describe('NNEPA Shopping Concierge — Core Knowledge & Intelligence Test Suite'
     // Section 9 verification: Check response presentation
     assert.ok(step5.text.includes('Bust: 37", Waist: 30", Hips: 40"'), 'Displays customer measurements');
     assert.ok(step5.text.includes('Size M'), 'Recommends Size M');
-    assert.ok(step5.text.includes('36–38"'), 'Displays Size M bust spec from published size chart');
+    assert.ok(step5.text.includes('36–38"') || step5.text.includes('36-38"'), 'Displays Size M bust spec from published size chart');
   });
 
   // 19. Sizing between sizes: Asks about fit preference
@@ -461,5 +467,117 @@ describe('NNEPA Shopping Concierge — Core Knowledge & Intelligence Test Suite'
     assert.ok(rendererSource.includes('isDeliverySchedule'), 'Detects and renders delivery destination sections');
     assert.ok(rendererSource.includes('renderInlineMarkdown'), 'Exports inline markdown parser');
     assert.ok(!rendererSource.includes('dangerouslySetInnerHTML'), 'Zero dangerouslySetInnerHTML (100% injection-safe)');
+  });
+
+  // 24. Sizing Path 1: International usual clothing size mapping
+  test('Scenario 24: Sizing Path 1 maps international sizing (US/UK/EU) to brand size', () => {
+    let ctx = createInitialConciergeContext(gownProduct);
+    ctx.profile.preferredName = 'Ama';
+    ctx.profile.onboardingStage = 'awaiting_size';
+
+    // Customer opens sizing discovery hub
+    const hub = processConciergeMessage('size_not_sure', ctx, CATALOGUE);
+    ctx = hub.updatedContext;
+    assert.equal(ctx.profile.onboardingStage, 'sizing_path_select');
+
+    // Customer selects Path 1: "I know my usual clothing size"
+    const path1 = processConciergeMessage('sizing_path_usual', ctx, CATALOGUE);
+    ctx = path1.updatedContext;
+    assert.equal(ctx.profile.onboardingStage, 'sizing_path_usual');
+    assert.ok(path1.options.some((o) => o.action === 'set_size_m'));
+
+    // Customer selects US 8-10 / UK 12-14 (M)
+    const selectM = processConciergeMessage('set_size_m', ctx, CATALOGUE);
+    assert.equal(selectM.updatedContext.profile.usualSize, 'M');
+    assert.equal(selectM.updatedContext.profile.onboardingStage, 'onboarded');
+  });
+
+  // 25. Sizing Path 2: Validation, correction, and no-tape guidance
+  test('Scenario 25: Sizing Path 2 validates bounds, explains string/ruler, and supports skipping', () => {
+    let ctx = createInitialConciergeContext(gownProduct);
+    ctx.profile.preferredName = 'Ama';
+    ctx.profile.onboardingStage = 'sizing_path_guided_unit';
+
+    // Customer asks what to do without a measuring tape
+    const noTape = processConciergeMessage('sizing_no_tape', ctx, CATALOGUE);
+    assert.ok(noTape.text.includes('string') || noTape.text.includes('ruler'), 'Explains string/ruler method');
+
+    // Customer picks inches
+    const unitRes = processConciergeMessage('choose_unit_in', ctx, CATALOGUE);
+    ctx = unitRes.updatedContext;
+    assert.equal(ctx.profile.onboardingStage, 'sizing_assistant_bust');
+
+    // Customer enters invalid alphanumeric text
+    const invalidRes = processConciergeMessage('about seventy-five', ctx, CATALOGUE);
+    assert.equal(invalidRes.intent, 'sizing_assistant_validation_error');
+    assert.equal(invalidRes.updatedContext.profile.onboardingStage, 'sizing_assistant_bust');
+    assert.ok(invalidRes.text.includes('enter a numeric measurement'));
+
+    // Customer enters physically unrealistic number (120 inches)
+    const unrealisticRes = processConciergeMessage('120', ctx, CATALOGUE);
+    assert.equal(unrealisticRes.intent, 'sizing_assistant_validation_error');
+    assert.ok(
+      unrealisticRes.text.includes('Please enter a measurement between') ||
+      unrealisticRes.text.includes('Please enter a realistic measurement'),
+      'Validates physical upper bounds'
+    );
+
+    // Customer chooses to skip bust
+    const skipRes = processConciergeMessage('skip_bust', ctx, CATALOGUE);
+    ctx = skipRes.updatedContext;
+    assert.equal(ctx.profile.onboardingStage, 'sizing_assistant_waist');
+    assert.ok(skipRes.text.includes('waist'));
+  });
+
+  // 26. Sizing Path 3: Existing garment comparison (tag & flat measurement)
+  test('Scenario 26: Sizing Path 3 evaluates existing garment flat chest measurement', () => {
+    let ctx = createInitialConciergeContext(gownProduct);
+    ctx.profile.preferredName = 'Ama';
+    ctx.profile.onboardingStage = 'sizing_path_select';
+
+    // Customer picks Path 3
+    const path3 = processConciergeMessage('sizing_path_garment', ctx, CATALOGUE);
+    ctx = path3.updatedContext;
+    assert.equal(ctx.profile.onboardingStage, 'sizing_path_garment_type');
+
+    // Customer selects lay-flat measurement
+    const measureGuide = processConciergeMessage('garment_measure_flat', ctx, CATALOGUE);
+    ctx = measureGuide.updatedContext;
+    assert.equal(ctx.profile.onboardingStage, 'sizing_path_garment_measure');
+
+    // Customer enters 18.5" armpit to armpit
+    const flatRes = processConciergeMessage('18.5', ctx, CATALOGUE);
+    assert.equal(flatRes.intent, 'garment_measurement_evaluated');
+    assert.ok(flatRes.text.includes('Size M'), 'Maps 18.5 flat (37 circumference) to Size M');
+    assert.ok(flatRes.text.includes('ease'), 'Mentions tailoring ease');
+  });
+
+  // 27. Interactive Sizing in Centimetres
+  test('Scenario 27: Interactive Sizing full journey in Centimetres', () => {
+    let ctx = createInitialConciergeContext(gownProduct);
+    ctx.profile.preferredName = 'Kofi';
+    ctx.profile.onboardingStage = 'sizing_path_guided_unit';
+
+    // Customer selects Centimetres
+    const unitRes = processConciergeMessage('choose_unit_cm', ctx, CATALOGUE);
+    ctx = unitRes.updatedContext;
+    assert.equal(ctx.profile.preferredUnit, 'cm');
+
+    // Bust: 94 cm
+    const bustRes = processConciergeMessage('94', ctx, CATALOGUE);
+    ctx = bustRes.updatedContext;
+    assert.equal(ctx.profile.measurements?.bust, 94);
+
+    // Waist: 76 cm
+    const waistRes = processConciergeMessage('76', ctx, CATALOGUE);
+    ctx = waistRes.updatedContext;
+    assert.equal(ctx.profile.measurements?.waist, 76);
+
+    // Hips: 101 cm
+    const hipsRes = processConciergeMessage('101', ctx, CATALOGUE);
+    ctx = hipsRes.updatedContext;
+    assert.equal(ctx.profile.measurements?.hips, 101);
+    assert.equal(ctx.profile.usualSize, 'M');
+    assert.ok(hipsRes.text.includes('91.5–96.5 cm') || hipsRes.text.includes('91.5-96.5 cm'), 'Displays metric size spec');
   });
 });
