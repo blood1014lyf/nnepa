@@ -516,7 +516,7 @@ export default function ShoppingConcierge({
             `View ${payload.name}`,
             `Navigated to the **${payload.name}** (GH₵ ${payload.price.toLocaleString()}). What would you like to know about its cut, fabrics, or sizing?`,
             [
-              { label: 'Add to Bag', action: 'order_assistance' },
+              { label: 'Add to Bag', action: 'confirm_add_to_cart', payload: { product: payload } },
               { label: 'Size Guide', action: 'size_guide' },
               { label: 'Delivery Details', action: 'delivery_info' },
               { label: 'Chat on WhatsApp', action: 'contact_whatsapp' }
@@ -580,11 +580,15 @@ export default function ShoppingConcierge({
           isAddingToCartRef.current = false;
         }, 600);
 
-        const prod = payload?.product || contextRef.current.focusedProduct;
+        const prod = payload?.product || (payload?.id ? payload : undefined) || contextRef.current.focusedProduct;
         if (!prod) {
           dispatchToEngine('Help me order');
           break;
         }
+
+        contextRef.current.focusedProduct = prod;
+        contextRef.current.activeCategory = prod.category;
+        contextRef.current.profile.selectedProduct = prod;
 
         if (prod.inStock === false) {
           setMessages((prev) => [
@@ -610,20 +614,20 @@ export default function ShoppingConcierge({
         }
 
         const hasSizes = prod.sizes && prod.sizes.length > 0 && !prod.sizes.includes('One Size');
-        const chosenSize = payload?.size || contextRef.current.profile.selectedSize || contextRef.current.profile.usualSize;
+        const chosenSize =
+          payload?.size ||
+          contextRef.current.profile.selectedSize ||
+          contextRef.current.profile.usualSize ||
+          (hasSizes ? (prod.sizes.includes('M') ? 'M' : prod.sizes[0]) : 'One Size');
 
-        if (hasSizes && (!chosenSize || !prod.sizes?.includes(chosenSize))) {
-          dispatchToEngine('prompt_choose_size');
-          break;
-        }
-
+        contextRef.current.profile.selectedSize = chosenSize;
         const finalSize = hasSizes ? chosenSize : 'One Size';
 
         if (onAddToCart) {
           onAddToCart(prod, finalSize);
         }
 
-        dispatchToEngine('confirm_add_to_cart');
+        dispatchToEngine('confirm_add_to_cart', label || 'Add to Bag');
         break;
       }
 
@@ -871,7 +875,7 @@ export default function ShoppingConcierge({
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleOptionClick('order_assistance', prod);
+                              handleOptionClick('confirm_add_to_cart', { product: prod }, 'Add to Bag');
                             }}
                             className="px-2.5 py-1 bg-plum-dark text-white hover:bg-plum rounded text-[10px] font-medium transition-colors cursor-pointer border-none"
                           >
@@ -991,7 +995,7 @@ export default function ShoppingConcierge({
                   ? 'Enter label size (e.g. M, UK 12, or US 8)...'
                   : 'Ask NNEPA about sizes, fabrics, delivery...'
               }
-              className="flex-1 px-3 py-2 bg-zinc-100 border border-zinc-200 rounded-full text-xs text-zinc-800 placeholder-zinc-400 outline-none focus:border-plum-dark focus:bg-white transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              className="flex-1 px-3 py-2 bg-zinc-100 border border-zinc-200 rounded-full text-[16px] sm:text-xs text-zinc-800 placeholder-zinc-400 outline-none focus:border-plum-dark focus:bg-white transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             />
             <button
               type="submit"
