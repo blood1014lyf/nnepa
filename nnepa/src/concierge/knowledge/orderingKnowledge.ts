@@ -66,7 +66,7 @@ export const ORDERING_KNOWLEDGE: OrderingKnowledge = {
       stepNumber: 4,
       title: 'Add to Shopping Bag',
       instruction:
-        'Click "Add to Bag". Alternatively, you can click "Place order via WhatsApp" directly on the garment page for immediate concierge ordering.',
+        'Click "Add to Bag". Alternatively, you can click "Place order via WhatsApp" directly on the garment page for direct WhatsApp ordering.',
       actionHint: 'Add to Bag'
     },
     {

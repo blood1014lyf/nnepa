@@ -133,7 +133,7 @@ export const FAQ_KNOWLEDGE_ENTRIES: FAQEntry[] = [
     answer:
       'No immediate payment is charged at checkout. Submitting your order registers your garment specifications with our Accra boutique. Our team then contacts you via WhatsApp with your Order Number to finalize your Mobile Money (MoMo) or direct boutique payment.',
     keywords: ['pay', 'payment', 'credit card', 'momo', 'mobile money', 'charge', 'cost'],
-    suggestedAction: { label: 'WhatsApp Concierge', action: 'contact_whatsapp' }
+    suggestedAction: { label: 'Chat on WhatsApp', action: 'contact_whatsapp' }
   },
 
   // ─── DELIVERY ────────────────────────────────────────────────────────
@@ -151,7 +151,7 @@ export const FAQ_KNOWLEDGE_ENTRIES: FAQEntry[] = [
     category: 'delivery',
     question: 'How can I track my order?',
     answer:
-      'Every order is assigned a private tracking URL (#/order/:publicId). You can also message our WhatsApp concierge (+233 53 879 5669) with your Order Number for real-time atelier and courier updates.',
+      'Every order is assigned a private tracking URL (#/order/:publicId). You can also message our WhatsApp store (+233 53 879 5669) with your Order Number for real-time atelier and courier updates.',
     keywords: ['track', 'tracking', 'status', 'where is my order', 'courier number'],
     suggestedAction: { label: 'Track Order', action: 'track_order' }
   },
@@ -184,7 +184,7 @@ export const FAQ_KNOWLEDGE_ENTRIES: FAQEntry[] = [
     category: 'support',
     question: 'How can I contact customer care or book a fitting?',
     answer:
-      'Our boutique concierge is available Monday to Saturday, 9:00 AM – 6:00 PM GMT. You can reach us via WhatsApp or phone at +233 53 879 5669, email sales@nnepaforiwaa.com, or book a fitting at our Accra studio on our Contact page (#/contact).',
+      'Our boutique team is available Monday to Saturday, 9:00 AM – 6:00 PM GMT. You can reach us via WhatsApp or phone at +233 53 879 5669, email sales@nnepaforiwaa.com, or book a fitting at our Accra studio on our Contact page (#/contact).',
     keywords: ['contact', 'support', 'customer service', 'phone', 'whatsapp', 'email', 'fitting', 'hours'],
     suggestedAction: { label: 'Contact Boutique', action: 'contact_whatsapp' }
   }

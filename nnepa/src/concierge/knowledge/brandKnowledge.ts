@@ -45,14 +45,14 @@ export interface BrandKnowledge {
 export const BRAND_KNOWLEDGE: BrandKnowledge = {
   name: 'Nnepa Foriwaa',
   assistantName: 'NNEPA',
-  assistantSubtitle: 'Your Personal Shopping Concierge',
+  assistantSubtitle: 'Shopping Assistant',
   tagline: 'Rooted. Refined. Regal.',
   foundedYear: 2015,
   summary:
-    'Founded in 2015, Nnepa Foriwaa is a premium African fashion brand in Accra, Ghana, crafting ready-to-wear and custom-tailored clothing for women and men alongside handcrafted bags and accessories.',
+    'Founded in 2015, Nnepa Foriwaa is an African fashion brand in Accra, Ghana, crafting clothing for women and men alongside handcrafted bags and accessories.',
   story: [
-    'Founded in 2015 and actively in business since, Nnepa Foriwaa crafts clothing for women and men that merges modern silhouettes with the richness of African heritage.',
-    'Every piece is sourced from artisans across West Africa and tailored in Accra with refined detail and timeless elegance.'
+    'Founded in 2015 and actively in business since, Nnepa Foriwaa crafts clothing for women and men that merges modern silhouettes with African heritage.',
+    'Every piece is sourced from artisans across West Africa and tailored in Accra with refined detail.'
   ],
   heritagePillars: [
     {
@@ -63,12 +63,12 @@ export const BRAND_KNOWLEDGE: BrandKnowledge = {
     {
       title: 'Made to Measure',
       description:
-        'Garments are available in tailored standard sizes or custom-tailored to individual measurements.'
+        'Garments are available in standard sizes or made to individual measurements.'
     },
     {
       title: 'Heritage Embroidery',
       description:
-        'Hand-embroidered details, beadwork, and traditional weaving techniques inspired by West African royal heritage.'
+        'Hand-embroidered details, beadwork, and traditional weaving techniques inspired by West African heritage.'
     }
   ],
   collectionsOverview: [

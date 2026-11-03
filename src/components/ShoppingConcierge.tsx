@@ -72,6 +72,7 @@ export default function ShoppingConcierge({
   // ═══ CHAT STATE (STRICTLY IN-MEMORY • ZERO PERSISTENCE) ═══
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState('');
+  const isAddingToCartRef = useRef(false);
   
   // Conversation engine context (in-memory)
   const contextRef = useRef<ConversationContext>(createInitialConciergeContext(activeProduct ?? null));
@@ -87,7 +88,7 @@ export default function ShoppingConcierge({
     text: `Hello! I’m NNEPA, your personal shopping assistant. It’s lovely to have you here. What would you like me to call you?`,
     timestamp: getTimeString(),
     options: [
-      { label: '✨ Browse Collections Directly', action: 'skip_onboarding' }
+      { label: 'Browse Collections Directly', action: 'skip_onboarding' }
     ]
   });
 
@@ -333,13 +334,13 @@ export default function ShoppingConcierge({
           {
             id: 'bot_' + (Date.now() + 1),
             sender: 'concierge',
-            text: 'Nnepa Foriwaa offers three distinguished luxury directions. Which world would you like to explore?',
+            text: 'Which collection would you like to view?',
             timestamp: getTimeString(),
             options: [
-              { label: "Women's Haute Couture", action: 'filter_women' },
-              { label: "Men's Luxury Kaftans & Agbadas", action: 'filter_men' },
-              { label: "Bags & Accessories", action: 'filter_bags' },
-              { label: "All Boutique Garments", action: 'filter_all' }
+              { label: 'Womenswear', action: 'filter_women' },
+              { label: 'Menswear', action: 'filter_men' },
+              { label: 'Bags & Accessories', action: 'filter_bags' },
+              { label: 'All Items', action: 'filter_all' }
             ]
           }
         ]);
@@ -386,11 +387,11 @@ export default function ShoppingConcierge({
           {
             id: 'bot_' + (Date.now() + 1),
             sender: 'concierge',
-            text: 'I have opened the International Size Chart and Standard Length Guide for you. You can review exact measurements across US, UK, and EU coordinates.',
+            text: 'I have opened the Size Chart and Length Guide for you. You can review measurements across US, UK, and EU standards.',
             timestamp: getTimeString(),
             options: [
-              { label: '🛍️ Return to Shopping', action: 'filter_all' },
-              { label: '💬 Send Measurements on WhatsApp', action: 'contact_whatsapp' }
+              { label: 'Return to Shopping', action: 'filter_all' },
+              { label: 'Chat on WhatsApp', action: 'contact_whatsapp' }
             ]
           }
         ]);
@@ -417,11 +418,12 @@ export default function ShoppingConcierge({
           {
             id: 'bot_' + (Date.now() + 1),
             sender: 'concierge',
-            text: 'I have opened your shopping bag. You can review your selected pieces, verify quantities, and proceed directly to order confirmation.',
+            text: 'I have opened your shopping bag. You can review your selected pieces, verify quantities, and proceed to checkout.',
             timestamp: getTimeString(),
             options: [
-              { label: '✨ Main Menu', action: 'main_menu' },
-              { label: '💬 WhatsApp Concierge', action: 'contact_whatsapp' }
+              { label: 'Proceed to Checkout', action: 'go_to_checkout' },
+              { label: 'Continue Shopping', action: 'explore_collections' },
+              { label: 'Chat on WhatsApp', action: 'contact_whatsapp' }
             ]
           }
         ]);
@@ -438,17 +440,17 @@ export default function ShoppingConcierge({
           {
             id: 'usr_' + Date.now(),
             sender: 'user',
-            text: 'Book a Private Fitting',
+            text: 'Book a Fitting',
             timestamp: getTimeString()
           },
           {
             id: 'bot_' + (Date.now() + 1),
             sender: 'concierge',
-            text: 'I have navigated you to our Contact page. You can schedule a private atelier fitting in Accra or connect directly with our head of tailoring.',
+            text: 'I have navigated you to our Contact page. You can schedule a studio fitting in Accra or connect directly with our tailoring team.',
             timestamp: getTimeString(),
             options: [
-              { label: '💬 Chat on WhatsApp', action: 'contact_whatsapp' },
-              { label: '✨ Main Menu', action: 'main_menu' }
+              { label: 'Chat on WhatsApp', action: 'contact_whatsapp' },
+              { label: 'Main Menu', action: 'main_menu' }
             ]
           }
         ]);
@@ -473,10 +475,10 @@ export default function ShoppingConcierge({
               text: `Navigated to the **${payload.name}** (GH₵ ${payload.price.toLocaleString()}). What would you like to know about its cut, fabrics, or sizing?`,
               timestamp: getTimeString(),
               options: [
-                { label: '📏 Size & Fit Advice', action: 'size_guide' },
-                { label: '🎨 Available Colours', action: 'check_colors' },
-                { label: '📦 Delivery Details', action: 'delivery_info' },
-                { label: '💬 Order via WhatsApp', action: 'contact_whatsapp' }
+                { label: 'Add to Bag', action: 'order_assistance' },
+                { label: 'Size Guide', action: 'size_guide' },
+                { label: 'Delivery Details', action: 'delivery_info' },
+                { label: 'Chat on WhatsApp', action: 'contact_whatsapp' }
               ]
             }
           ]);
@@ -491,7 +493,7 @@ export default function ShoppingConcierge({
         const prod = contextRef.current.focusedProduct;
         const currentContext = prod ? ` regarding the ${prod.name}` : '';
         const url = `https://wa.me/233538795669?text=${encodeURIComponent(
-          `Hello Nnepa Foriwaa! I would like personal concierge assistance${currentContext}.`
+          `Hello Nnepa Foriwaa! I would like some assistance${currentContext}.`
         )}`;
         window.open(url, '_blank', 'noopener,noreferrer');
         setMessages((prev) => [
@@ -505,23 +507,82 @@ export default function ShoppingConcierge({
           {
             id: 'bot_' + (Date.now() + 1),
             sender: 'concierge',
-            text: 'Connecting you directly with our atelier team on WhatsApp (+233 53 879 5669). We are ready to assist with custom fittings, order inquiries, and styling.',
+            text: 'Connecting you with our team on WhatsApp (+233 53 879 5669). We are ready to assist with sizing, order inquiries, and styling.',
             timestamp: getTimeString(),
             options: [
-              { label: '✨ Return to Main Menu', action: 'main_menu' },
-              { label: '👗 Continue Browsing', action: 'filter_all' }
+              { label: 'Return to Main Menu', action: 'main_menu' },
+              { label: 'Continue Browsing', action: 'filter_all' }
             ]
           }
         ]);
         break;
       }
 
-      case 'confirm_add_to_cart': {
-        const prod = contextRef.current.focusedProduct;
-        const size = contextRef.current.profile.selectedSize || contextRef.current.profile.usualSize || 'M';
-        if (prod && onAddToCart) {
-          onAddToCart(prod, size);
+      case 'select_size_for_order': {
+        const selectedSize = payload?.size;
+        if (selectedSize) {
+          contextRef.current.profile.selectedSize = selectedSize;
+          contextRef.current.profile.usualSize = contextRef.current.profile.usualSize || selectedSize;
         }
+        dispatchToEngine(`select_size_for_order_${selectedSize || ''}`, label);
+        break;
+      }
+
+      case 'prompt_choose_size': {
+        dispatchToEngine('prompt_choose_size');
+        break;
+      }
+
+      case 'confirm_add_to_cart': {
+        if (isAddingToCartRef.current) break;
+        isAddingToCartRef.current = true;
+        setTimeout(() => {
+          isAddingToCartRef.current = false;
+        }, 600);
+
+        const prod = payload?.product || contextRef.current.focusedProduct;
+        if (!prod) {
+          dispatchToEngine('Help me order');
+          break;
+        }
+
+        if (prod.inStock === false) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: 'usr_' + Date.now(),
+              sender: 'user',
+              text: 'Add to bag',
+              timestamp: getTimeString()
+            },
+            {
+              id: 'bot_' + (Date.now() + 1),
+              sender: 'concierge',
+              text: `The **${prod.name}** is currently out of stock. You can contact our store on WhatsApp to check availability, or explore other pieces from the collection.`,
+              timestamp: getTimeString(),
+              options: [
+                { label: 'Chat on WhatsApp', action: 'contact_whatsapp' },
+                { label: 'Browse Collections', action: 'filter_all' }
+              ]
+            }
+          ]);
+          break;
+        }
+
+        const hasSizes = prod.sizes && prod.sizes.length > 0 && !prod.sizes.includes('One Size');
+        const chosenSize = payload?.size || contextRef.current.profile.selectedSize || contextRef.current.profile.usualSize;
+
+        if (hasSizes && (!chosenSize || !prod.sizes?.includes(chosenSize))) {
+          dispatchToEngine('prompt_choose_size');
+          break;
+        }
+
+        const finalSize = hasSizes ? chosenSize : 'One Size';
+
+        if (onAddToCart) {
+          onAddToCart(prod, finalSize);
+        }
+
         dispatchToEngine('confirm_add_to_cart');
         break;
       }
@@ -531,6 +592,10 @@ export default function ShoppingConcierge({
         break;
 
       case 'order_assistance':
+        if (payload) {
+          contextRef.current.focusedProduct = payload;
+          contextRef.current.activeCategory = payload.category;
+        }
         dispatchToEngine('Help me order this');
         break;
 
@@ -632,7 +697,7 @@ export default function ShoppingConcierge({
               if (proactivePrompt) dismissProactivePrompt();
             }
           }}
-          aria-label={isOpen ? 'Close NNEPA shopping concierge' : 'Open NNEPA personal shopping concierge'}
+          aria-label={isOpen ? 'Close NNEPA shopping assistant' : 'Open NNEPA shopping assistant'}
           title={`${NNEPA_IDENTITY.name} — ${NNEPA_IDENTITY.title}`}
           className="relative w-14 h-14 rounded-full bg-plum-dark hover:bg-plum text-white shadow-xl hover:shadow-2xl flex items-center justify-center transition-all duration-200 hover:scale-105 cursor-pointer border border-plum/30 group"
         >
@@ -657,25 +722,25 @@ export default function ShoppingConcierge({
           aria-label={`${NNEPA_IDENTITY.name} — ${NNEPA_IDENTITY.title}`}
           className="fixed bottom-24 right-4 sm:right-6 z-[85] w-[calc(100vw-2rem)] sm:w-[390px] h-[calc(100dvh-7rem)] sm:h-[590px] max-h-[85vh] bg-white rounded-2xl shadow-2xl border border-zinc-200/90 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200 overscroll-contain"
         >
-          {/* Concierge Header */}
+          {/* Header */}
           <div className="bg-gradient-to-r from-plum-dark via-plum to-plum-dark text-white p-4 flex items-center justify-between shrink-0 border-b border-plum/40 shadow-xs">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-lavender border border-white/20">
-                <Sparkles className="w-4 h-4" />
+                <ShoppingBag className="w-4 h-4 text-white" />
               </div>
               <div>
                 <h3 className="font-serif text-sm font-bold tracking-wide text-white leading-tight">
                   {NNEPA_IDENTITY.name}
                 </h3>
                 <span className="text-[10px] text-lavender/90 flex items-center gap-1 font-light">
-                  <Sparkles className="w-3 h-3 text-lavender" />
+                  <ShoppingBag className="w-2.5 h-2.5 text-lavender" />
                   <span>{NNEPA_IDENTITY.title}</span>
                 </span>
               </div>
             </div>
             <button
               onClick={handleCloseConcierge}
-              aria-label="Close concierge"
+              aria-label="Close shopping assistant"
               className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center border-none cursor-pointer transition-colors"
             >
               <X className="w-4 h-4" />
@@ -730,8 +795,20 @@ export default function ShoppingConcierge({
                             GH₵ {prod.price.toLocaleString()}
                           </span>
                         </div>
-                        <div className="px-2.5 py-1 bg-zinc-100 text-zinc-700 hover:bg-plum-dark hover:text-white rounded text-[10px] font-semibold shrink-0 transition-colors">
-                          View
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOptionClick('order_assistance', prod);
+                            }}
+                            className="px-2.5 py-1 bg-plum-dark text-white hover:bg-plum rounded text-[10px] font-medium transition-colors cursor-pointer border-none"
+                          >
+                            Add to Bag
+                          </button>
+                          <div className="px-2 py-1 bg-zinc-100 text-zinc-700 hover:bg-zinc-200 rounded text-[10px] font-medium transition-colors">
+                            View
+                          </div>
                         </div>
                       </div>
                     ))}

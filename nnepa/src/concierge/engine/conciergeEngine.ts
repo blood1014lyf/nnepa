@@ -593,7 +593,16 @@ export function classifyCustomerIntent(
     norm.includes('purchase this') ||
     norm.includes('complete my order') ||
     norm.includes('complete order') ||
-    norm.includes('place order')
+    norm.includes('place order') ||
+    norm.includes('add to bag') ||
+    norm.includes('add to cart') ||
+    norm.includes('buy now') ||
+    norm.startsWith('select size for order') ||
+    norm.startsWith('select_size_for_order') ||
+    norm.startsWith('prompt choose size') ||
+    norm.startsWith('prompt_choose_size') ||
+    norm.startsWith('confirm add to cart') ||
+    norm.startsWith('confirm_add_to_cart')
   ) {
     return 'order_assistance';
   }
@@ -723,9 +732,9 @@ export function processConciergeMessage(
     return {
       text,
       options: [
-        { label: '✨ View Suitable Garments', action: 'filter_all' },
-        { label: '👗 Check Garment Fit', action: 'check_garment_fit' },
-        { label: '📏 Size & Length Guide', action: 'size_guide' }
+        { label: 'View Suitable Garments', action: 'filter_all' },
+        { label: 'Check Garment Fit', action: 'check_garment_fit' },
+        { label: 'Size & Length Guide', action: 'size_guide' }
       ],
       intent: 'size_profile_completed',
       updatedContext
@@ -828,7 +837,7 @@ export function processConciergeMessage(
     return {
       text,
       options: [
-        { label: '✨ Book a Fitting', action: 'book_fitting_yes' },
+        { label: 'Book a Fitting', action: 'book_fitting_yes' },
         { label: 'No thank you, continue shopping', action: 'book_fitting_no' }
       ],
       intent: 'sizing_fitting_offer',
@@ -849,8 +858,8 @@ export function processConciergeMessage(
     return {
       text,
       options: [
-        { label: '👗 Browse Collections', action: 'filter_all' },
-        { label: '✨ Main Menu', action: 'main_menu' }
+        { label: 'Browse Collections', action: 'filter_all' },
+        { label: 'Main Menu', action: 'main_menu' }
       ],
       intent: 'book_fitting_declined',
       updatedContext
@@ -865,15 +874,15 @@ export function processConciergeMessage(
     profile.onboardingStage = 'onboarded';
 
     const text =
-      `We would be delighted to host you for a private fitting at our Accra atelier, or assist you directly through WhatsApp (+233 53 879 5669). Our team will ensure every line and hem is tailored to you.\n\n` +
+      `We can host you for a private fitting at our Accra atelier, or assist you directly through WhatsApp (+233 53 879 5669). Our team will ensure every line and hem is tailored to you.\n\n` +
       `How would you like to proceed?`;
 
     return {
       text,
       options: [
-        { label: '💬 Chat on WhatsApp', action: 'contact_whatsapp' },
-        { label: '📍 View Atelier Contact Details', action: 'book_fitting' },
-        { label: '🛍️ Return to Shopping', action: 'filter_all' }
+        { label: 'Chat on WhatsApp', action: 'contact_whatsapp' },
+        { label: 'View Atelier Contact Details', action: 'book_fitting' },
+        { label: 'Return to Shopping', action: 'filter_all' }
       ],
       intent: 'book_fitting_accepted',
       updatedContext
@@ -913,10 +922,10 @@ export function processConciergeMessage(
       return {
         text,
         options: [
-          { label: `✨ View Size ${targetSize} Pieces`, action: 'filter_all' },
-          { label: '📅 Book a Fitting', action: 'book_fitting_yes' },
-          { label: '📏 View Full Size Chart', action: 'open_size_chart' },
-          { label: '👗 Continue Browsing', action: 'filter_all' }
+          { label: `View Size ${targetSize} Pieces`, action: 'filter_all' },
+          { label: 'Book a Fitting', action: 'book_fitting_yes' },
+          { label: 'View Full Size Chart', action: 'open_size_chart' },
+          { label: 'Continue Browsing', action: 'filter_all' }
         ],
         intent: 'sizing_reference_matched',
         updatedContext
@@ -930,7 +939,7 @@ export function processConciergeMessage(
       return {
         text,
         options: [
-          { label: '✨ Book a Fitting', action: 'book_fitting_yes' },
+          { label: 'Book a Fitting', action: 'book_fitting_yes' },
           { label: 'No thank you, continue shopping', action: 'book_fitting_no' }
         ],
         intent: 'sizing_fitting_offer',
@@ -944,7 +953,7 @@ export function processConciergeMessage(
     profile.fitPreference = userInput === 'fit_closer' ? 'closer' : 'relaxed';
     profile.onboardingStage = 'onboarded';
 
-    const fitLabel = profile.fitPreference === 'closer' ? 'closer tailored fit' : 'relaxed, comfortable drape';
+    const fitLabel = profile.fitPreference === 'closer' ? 'closer tailored fit' : 'relaxed drape';
     const text =
       `Understood${customerName}. I have saved your preference for a **${fitLabel}** in Size ${profile.usualSize} to your session profile.\n\n` +
       `Where would you like to explore next?`;
@@ -952,9 +961,9 @@ export function processConciergeMessage(
     return {
       text,
       options: [
-        { label: '✨ View Suitable Garments', action: 'filter_all' },
-        { label: '👗 Find a Garment', action: 'find_product' },
-        { label: '🛍️ Return to Collection', action: 'explore_collections' }
+        { label: 'View Suitable Garments', action: 'filter_all' },
+        { label: 'Find a Garment', action: 'find_product' },
+        { label: 'Return to Collection', action: 'explore_collections' }
       ],
       intent: 'fit_preference_saved',
       updatedContext
@@ -965,24 +974,13 @@ export function processConciergeMessage(
   if (userInput === 'confirm_add_to_cart') {
     if (activeProd) {
       profile.orderStage = 'added';
-      const orderSize = profile.selectedSize || profile.usualSize || 'M';
-      const orderColor = profile.selectedColor || prodKnowledge?.primaryColor || 'Signature Colourway';
-      const orderQty = profile.selectedQuantity || 1;
-
-      const text =
-        `I’ve added the **${activeProd.name} (Size ${orderSize})** to your shopping bag!\n\n` +
-        `• **Size**: ${orderSize}\n` +
-        `• **Colour**: ${orderColor}\n` +
-        `• **Quantity**: ${orderQty}\n` +
-        `• **Total**: GH₵ ${(activeProd.price * orderQty).toLocaleString()}\n\n` +
-        `You can proceed to checkout now to finalize your delivery coordinates. Our Accra atelier connects with you to confirm your measurements before cutting begins.`;
 
       return {
-        text,
+        text: 'Added to your bag.',
         options: [
-          { label: '💳 Proceed to Checkout', action: 'go_to_checkout' },
-          { label: '🛍️ View Shopping Bag', action: 'open_bag' },
-          { label: '✨ Continue Shopping', action: 'explore_collections' }
+          { label: 'View Bag', action: 'open_bag' },
+          { label: 'Proceed to Checkout', action: 'go_to_checkout' },
+          { label: 'Continue Shopping', action: 'explore_collections' }
         ],
         intent: 'order_added_to_cart',
         updatedContext
@@ -993,11 +991,11 @@ export function processConciergeMessage(
   if (userInput === 'skip_onboarding') {
     profile.onboardingStage = 'onboarded';
     return {
-      text: `Welcome${customerNameSalutation} to Nnepa Foriwaa. How may I guide your boutique experience today?`,
+      text: `Welcome${customerNameSalutation} to Nnepa Foriwaa. How can I help you today?`,
       options: [
-        { label: '✨ Explore Collections', action: 'explore_collections' },
-        { label: '👗 Find a Garment', action: 'find_product' },
-        { label: '📏 Size & Length Guide', action: 'size_guide' }
+        { label: 'Explore Collections', action: 'explore_collections' },
+        { label: 'Find a Garment', action: 'find_product' },
+        { label: 'Size & Length Guide', action: 'size_guide' }
       ],
       intent: 'onboarding_skipped',
       updatedContext
@@ -1025,6 +1023,7 @@ export function processConciergeMessage(
       'alterations_info',
       'payment_info',
       'how_to_order',
+      'order_assistance',
       'contact_boutique',
       'explore_women',
       'explore_men',
@@ -1090,9 +1089,9 @@ export function processConciergeMessage(
       return {
         text,
         options: [
-          { label: '✨ View Suitable Garments', action: 'filter_all' },
-          { label: '👗 Check Garment Fit', action: 'check_garment_fit' },
-          { label: '📏 Size & Length Guide', action: 'size_guide' }
+          { label: 'View Suitable Garments', action: 'filter_all' },
+          { label: 'Check Garment Fit', action: 'check_garment_fit' },
+          { label: 'Size & Length Guide', action: 'size_guide' }
         ],
         intent: 'size_profile_completed',
         updatedContext
@@ -1127,20 +1126,20 @@ export function processConciergeMessage(
         const isBoubou = /boubou|kaftan|wrap|cape/i.test(prodKnowledge.name);
         const silhouette = isBoubou
           ? 'a flowing, relaxed silhouette designed for breathable ease and elegance'
-          : 'a tailored, sculpted silhouette structured to flatter your natural form';
+          : 'a tailored silhouette structured to flatter your natural form';
 
         const text =
           `Yes${customerName}. Based on your profile (**Size ${size}**), the **${prodKnowledge.name}** in size ${size} is tailored with:\n\n` +
           (spec ? `• ${spec}\n\n` : '') +
-          `This piece features ${silhouette}. Every garment is individually hand-tailored in our Accra atelier, and we provide complimentary alterations within 7 days of delivery should you desire minor adjustments.\n\n` +
+          `This piece features ${silhouette}. Every garment is individually tailored in our Accra atelier, and we provide complimentary alterations within 7 days of delivery should you desire minor adjustments.\n\n` +
           `Would you like me to help you complete your order for this piece?`;
 
         return {
           text,
           options: [
-            { label: `🛍️ Help Me Order in Size ${size}`, action: 'order_assistance' },
-            { label: '📏 Open Full Size Chart', action: 'open_size_chart' },
-            { label: '✨ Explore Other Pieces', action: 'explore_collections' }
+            { label: `Help Me Order in Size ${size}`, action: 'order_assistance' },
+            { label: 'Open Full Size Chart', action: 'open_size_chart' },
+            { label: 'Explore Other Pieces', action: 'explore_collections' }
           ],
           products: [prodKnowledge.product],
           intent: 'garment_fit_profile_evaluated',
@@ -1148,7 +1147,7 @@ export function processConciergeMessage(
         };
       } else {
         const text =
-          `I would be delighted to check the fit for the **${prodKnowledge.name}**${customerName}. How would you like to determine your size?`;
+          `I would be happy to check the fit for the **${prodKnowledge.name}**${customerName}. How would you like to determine your size?`;
 
         return {
           text,
@@ -1167,8 +1166,8 @@ export function processConciergeMessage(
       return {
         text,
         options: [
-          { label: '👗 Browse Womenswear', action: 'filter_women' },
-          { label: '👔 Browse Menswear', action: 'filter_men' }
+          { label: 'Browse Womenswear', action: 'filter_women' },
+          { label: 'Browse Menswear', action: 'filter_men' }
         ],
         products: catalogue.slice(0, 3),
         intent: 'garment_fit_choose_product',
@@ -1178,33 +1177,99 @@ export function processConciergeMessage(
   }
 
   // ─── INTENT: ORDER ASSISTANCE FLOW ───────────────────────────────────────
-  if (classifiedIntent === 'order_assistance') {
+  if (
+    classifiedIntent === 'order_assistance' ||
+    userInput === 'order_assistance' ||
+    userInput.startsWith('select_size_for_order_') ||
+    userInput === 'prompt_choose_size'
+  ) {
     if (prodKnowledge) {
+      profile.onboardingStage = 'onboarded';
+      // 1. Stock validation
+      if (prodKnowledge.product.inStock === false) {
+        return {
+          text: `The **${prodKnowledge.name}** is currently out of stock. You can contact our store on WhatsApp to check availability, or explore other pieces from the collection.`,
+          options: [
+            { label: 'Chat on WhatsApp', action: 'contact_whatsapp' },
+            { label: 'Browse Collections', action: 'filter_all' }
+          ],
+          products: catalogue.slice(0, 3),
+          intent: 'product_out_of_stock',
+          updatedContext
+        };
+      }
+
+      // Check if user just selected a size via select_size_for_order_X or query
+      if (userInput.startsWith('select_size_for_order_')) {
+        const picked = userInput.replace('select_size_for_order_', '').trim().toUpperCase();
+        if (picked) {
+          profile.selectedSize = picked;
+          profile.usualSize = profile.usualSize || picked;
+        }
+      }
+
+      const availableSizes = prodKnowledge.availableSizes || [];
+      const hasSpecificSizes = availableSizes.length > 0 && !availableSizes.includes('One Size');
+
+      // 2. Check if size is already determined and valid for this garment
+      const currentChosenSize = profile.selectedSize || profile.usualSize;
+      const isSizeKnownAndAvailable = currentChosenSize && availableSizes.includes(currentChosenSize);
+
+      if (userInput === 'prompt_choose_size' || (hasSpecificSizes && !isSizeKnownAndAvailable)) {
+        profile.selectedProduct = prodKnowledge.product;
+        profile.orderStage = 'confirm_size';
+
+        const sizeOptions: ConciergeActionOption[] = availableSizes.map((s) => ({
+          label: `Size ${s}`,
+          action: 'select_size_for_order',
+          payload: { size: s, product: prodKnowledge.product }
+        }));
+        sizeOptions.push({ label: 'Size Guide', action: 'size_guide' });
+        sizeOptions.push({ label: 'Browse Collections', action: 'filter_all' });
+
+        return {
+          text: `What size would you like for the **${prodKnowledge.name}**?`,
+          options: sizeOptions,
+          products: [prodKnowledge.product],
+          intent: 'order_select_size',
+          updatedContext
+        };
+      }
+
+      // Size is known or item does not require sizes (One Size / bags)
+      const confirmedSize = hasSpecificSizes ? (currentChosenSize as string) : 'One Size';
       profile.selectedProduct = prodKnowledge.product;
-      profile.selectedSize = profile.usualSize || 'M';
-      profile.selectedColor = prodKnowledge.primaryColor || 'Signature Colourway';
+      profile.selectedSize = confirmedSize;
       profile.selectedQuantity = 1;
       profile.orderStage = 'summary_ready';
 
       const price = prodKnowledge.product.price;
+      const sizeNote = hasSpecificSizes ? ` in Size ${confirmedSize}` : '';
       const text =
-        `Wonderful${customerName}. Would you like me to help you complete your order for the **${prodKnowledge.name}**?\n\n` +
-        `Here are the confirmed details for your piece:\n` +
-        `• **Garment**: ${prodKnowledge.name}\n` +
-        `• **Colour**: ${profile.selectedColor}\n` +
-        `• **Size**: Size ${profile.selectedSize} (pre-selected from your profile)\n` +
-        `• **Quantity**: 1 piece\n` +
-        `• **Total Price**: GH₵ ${price.toLocaleString()}\n\n` +
-        `All garments are tailored in Accra in 3–7 working days with complimentary alterations.\n\n` +
-        `Would you like me to add this directly to your shopping bag?`;
+        `Would you like to add the **${prodKnowledge.name}**${sizeNote} (GH₵ ${price.toLocaleString()}) to your bag?`;
+
+      const options: ConciergeActionOption[] = [
+        {
+          label: hasSpecificSizes ? `Add to Bag (Size ${confirmedSize})` : 'Add to Bag',
+          action: 'confirm_add_to_cart',
+          payload: { size: confirmedSize, product: prodKnowledge.product }
+        }
+      ];
+
+      if (hasSpecificSizes) {
+        options.push({
+          label: 'Change Size',
+          action: 'prompt_choose_size',
+          payload: { product: prodKnowledge.product }
+        });
+      }
+
+      options.push({ label: 'Size Guide', action: 'size_guide' });
+      options.push({ label: 'Continue Browsing', action: 'filter_all' });
 
       return {
         text,
-        options: [
-          { label: '🛍️ Add to Bag & Proceed', action: 'confirm_add_to_cart' },
-          { label: '📏 Change Size', action: 'size_guide' },
-          { label: '💬 Chat on WhatsApp', action: 'contact_whatsapp' }
-        ],
+        options,
         products: [prodKnowledge.product],
         intent: 'order_assistance_summary',
         updatedContext
@@ -1213,8 +1278,8 @@ export function processConciergeMessage(
       return {
         text: `Which piece from our boutique would you like to order today${customerName}?`,
         options: [
-          { label: '👗 Browse Collections', action: 'filter_all' },
-          { label: '💬 Chat on WhatsApp', action: 'contact_whatsapp' }
+          { label: 'Browse Collections', action: 'filter_all' },
+          { label: 'Chat on WhatsApp', action: 'contact_whatsapp' }
         ],
         products: catalogue.slice(0, 3),
         intent: 'order_assistance_select_product',
@@ -1243,7 +1308,7 @@ export function processConciergeMessage(
         options: [
           { label: `View ${p1.name}`, action: 'navigate_product', payload: p1 },
           { label: `View ${p2.name}`, action: 'navigate_product', payload: p2 },
-          { label: '📏 Size Guide', action: 'size_guide' }
+          { label: 'Size Guide', action: 'size_guide' }
         ],
         products: [p1, p2],
         intent: classifiedIntent,
@@ -1260,14 +1325,14 @@ export function processConciergeMessage(
         : '';
       const text =
         `The **${prodKnowledge.name}** is **${prodKnowledge.formattedPrice}**${saleNote}.\n\n` +
-        `This price reflects authentic West African handwoven craftsmanship and tailored construction in our Accra atelier.`;
+        `This price includes tailored construction in our Accra atelier.`;
 
       return {
         text,
         options: [
-          { label: `🛍️ Order ${prodKnowledge.name}`, action: 'order_assistance' },
-          { label: '📏 Size & Fit', action: 'size_guide' },
-          { label: '📦 Delivery Rates', action: 'delivery_info' }
+          { label: `Order ${prodKnowledge.name}`, action: 'order_assistance' },
+          { label: 'Size & Fit', action: 'size_guide' },
+          { label: 'Delivery Rates', action: 'delivery_info' }
         ],
         products: [prodKnowledge.product],
         intent: classifiedIntent,
@@ -1275,10 +1340,10 @@ export function processConciergeMessage(
       };
     } else {
       return {
-        text: `Which garment would you like the price for${customerName}? Please share the name or select from our curated pieces below:`,
+        text: `Which garment would you like the price for${customerName}? Please share the name or select from the pieces below:`,
         options: [
-          { label: '👗 Browse Women’s Pieces', action: 'filter_women' },
-          { label: '👔 Browse Men’s Pieces', action: 'filter_men' }
+          { label: 'Browse Women’s Pieces', action: 'filter_women' },
+          { label: 'Browse Men’s Pieces', action: 'filter_men' }
         ],
         products: catalogue.slice(0, 3),
         intent: classifiedIntent,
@@ -1307,9 +1372,9 @@ export function processConciergeMessage(
           return {
             text,
             options: [
-              { label: `🛍️ Order in Size ${requestedSize.alpha}`, action: 'order_assistance' },
-              { label: '📏 Open Size Chart', action: 'open_size_chart' },
-              { label: '✨ Explore Other Pieces', action: 'explore_collections' }
+              { label: `Order in Size ${requestedSize.alpha}`, action: 'order_assistance' },
+              { label: 'Open Size Chart', action: 'open_size_chart' },
+              { label: 'Explore Other Pieces', action: 'explore_collections' }
             ],
             products: [prodKnowledge.product],
             intent: classifiedIntent,
@@ -1318,13 +1383,13 @@ export function processConciergeMessage(
         } else {
           const text =
             `The **${prodKnowledge.name}** is currently offered in sizes: **${prodKnowledge.availableSizes.join(', ')}**.\n\n` +
-            `Size ${requestedSize.alpha} is not listed in standard ready-to-wear for this piece, but our Accra atelier can tailor bespoke dimensions to your exact measurements.`;
+            `Size ${requestedSize.alpha} is not listed in standard sizes for this piece, but our Accra atelier can tailor to your measurements upon request.`;
 
           return {
             text,
             options: [
-              { label: '📏 View Full Size Chart', action: 'open_size_chart' },
-              { label: '✨ Explore Available Pieces', action: 'explore_collections' }
+              { label: 'View Full Size Chart', action: 'open_size_chart' },
+              { label: 'Explore Available Pieces', action: 'explore_collections' }
             ],
             products: [prodKnowledge.product],
             intent: classifiedIntent,
@@ -1334,14 +1399,14 @@ export function processConciergeMessage(
       } else {
         const text =
           `The **${prodKnowledge.name}** is available in sizes: **${prodKnowledge.availableSizes.join(', ')}**.\n\n` +
-          `Our garments are calibrated to international sizing standards (US, UK, and EU). Would you like to check specific body measurements on our Size Chart?`;
+          `Our garments follow international sizing standards (US, UK, and EU). Would you like to check specific body measurements on our Size Chart?`;
 
         return {
           text,
           options: [
-            { label: '📏 Open Size Chart', action: 'open_size_chart' },
-            { label: `🛍️ Order ${prodKnowledge.name}`, action: 'order_assistance' },
-            { label: '✨ Explore Collection', action: 'explore_collections' }
+            { label: 'Open Size Chart', action: 'open_size_chart' },
+            { label: `Order ${prodKnowledge.name}`, action: 'order_assistance' },
+            { label: 'Explore Collection', action: 'explore_collections' }
           ],
           products: [prodKnowledge.product],
           intent: classifiedIntent,
@@ -1351,14 +1416,14 @@ export function processConciergeMessage(
     } else {
       const generalSizeNote = requestedSize
         ? `Most Nnepa Foriwaa garments are tailored across standard sizes S through XXL, including Size ${requestedSize.alpha}.`
-        : 'Our ready-to-wear collections are tailored in sizes S through XXL, alongside One Size handcrafted bags.';
+        : 'Our collections are tailored across standard sizes S through XXL.';
 
       return {
-        text: `${generalSizeNote} Which piece would you like me to check availability for${customerName}?`,
+        text: `${generalSizeNote} Which specific garment would you like to check size availability for${customerName}?`,
         options: [
-          { label: '👗 View Women’s Garments', action: 'filter_women' },
-          { label: '👔 View Men’s Garments', action: 'filter_men' },
-          { label: '📏 View Full Size Chart', action: 'open_size_chart' }
+          { label: 'View Women’s Garments', action: 'filter_women' },
+          { label: 'View Men’s Garments', action: 'filter_men' },
+          { label: 'View Full Size Chart', action: 'open_size_chart' }
         ],
         products: catalogue.slice(0, 3),
         intent: classifiedIntent,
@@ -1370,23 +1435,23 @@ export function processConciergeMessage(
   // ─── INTENT: PRODUCT COLOR INQUIRY ───────────────────────────────────────
   if (classifiedIntent === 'product_color') {
     if (prodKnowledge) {
-      const primary = prodKnowledge.primaryColor ? `shown in **${prodKnowledge.primaryColor}**` : 'shown online';
+      const primary = prodKnowledge.primaryColor ? `available in **${prodKnowledge.primaryColor}**` : 'available as shown';
       const count = prodKnowledge.publishedColorCount;
       const countNote = count && count > 1
-        ? `This piece is cut in **${count} colourways**.`
-        : 'This piece is featured in its primary signature colourway.';
+        ? `This piece is available in **${count} colors**.`
+        : 'This piece is available in one color.';
 
       const text =
         `The **${prodKnowledge.name}** is ${primary}. ${countNote}\n\n` +
-        `Our handwoven textiles and wax-prints are crafted in limited artisan runs. Custom colourways and bespoke textile swatches can be requested directly via our atelier team on WhatsApp (+233 53 879 5669).`;
+        `For custom colors or fabric options, you can contact our store directly on WhatsApp (+233 53 879 5669).`;
 
       return {
         text,
         options: [
-          { label: `🛍️ Order ${prodKnowledge.name}`, action: 'order_assistance' },
-          { label: '💬 Chat on WhatsApp', action: 'contact_whatsapp' },
-          { label: '✨ Explore Other Pieces', action: 'explore_collections' },
-          { label: '📏 Size & Fit Advice', action: 'check_garment_fit' }
+          { label: `Order ${prodKnowledge.name}`, action: 'order_assistance' },
+          { label: 'Chat on WhatsApp', action: 'contact_whatsapp' },
+          { label: 'Explore Other Pieces', action: 'explore_collections' },
+          { label: 'Size & Fit Advice', action: 'check_garment_fit' }
         ],
         products: [prodKnowledge.product],
         intent: classifiedIntent,
@@ -1394,10 +1459,10 @@ export function processConciergeMessage(
       };
     } else {
       return {
-        text: `Many of our signature boubous, kaftans, and gowns are produced in limited palette variations. Which piece would you like to explore alternative colours for${customerName}?`,
+        text: `Several of our pieces are produced in multiple colors. Which piece would you like to check colors for${customerName}?`,
         options: [
-          { label: '👗 Browse Collection', action: 'filter_all' },
-          { label: '✨ Explore New Arrivals', action: 'explore_collections' }
+          { label: 'Browse Collection', action: 'filter_all' },
+          { label: 'Explore New Arrivals', action: 'explore_collections' }
         ],
         products: catalogue.slice(0, 3),
         intent: classifiedIntent,
@@ -1421,9 +1486,9 @@ export function processConciergeMessage(
       return {
         text,
         options: [
-          { label: `🛍️ Order ${prodKnowledge.name}`, action: 'order_assistance' },
-          { label: '📏 Size & Length Guide', action: 'size_guide' },
-          { label: '✨ Explore Other Pieces', action: 'explore_collections' }
+          { label: `Order ${prodKnowledge.name}`, action: 'order_assistance' },
+          { label: 'Size & Length Guide', action: 'size_guide' },
+          { label: 'Explore Other Pieces', action: 'explore_collections' }
         ],
         products: [prodKnowledge.product],
         intent: classifiedIntent,
@@ -1431,10 +1496,10 @@ export function processConciergeMessage(
       };
     } else {
       return {
-        text: 'We craft using authentic West African heritage textiles: handwoven Asante silk Kente, fine Northern Fugu strip-woven cotton, hand-loomed Nigerian Aso-Oke, damask brocade, washed linen, and breathable silk-cotton blends. Which garment would you like material details on?',
+        text: 'We craft using authentic West African textiles: handwoven Asante silk Kente, fine Northern Fugu strip-woven cotton, hand-loomed Nigerian Aso-Oke, damask brocade, washed linen, and breathable silk-cotton blends. Which garment would you like material details on?',
         options: [
-          { label: '👗 Explore Womenswear', action: 'filter_women' },
-          { label: '👔 Explore Menswear', action: 'filter_men' }
+          { label: 'Explore Womenswear', action: 'filter_women' },
+          { label: 'Explore Menswear', action: 'filter_men' }
         ],
         products: catalogue.slice(0, 3),
         intent: classifiedIntent,
@@ -1450,7 +1515,7 @@ export function processConciergeMessage(
         text: `**Care Instructions for ${prodKnowledge.name}:**\n${prodKnowledge.careInstructions}`,
         options: [
           { label: `View ${prodKnowledge.name}`, action: 'navigate_product', payload: prodKnowledge.product },
-          { label: '✨ Main Menu', action: 'main_menu' }
+          { label: 'Main Menu', action: 'main_menu' }
         ],
         intent: classifiedIntent,
         updatedContext
@@ -1458,13 +1523,13 @@ export function processConciergeMessage(
     }
     const pieceName = prodKnowledge ? ` for the **${prodKnowledge.name}**` : '';
     const text =
-      `Because our garments incorporate delicate handwoven Kente, metallic brocade, and hand-dyed West African textiles, specialist dry cleaning is strongly recommended${pieceName} to preserve its structure and lustre.`;
+      `Because our garments incorporate delicate handwoven Kente, metallic brocade, and hand-dyed West African textiles, specialist dry cleaning is strongly recommended${pieceName} to preserve its structure and color.`;
 
     return {
       text,
       options: [
-        { label: '📏 Size Guide', action: 'size_guide' },
-        { label: '✨ Main Menu', action: 'main_menu' }
+        { label: 'Size Guide', action: 'size_guide' },
+        { label: 'Main Menu', action: 'main_menu' }
       ],
       intent: classifiedIntent,
       updatedContext
@@ -1475,13 +1540,13 @@ export function processConciergeMessage(
   if (classifiedIntent === 'similar_products') {
     if (activeProd) {
       const similar = getSimilarProducts(activeProd, catalogue, 3);
-      const text = `Here are curated pieces with similar craftsmanship and aesthetic to the **${activeProd.name}**:`;
+      const text = `Here are pieces similar to the **${activeProd.name}**:`;
 
       return {
         text,
         options: [
-          { label: '👗 View Complete Catalog', action: 'filter_all' },
-          { label: '📏 Size Guide', action: 'size_guide' }
+          { label: 'View Complete Catalog', action: 'filter_all' },
+          { label: 'Size Guide', action: 'size_guide' }
         ],
         products: similar,
         intent: classifiedIntent,
@@ -1489,11 +1554,11 @@ export function processConciergeMessage(
       };
     } else {
       return {
-        text: `I’d be delighted to recommend pieces${customerName}. Are you looking for womenswear, menswear, or handcrafted accessories?`,
+        text: `I can recommend pieces${customerName}. Are you looking for womenswear, menswear, or handcrafted accessories?`,
         options: [
-          { label: '👗 Womenswear', action: 'filter_women' },
-          { label: '👔 Menswear', action: 'filter_men' },
-          { label: '👜 Bags & Accessories', action: 'filter_bags' }
+          { label: 'Womenswear', action: 'filter_women' },
+          { label: 'Menswear', action: 'filter_men' },
+          { label: 'Bags & Accessories', action: 'filter_bags' }
         ],
         products: catalogue.slice(0, 3),
         intent: classifiedIntent,
@@ -1514,9 +1579,9 @@ export function processConciergeMessage(
     return {
       text,
       options: [
-        { label: '📐 Open Full Size Chart', action: 'open_size_chart' },
-        { label: '📏 Find My Best Fit', action: 'sizing_path_select' },
-        { label: '🛍️ Return to Shopping', action: 'filter_all' }
+        { label: 'Open Full Size Chart', action: 'open_size_chart' },
+        { label: 'Find My Best Fit', action: 'sizing_path_select' },
+        { label: 'Return to Shopping', action: 'filter_all' }
       ],
       intent: classifiedIntent,
       updatedContext
@@ -1529,7 +1594,7 @@ export function processConciergeMessage(
       `**How to Place an Order at Nnepa Foriwaa:**\n\n` +
       `1. **Select Your Piece**: Choose your garment from our collections.\n` +
       `2. **Choose Your Size**: Select your standard size (S–XXL) or reference our Size Chart.\n` +
-      `3. **Add to Bag**: Click "Add to Bag" (or use "Place order via WhatsApp" on the product page for instant concierge service).\n` +
+      `3. **Add to Bag**: Click "Add to Bag" on the garment page or in chat.\n` +
       `4. **Checkout**: Proceed to checkout (#/checkout) and enter your contact and delivery coordinates.\n` +
       `5. **Order Confirmation**: Placing your order registers your garment specifications with our Accra boutique. No credit card is charged immediately online; our team connects with you on WhatsApp with your Order Number to confirm measurements and finalize delivery scheduling.\n\n` +
       `Would you like me to guide your order for a specific piece?`;
@@ -1537,9 +1602,9 @@ export function processConciergeMessage(
     return {
       text,
       options: [
-        { label: '🛍️ Open Shopping Bag', action: 'open_bag' },
-        { label: '👗 Browse Collections', action: 'filter_all' },
-        { label: '📏 Size & Fit Guide', action: 'size_guide' }
+        { label: 'Open Shopping Bag', action: 'open_bag' },
+        { label: 'Browse Collections', action: 'filter_all' },
+        { label: 'Size & Fit Guide', action: 'size_guide' }
       ],
       intent: classifiedIntent,
       updatedContext
@@ -1558,9 +1623,9 @@ export function processConciergeMessage(
     return {
       text,
       options: [
-        { label: '🛍️ How to Order', action: 'how_to_order' },
-        { label: '📦 Delivery Rates', action: 'delivery_info' },
-        { label: '✨ Explore Collection', action: 'explore_collections' }
+        { label: 'How to Order', action: 'how_to_order' },
+        { label: 'Delivery Rates', action: 'delivery_info' },
+        { label: 'Explore Collection', action: 'explore_collections' }
       ],
       intent: classifiedIntent,
       updatedContext
@@ -1580,9 +1645,9 @@ export function processConciergeMessage(
     return {
       text,
       options: [
-        { label: '🛍️ How to Place an Order', action: 'how_to_order' },
-        { label: '👗 Browse Collections', action: 'filter_all' },
-        { label: '📏 Size & Fit Guide', action: 'size_guide' }
+        { label: 'How to Place an Order', action: 'how_to_order' },
+        { label: 'Browse Collections', action: 'filter_all' },
+        { label: 'Size & Fit Guide', action: 'size_guide' }
       ],
       intent: classifiedIntent,
       updatedContext
@@ -1601,9 +1666,9 @@ export function processConciergeMessage(
     return {
       text,
       options: [
-        { label: '📏 Size Chart & Lengths', action: 'size_guide' },
-        { label: '📏 Find My Best Fit', action: 'sizing_path_select' },
-        { label: '🛍️ Browse Collections', action: 'filter_all' }
+        { label: 'Size Chart & Lengths', action: 'size_guide' },
+        { label: 'Find My Best Fit', action: 'sizing_path_select' },
+        { label: 'Browse Collections', action: 'filter_all' }
       ],
       intent: classifiedIntent,
       updatedContext
@@ -1620,8 +1685,8 @@ export function processConciergeMessage(
     return {
       text,
       options: [
-        { label: '📏 View Size Chart', action: 'open_size_chart' },
-        { label: '📏 Find My Best Fit', action: 'sizing_path_select' }
+        { label: 'View Size Chart', action: 'open_size_chart' },
+        { label: 'Find My Best Fit', action: 'sizing_path_select' }
       ],
       intent: classifiedIntent,
       updatedContext
@@ -1631,15 +1696,15 @@ export function processConciergeMessage(
   // ─── INTENT: ALTERATIONS ─────────────────────────────────────────────────
   if (classifiedIntent === 'alterations_info') {
     const text =
-      `**Bespoke Alterations Service:**\n\n` +
+      `**Alterations Service:**\n\n` +
       `We provide a **complimentary fitting alteration service** at our Accra atelier within **7 days** of garment receipt.\n\n` +
       `If you need hem calibration, waist adjustments, or bespoke sizing, our master tailors will gladly make the adjustments. You can also specify custom measurements or hem lengths in your order notes at checkout.`;
 
     return {
       text,
       options: [
-        { label: '📏 View Length Guide', action: 'size_guide' },
-        { label: '📏 Find My Best Fit', action: 'sizing_path_select' }
+        { label: 'View Length Guide', action: 'size_guide' },
+        { label: 'Find My Best Fit', action: 'sizing_path_select' }
       ],
       intent: classifiedIntent,
       updatedContext
@@ -1649,7 +1714,7 @@ export function processConciergeMessage(
   // ─── INTENT: CONTACT BOUTIQUE ────────────────────────────────────────────
   if (classifiedIntent === 'contact_boutique') {
     const text =
-      `**Connect with Nnepa Foriwaa Concierge:**\n\n` +
+      `**Contact Nnepa Foriwaa:**\n\n` +
       `• **WhatsApp / Phone**: +233 53 879 5669\n` +
       `• **Email**: sales@nnepaforiwaa.com\n` +
       `• **Boutique Hours**: Monday – Saturday, 9:00 AM – 6:00 PM GMT\n` +
@@ -1658,9 +1723,9 @@ export function processConciergeMessage(
     return {
       text,
       options: [
-        { label: '💬 Open WhatsApp', action: 'contact_whatsapp' },
-        { label: '📅 Book a Fitting', action: 'book_fitting' },
-        { label: '✨ Return to Main Menu', action: 'main_menu' }
+        { label: 'Open WhatsApp', action: 'contact_whatsapp' },
+        { label: 'Book a Fitting', action: 'book_fitting' },
+        { label: 'Return to Main Menu', action: 'main_menu' }
       ],
       intent: classifiedIntent,
       updatedContext
@@ -1675,8 +1740,8 @@ export function processConciergeMessage(
     return {
       text,
       options: [
-        { label: '👗 View All Womenswear', action: 'filter_women' },
-        { label: '📏 Sizing & Length Guide', action: 'size_guide' }
+        { label: 'View All Womenswear', action: 'filter_women' },
+        { label: 'Sizing & Length Guide', action: 'size_guide' }
       ],
       products: womenProds,
       intent: classifiedIntent,
@@ -1691,8 +1756,8 @@ export function processConciergeMessage(
     return {
       text,
       options: [
-        { label: '👔 View All Menswear', action: 'filter_men' },
-        { label: '📏 Men’s Size Guide', action: 'size_guide' }
+        { label: 'View All Menswear', action: 'filter_men' },
+        { label: 'Men’s Size Guide', action: 'size_guide' }
       ],
       products: menProds,
       intent: classifiedIntent,
@@ -1707,8 +1772,8 @@ export function processConciergeMessage(
     return {
       text,
       options: [
-        { label: '👜 View All Bags & Accessories', action: 'filter_bags' },
-        { label: '✨ Explore Other Collections', action: 'explore_collections' }
+        { label: 'View All Bags & Accessories', action: 'filter_bags' },
+        { label: 'Explore Other Collections', action: 'explore_collections' }
       ],
       products: bagProds,
       intent: classifiedIntent,
@@ -1719,14 +1784,14 @@ export function processConciergeMessage(
   // ─── INTENT: GREETING ────────────────────────────────────────────────────
   if (classifiedIntent === 'greeting') {
     const greetingText = profile.preferredName
-      ? `Warm greetings, ${profile.preferredName}. It’s lovely to have you here at Nnepa Foriwaa. How may I guide your boutique experience today?`
+      ? `Hello, ${profile.preferredName}! What can I help you find today?`
       : 'Hello! I’m NNEPA, your personal shopping assistant. It’s lovely to have you here. What would you like me to call you?';
 
     const greetingOptions = profile.preferredName
       ? [
-          { label: '✨ Explore Collections', action: 'explore_collections' },
-          { label: '👗 Find a Garment', action: 'find_product' },
-          { label: '📏 Size & Length Guide', action: 'size_guide' }
+          { label: 'Explore Collections', action: 'explore_collections' },
+          { label: 'Find a Garment', action: 'find_product' },
+          { label: 'Size & Length Guide', action: 'size_guide' }
         ]
       : [];
 
@@ -1745,7 +1810,7 @@ export function processConciergeMessage(
     if (matchingFaq.suggestedAction) {
       options.push(matchingFaq.suggestedAction);
     }
-    options.push({ label: '✨ Main Menu', action: 'main_menu' });
+    options.push({ label: 'Main Menu', action: 'main_menu' });
 
     return {
       text: matchingFaq.answer,
@@ -1761,8 +1826,8 @@ export function processConciergeMessage(
     return {
       text: `I discovered ${searchResults.length} piece${searchResults.length > 1 ? 's' : ''} in our boutique corresponding to your inquiry:`,
       options: [
-        { label: '👗 View Complete Catalog', action: 'filter_all' },
-        { label: '📏 Size Guide', action: 'size_guide' }
+        { label: 'View Complete Catalog', action: 'filter_all' },
+        { label: 'Size Guide', action: 'size_guide' }
       ],
       products: searchResults,
       intent: 'catalogue_search',
@@ -1774,9 +1839,9 @@ export function processConciergeMessage(
   return {
     text: `${UNCONFIRMED_FALLBACK_TEXT}\n\nOur Accra atelier team is ready to assist you directly Monday through Saturday, 9:00 AM – 6:00 PM GMT.`,
     options: [
-      { label: '💬 WhatsApp Boutique (+233 53 879 5669)', action: 'contact_whatsapp' },
-      { label: '📅 Book a Fitting', action: 'book_fitting' },
-      { label: '✨ Return to Main Menu', action: 'main_menu' }
+      { label: 'WhatsApp Boutique (+233 53 879 5669)', action: 'contact_whatsapp' },
+      { label: 'Book a Fitting', action: 'book_fitting' },
+      { label: 'Return to Main Menu', action: 'main_menu' }
     ],
     intent: 'unconfirmed_fallback',
     updatedContext

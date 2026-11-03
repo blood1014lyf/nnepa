@@ -175,7 +175,7 @@ describe('NNEPA Shopping Concierge — Core Knowledge & Intelligence Test Suite'
   test('Scenario 11: Add-to-cart proactive invitation string conforms to brief', () => {
     assert.equal(
       PROACTIVE_PROMPTS.afterAddToCart,
-      'Lovely choice. Would you like help completing your order?',
+      'Added to your bag. Would you like help checking out?',
       'Matches exact brand prompt string'
     );
   });
@@ -400,7 +400,7 @@ describe('NNEPA Shopping Concierge — Core Knowledge & Intelligence Test Suite'
     // Step 2: Customer confirms adding to cart
     const addRes = processConciergeMessage('confirm_add_to_cart', ctx, CATALOGUE);
     assert.equal(addRes.intent, 'order_added_to_cart');
-    assert.ok(addRes.text.includes('shopping bag'), 'Confirms addition to shopping bag');
+    assert.ok(addRes.text.includes('bag'), 'Confirms addition to bag');
     assert.ok(addRes.options.some((o) => o.action === 'go_to_checkout'), 'Provides button to proceed to checkout');
   });
 
@@ -515,5 +515,78 @@ describe('NNEPA Shopping Concierge — Core Knowledge & Intelligence Test Suite'
     assert.equal(res.intent, 'sizing_fitting_offer');
     assert.equal(res.updatedContext.profile.onboardingStage, 'sizing_fitting_offer');
     assert.ok(res.text.includes('We can arrange a fitting to help you find the right size'));
+  });
+
+  // 29. Sizing must be selected if unknown before adding sized piece to cart
+  test('Scenario 29: Customer attempts to order sized piece without prior size -> prompts to select available size', () => {
+    let ctx = createInitialConciergeContext(gownProduct);
+    ctx.profile.usualSize = undefined;
+    ctx.profile.selectedSize = undefined;
+
+    const res = processConciergeMessage('Help me order this', ctx, CATALOGUE);
+    assert.equal(res.intent, 'order_select_size');
+    assert.ok(res.text.includes('What size would you like for the'), 'Prompts for size without assuming M');
+    assert.ok(!res.text.includes('pre-selected'), 'Does NOT assume pre-selected size');
+    assert.ok(res.options.some((o) => o.action === 'select_size_for_order'), 'Provides available size buttons');
+
+    // Customer picks Size L
+    const sizeSelectRes = processConciergeMessage('select_size_for_order_L', res.updatedContext, CATALOGUE);
+    assert.equal(sizeSelectRes.intent, 'order_assistance_summary');
+    assert.equal(sizeSelectRes.updatedContext.profile.selectedSize, 'L');
+    assert.ok(sizeSelectRes.text.includes('Size L') || sizeSelectRes.text.includes('size **L**'), 'Prepares order summary for size L');
+    assert.ok(sizeSelectRes.options.some((o) => o.action === 'confirm_add_to_cart'), 'Offers Add to Bag for selected size');
+  });
+
+  // 30. Out of stock piece prevents ordering
+  test('Scenario 30: Out-of-stock piece explains availability and prevents ordering', () => {
+    const oosProduct: Product = {
+      ...gownProduct,
+      id: 'out_of_stock_piece',
+      inStock: false
+    };
+
+    let ctx = createInitialConciergeContext(oosProduct);
+    const res = processConciergeMessage('Help me order this', ctx, CATALOGUE);
+
+    assert.equal(res.intent, 'product_out_of_stock');
+    assert.ok(res.text.includes('currently out of stock'), 'Informs that item is out of stock');
+    assert.ok(res.options.some((o) => o.action === 'contact_whatsapp'), 'Offers WhatsApp contact');
+    assert.ok(!res.options.some((o) => o.action === 'confirm_add_to_cart'), 'Does NOT offer add to cart');
+  });
+
+  // 31. Zero unsolicited colour suggestions in price or sizing queries
+  test('Scenario 31: Price and sizing inquiries do not mention colour unsolicited', () => {
+    let ctx = createInitialConciergeContext(gownProduct);
+    const priceRes = processConciergeMessage('How much is this dress?', ctx, CATALOGUE);
+    assert.ok(!priceRes.text.toLowerCase().includes('colourway'), 'Price query has no unsolicited colourway');
+    assert.ok(!priceRes.text.toLowerCase().includes('color option'), 'Price query has no unsolicited colors');
+
+    const sizeRes = processConciergeMessage('What sizes do you have?', ctx, CATALOGUE);
+    assert.ok(!sizeRes.text.toLowerCase().includes('colourway'), 'Size query has no unsolicited colourway');
+  });
+
+  // 32. Zero emoji characters across all options and responses
+  test('Scenario 32: All options across main intents have zero emoji characters', () => {
+    let ctx = createInitialConciergeContext(gownProduct);
+    const emojiRegex = /[\u2600-\u27BF\uD83C-\uDBFF\uDC00-\uDFFF]/;
+
+    const queries = [
+      'Hello',
+      'How much does this cost?',
+      'What sizes are available?',
+      'How to place an order',
+      'Tell me about delivery',
+      'Can I return this?',
+      'Help me order this',
+      'Do you have other colors?'
+    ];
+
+    for (const q of queries) {
+      const res = processConciergeMessage(q, ctx, CATALOGUE);
+      assert.ok(!emojiRegex.test(res.text), `Response for "${q}" contains emoji`);
+      for (const opt of res.options) {
+        assert.ok(!emojiRegex.test(opt.label), `Option "${opt.label}" for "${q}" contains emoji`);
+      }
+    }
   });
 });
