@@ -18,7 +18,7 @@ export default function Toast({ message }: ToastProps) {
           animate={{ y: 0, opacity: 1, x: '-50%' }}
           exit={{ y: 40, opacity: 0, x: '-50%' }}
           transition={{ type: 'spring', damping: 18, stiffness: 150 }}
-          className="fixed bottom-8 left-1/2 -translate-x-1/2 max-w-[90vw] bg-white/95 backdrop-blur-md border border-solid border-lilac/45 md:px-8 px-5 py-3 rounded-full text-xs sm:text-sm font-semibold text-plum-dark shadow-xl z-[9000] text-center truncate"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md bg-white/95 backdrop-blur-md border border-solid border-lilac/45 px-4 py-3 rounded-2xl text-xs sm:text-sm font-semibold text-plum-dark shadow-2xl z-[9000] text-center leading-snug break-words"
         >
           {message}
         </motion.div>

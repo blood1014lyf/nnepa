@@ -236,17 +236,8 @@ export default function CheckoutView({
               </div>
             </div>
 
-            {/* Quick WhatsApp Concierge Button */}
+            {/* Order Confirmation Actions */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a
-                href={createWhatsAppUrl(completedOrder)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2.5 px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-[3px] text-xs font-bold tracking-[0.2em] uppercase transition-all shadow-md"
-              >
-                <WhatsAppIcon className="w-4 h-4 fill-white" />
-                Notify via WhatsApp
-              </a>
               <button
                 type="button"
                 onClick={onBackToShop}
@@ -344,7 +335,7 @@ export default function CheckoutView({
 
                   <div>
                     <label className="text-[0.62rem] font-bold tracking-[0.18em] uppercase text-text-muted block mb-1.5">
-                      Phone / WhatsApp *
+                      Phone Number *
                     </label>
                     <input
                       type="tel"
@@ -443,43 +434,30 @@ export default function CheckoutView({
                 </div>
               </div>
 
-              {/* Step 3: Direct WhatsApp Order Confirmation */}
+              {/* Step 3: Order Confirmation */}
               <div className="bg-white p-6 sm:p-8 rounded-lg border border-lilac/25 shadow-sm">
                 <div className="flex items-center gap-2 text-[0.62rem] font-bold tracking-[0.25em] uppercase text-mauve-deep mb-2">
                   <span className="w-5 h-5 rounded-full bg-lavender text-white flex items-center justify-center text-[0.6rem]">3</span>
                   Order Confirmation
                 </div>
                 <h3 className="font-serif text-2xl font-light text-plum-dark mb-3">
-                  Direct WhatsApp Concierge
+                  Confirm & Place Order
                 </h3>
                 <p className="text-xs text-text-muted leading-relaxed mb-6">
-                  No payment is required right now. Placing your order connects you directly to our WhatsApp concierge with your complete order details prefilled for personal confirmation.
+                  No payment is required right now. Placing your order registers your garment specifications directly with our boutique for fitting and delivery scheduling.
                 </p>
-
-                <div className="p-4 bg-emerald-50/60 border border-emerald-200/60 rounded-md flex items-center gap-3 text-xs text-emerald-900 mb-6">
-                  <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
-                    <MessageSquare className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-emerald-950">Direct WhatsApp Checkout</div>
-                    <div className="text-[0.68rem] text-emerald-800">
-                      Your order summary and garments will open ready to send in WhatsApp.
-                    </div>
-                  </div>
-                </div>
 
                 {/* Submission CTA */}
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-4 bg-gradient-to-br from-emerald-600 via-emerald-700 to-plum-dark text-white text-xs font-bold tracking-[0.22em] uppercase rounded-[3px] shadow-[0_8px_24px_rgba(5,150,105,0.25)] hover:opacity-95 active:scale-[0.99] transition-all cursor-pointer border-none flex items-center justify-center gap-2"
+                  className="w-full py-4 bg-gradient-to-br from-lavender via-mauve to-mauve-deep text-white text-xs font-bold tracking-[0.22em] uppercase rounded-[3px] shadow-[0_8px_24px_rgba(155,132,204,0.35)] hover:opacity-95 active:scale-[0.99] transition-all cursor-pointer border-none flex items-center justify-center gap-2"
                 >
                   {isSubmitting ? (
-                    'Opening WhatsApp...'
+                    'Submitting Order...'
                   ) : (
                     <>
-                      <MessageSquare className="w-4 h-4" />
-                      Place Order on WhatsApp · GH₵ {total.toLocaleString()}
+                      Confirm & Place Order · GH₵ {total.toLocaleString()}
                     </>
                   )}
                 </button>
@@ -588,10 +566,6 @@ export default function CheckoutView({
               <div className="flex items-center gap-2.5">
                 <Truck className="w-4 h-4 text-lavender shrink-0" />
                 <span>Orders over GH₵ 1,000 enjoy free door-to-door delivery in Accra.</span>
-              </div>
-              <div className="flex items-center gap-2.5">
-                <MessageSquare className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Direct WhatsApp concierge support and order tracking.</span>
               </div>
             </div>
           </div>
