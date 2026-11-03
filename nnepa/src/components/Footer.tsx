@@ -265,9 +265,11 @@ export default function Footer({ currentPage, onNavigate, onScrollToSection, adm
             <span>•</span>
             <button
               onClick={() => onNavigate(adminToken ? 'admin-dashboard' : 'admin-login')}
-              className="bg-transparent border-none p-0 text-lilac/40 hover:text-lilac cursor-pointer transition-colors"
+              className="bg-transparent border-none p-0 text-lilac/40 hover:text-lilac cursor-pointer transition-colors text-[0.6rem] lowercase tracking-wider opacity-70 hover:opacity-100"
+              title="Admin"
+              aria-label="Admin"
             >
-              {adminToken ? 'Admin Dashboard' : 'Admin Login'}
+              am
             </button>
           </div>
         </div>
