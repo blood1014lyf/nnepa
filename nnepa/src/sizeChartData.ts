@@ -22,6 +22,10 @@ export interface WomenSizeRow {
   shoulderCm: string;
   dressLengthIn: string;
   dressLengthCm: string;
+  pantsInseamIn: string;
+  pantsInseamCm: string;
+  pantsOutseamIn: string;
+  pantsOutseamCm: string;
 }
 
 export interface MenSizeRow {
@@ -41,6 +45,10 @@ export interface MenSizeRow {
   shirtLengthCm: string;
   agbadaLengthIn: string;
   agbadaLengthCm: string;
+  trousersInseamIn: string;
+  trousersInseamCm: string;
+  trousersOutseamIn: string;
+  trousersOutseamCm: string;
 }
 
 export const WOMEN_SIZE_CHART: WomenSizeRow[] = [
@@ -58,7 +66,11 @@ export const WOMEN_SIZE_CHART: WomenSizeRow[] = [
     shoulderIn: '14.5 – 15"',
     shoulderCm: '37 – 38 cm',
     dressLengthIn: '54"',
-    dressLengthCm: '137 cm'
+    dressLengthCm: '137 cm',
+    pantsInseamIn: '30"',
+    pantsInseamCm: '76 cm',
+    pantsOutseamIn: '40"',
+    pantsOutseamCm: '101.5 cm'
   },
   {
     alphaSize: 'S',
@@ -74,7 +86,11 @@ export const WOMEN_SIZE_CHART: WomenSizeRow[] = [
     shoulderIn: '15 – 15.5"',
     shoulderCm: '38 – 39.5 cm',
     dressLengthIn: '55"',
-    dressLengthCm: '140 cm'
+    dressLengthCm: '140 cm',
+    pantsInseamIn: '30.5"',
+    pantsInseamCm: '77.5 cm',
+    pantsOutseamIn: '40.5"',
+    pantsOutseamCm: '103 cm'
   },
   {
     alphaSize: 'M',
@@ -90,7 +106,11 @@ export const WOMEN_SIZE_CHART: WomenSizeRow[] = [
     shoulderIn: '15.5 – 16"',
     shoulderCm: '39.5 – 40.5 cm',
     dressLengthIn: '56"',
-    dressLengthCm: '142 cm'
+    dressLengthCm: '142 cm',
+    pantsInseamIn: '31"',
+    pantsInseamCm: '79 cm',
+    pantsOutseamIn: '41"',
+    pantsOutseamCm: '104 cm'
   },
   {
     alphaSize: 'L',
@@ -106,7 +126,11 @@ export const WOMEN_SIZE_CHART: WomenSizeRow[] = [
     shoulderIn: '16 – 16.5"',
     shoulderCm: '40.5 – 42 cm',
     dressLengthIn: '57"',
-    dressLengthCm: '145 cm'
+    dressLengthCm: '145 cm',
+    pantsInseamIn: '31.5"',
+    pantsInseamCm: '80 cm',
+    pantsOutseamIn: '41.5"',
+    pantsOutseamCm: '105.5 cm'
   },
   {
     alphaSize: 'XL',
@@ -122,7 +146,11 @@ export const WOMEN_SIZE_CHART: WomenSizeRow[] = [
     shoulderIn: '16.5 – 17"',
     shoulderCm: '42 – 43 cm',
     dressLengthIn: '58"',
-    dressLengthCm: '147 cm'
+    dressLengthCm: '147 cm',
+    pantsInseamIn: '32"',
+    pantsInseamCm: '81 cm',
+    pantsOutseamIn: '42"',
+    pantsOutseamCm: '106.5 cm'
   },
   {
     alphaSize: 'XXL',
@@ -138,7 +166,11 @@ export const WOMEN_SIZE_CHART: WomenSizeRow[] = [
     shoulderIn: '17 – 17.5"',
     shoulderCm: '43 – 44.5 cm',
     dressLengthIn: '58"',
-    dressLengthCm: '147 cm'
+    dressLengthCm: '147 cm',
+    pantsInseamIn: '32"',
+    pantsInseamCm: '81 cm',
+    pantsOutseamIn: '42"',
+    pantsOutseamCm: '106.5 cm'
   }
 ];
 
@@ -159,7 +191,11 @@ export const MEN_SIZE_CHART: MenSizeRow[] = [
     shirtLengthIn: '31"',
     shirtLengthCm: '78.5 cm',
     agbadaLengthIn: '53"',
-    agbadaLengthCm: '135 cm'
+    agbadaLengthCm: '135 cm',
+    trousersInseamIn: '30.5"',
+    trousersInseamCm: '77.5 cm',
+    trousersOutseamIn: '40.5"',
+    trousersOutseamCm: '103 cm'
   },
   {
     alphaSize: 'S',
@@ -177,7 +213,11 @@ export const MEN_SIZE_CHART: MenSizeRow[] = [
     shirtLengthIn: '32"',
     shirtLengthCm: '81 cm',
     agbadaLengthIn: '54"',
-    agbadaLengthCm: '137 cm'
+    agbadaLengthCm: '137 cm',
+    trousersInseamIn: '31"',
+    trousersInseamCm: '79 cm',
+    trousersOutseamIn: '41"',
+    trousersOutseamCm: '104 cm'
   },
   {
     alphaSize: 'M',
@@ -195,7 +235,11 @@ export const MEN_SIZE_CHART: MenSizeRow[] = [
     shirtLengthIn: '33"',
     shirtLengthCm: '84 cm',
     agbadaLengthIn: '55"',
-    agbadaLengthCm: '140 cm'
+    agbadaLengthCm: '140 cm',
+    trousersInseamIn: '31.5"',
+    trousersInseamCm: '80 cm',
+    trousersOutseamIn: '41.5"',
+    trousersOutseamCm: '105.5 cm'
   },
   {
     alphaSize: 'L',
@@ -213,7 +257,11 @@ export const MEN_SIZE_CHART: MenSizeRow[] = [
     shirtLengthIn: '34"',
     shirtLengthCm: '86.5 cm',
     agbadaLengthIn: '56"',
-    agbadaLengthCm: '142 cm'
+    agbadaLengthCm: '142 cm',
+    trousersInseamIn: '32"',
+    trousersInseamCm: '81.5 cm',
+    trousersOutseamIn: '42"',
+    trousersOutseamCm: '107 cm'
   },
   {
     alphaSize: 'XL',
@@ -231,7 +279,11 @@ export const MEN_SIZE_CHART: MenSizeRow[] = [
     shirtLengthIn: '35"',
     shirtLengthCm: '89 cm',
     agbadaLengthIn: '57"',
-    agbadaLengthCm: '145 cm'
+    agbadaLengthCm: '145 cm',
+    trousersInseamIn: '32.5"',
+    trousersInseamCm: '82.5 cm',
+    trousersOutseamIn: '42.5"',
+    trousersOutseamCm: '108 cm'
   },
   {
     alphaSize: 'XXL',
@@ -249,7 +301,126 @@ export const MEN_SIZE_CHART: MenSizeRow[] = [
     shirtLengthIn: '35.5"',
     shirtLengthCm: '90 cm',
     agbadaLengthIn: '57"',
-    agbadaLengthCm: '145 cm'
+    agbadaLengthCm: '145 cm',
+    trousersInseamIn: '32.5"',
+    trousersInseamCm: '82.5 cm',
+    trousersOutseamIn: '42.5"',
+    trousersOutseamCm: '108 cm'
+  }
+];
+
+// ═══ STANDARD LENGTH GUIDES (PANTS & DRESSES) ═══
+
+export interface DressLengthCategory {
+  id: string;
+  silhouette: string;
+  lengthIn: string;
+  lengthCm: string;
+  hemPosition: string;
+  proportionNote: string;
+  bestPairedWith: string;
+  measuringInstruction: string;
+}
+
+export interface PantsLengthCategory {
+  id: string;
+  style: string;
+  inseamIn: string;
+  inseamCm: string;
+  outseamIn: string;
+  outseamCm: string;
+  hemBreak: string;
+  footwearGuide: string;
+  measuringInstruction: string;
+}
+
+export const DRESS_LENGTH_GUIDE: DressLengthCategory[] = [
+  {
+    id: 'mini',
+    silhouette: 'Mini Dress & Tunics',
+    lengthIn: '34 – 36"',
+    lengthCm: '86 – 91 cm',
+    hemPosition: 'Mid-thigh (approx. 4–6" above knee cap)',
+    proportionNote: 'Youthful, contemporary silhouette with room for dynamic movement.',
+    bestPairedWith: 'Flat sandals, mules, or sculptural block heels.',
+    measuringInstruction: 'Measure from High Point Shoulder (HPS) down across the apex of the bust to the mid-thigh hemline.'
+  },
+  {
+    id: 'knee',
+    silhouette: 'Knee-Length & Shift Ensembles',
+    lengthIn: '39 – 42"',
+    lengthCm: '99 – 107 cm',
+    hemPosition: 'Directly at the knee or just skimming the lower patella',
+    proportionNote: 'Refined corporate and daytime cocktail elegance.',
+    bestPairedWith: 'Classic pumps, slingbacks, or pointed-toe heels.',
+    measuringInstruction: 'Measure from HPS straight down over the bust apex to the exact center of the knee cap.'
+  },
+  {
+    id: 'midi',
+    silhouette: 'Midi & Tea-Length Creations',
+    lengthIn: '45 – 49"',
+    lengthCm: '114 – 124 cm',
+    hemPosition: 'Mid-calf (harmonious balance between knee and ankle)',
+    proportionNote: 'Sophisticated editorial drape for galas, high teas, and weddings.',
+    bestPairedWith: 'Stilettos, ankle-strap sandals, or embellished heels.',
+    measuringInstruction: 'Measure from HPS down past the waist curve to the widest point of the lower calf.'
+  },
+  {
+    id: 'maxi',
+    silhouette: 'Floor Gown, Maxi & Royal Boubou',
+    lengthIn: '55 – 60"',
+    lengthCm: '140 – 152 cm',
+    hemPosition: 'Floor-skimming / Ankle drape with bespoke sweep',
+    proportionNote: 'Cut with majestic ease to float gracefully without catching the ground.',
+    bestPairedWith: 'Designed to pair with 2"–4" formal heels or couture flats.',
+    measuringInstruction: 'Measure standing upright from HPS straight to the floor, wearing your intended heels or footwear.'
+  }
+];
+
+export const PANTS_LENGTH_GUIDE: PantsLengthCategory[] = [
+  {
+    id: 'ankle',
+    style: 'Ankle / Cropped Cigarette Trousers',
+    inseamIn: '27 – 29"',
+    inseamCm: '68.5 – 73.5 cm',
+    outseamIn: '37 – 39"',
+    outseamCm: '94 – 99 cm',
+    hemBreak: 'Zero break: Sits cleanly at or just above the ankle bone',
+    footwearGuide: 'Low heels, leather loafers, pointed mules, or minimalist sandals.',
+    measuringInstruction: 'Inseam: inner crotch point to ankle bone. Outseam: natural waistband down the outer hip to ankle.'
+  },
+  {
+    id: 'regular',
+    style: 'Classic Straight / Standard Trousers',
+    inseamIn: '31 – 32"',
+    inseamCm: '78.5 – 81.5 cm',
+    outseamIn: '40.5 – 42"',
+    outseamCm: '103 – 107 cm',
+    hemBreak: 'Slight break: Rests gently on the top of the shoe without folding',
+    footwearGuide: 'Standard dress pumps, block heels, or polished leather shoes.',
+    measuringInstruction: 'Standard fit calibrated for heights 5\'4" – 5\'7" (162–170 cm). Measure waist to shoe instep.'
+  },
+  {
+    id: 'palazzo',
+    style: 'Wide-Leg / Palazzo & Flared Pants',
+    inseamIn: '33 – 35"',
+    inseamCm: '84 – 89 cm',
+    outseamIn: '43 – 45"',
+    outseamCm: '109 – 114 cm',
+    hemBreak: 'Full break / Floor-sweep: 0.5" above the floor with heels',
+    footwearGuide: 'Platform wedges, 3"–4" stilettos, or elevated evening heels.',
+    measuringInstruction: 'Measure from high waist over the hip to the floor while wearing your chosen heel height.'
+  },
+  {
+    id: 'kaftan-trouser',
+    style: 'Men\'s Kaftan & Agbada Trousers (Sokoto)',
+    inseamIn: '31 – 33"',
+    inseamCm: '78.5 – 84 cm',
+    outseamIn: '41 – 43"',
+    outseamCm: '104 – 109 cm',
+    hemBreak: 'Clean drape: Tapers subtly over the instep without dragging',
+    footwearGuide: 'Traditional leather mules, velvet loafers, or tailored dress slippers.',
+    measuringInstruction: 'Measure from waistband (or drawstring position) down the side to the ankle shoe contact.'
   }
 ];
 
@@ -308,6 +479,16 @@ export const MEASURING_TIPS = [
   },
   {
     step: '4',
+    title: 'Dress Length (HPS to Hem)',
+    desc: 'Measure from High Point Shoulder (where your shoulder meets your neck), passing over the bust apex down to your desired hemline.'
+  },
+  {
+    step: '5',
+    title: 'Pants Inseam & Outseam',
+    desc: 'Inseam: measure along the inner leg seam from crotch to hem. Outseam: measure from the top of the waistband down the outer hip to the floor or ankle.'
+  },
+  {
+    step: '6',
     title: 'Shoulders & Neck',
     desc: 'For tailored jackets, shirts and agbadas, measure across the back from shoulder tip to shoulder tip, and measure loosely around the base of the neck.'
   }
