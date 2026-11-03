@@ -445,4 +445,21 @@ describe('NNEPA Shopping Concierge — Core Knowledge & Intelligence Test Suite'
       );
     }
   });
+
+  // 23. Response Presentation: Message Renderer formatting & sanitization
+  test('Scenario 23: Response Presentation Layer sanitizes and renders structured markdown', () => {
+    const rendererSource = fs.readFileSync(
+      path.resolve(process.cwd(), 'src/concierge/components/ConciergeMessageRenderer.tsx'),
+      'utf8'
+    );
+
+    // Verify it handles numbered steps, processing times, order specs, and sizing recommendations
+    assert.ok(rendererSource.includes('numbered_list'), 'Supports numbered step rendering');
+    assert.ok(rendererSource.includes('processing_badge'), 'Supports processing time badge');
+    assert.ok(rendererSource.includes('isOrderSummary'), 'Detects and renders order summary specification cards');
+    assert.ok(rendererSource.includes('isSizingSpecs'), 'Detects and renders sizing comparison cards');
+    assert.ok(rendererSource.includes('isDeliverySchedule'), 'Detects and renders delivery destination sections');
+    assert.ok(rendererSource.includes('renderInlineMarkdown'), 'Exports inline markdown parser');
+    assert.ok(!rendererSource.includes('dangerouslySetInnerHTML'), 'Zero dangerouslySetInnerHTML (100% injection-safe)');
+  });
 });

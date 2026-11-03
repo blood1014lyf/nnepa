@@ -34,6 +34,7 @@ import {
   type ConversationContext,
   type ConciergeActionOption
 } from '../concierge/engine/conciergeEngine.ts';
+import ConciergeMessageRenderer from '../concierge/components/ConciergeMessageRenderer.tsx';
 import { PROACTIVE_PROMPTS, NNEPA_IDENTITY } from '../concierge/knowledge/index.ts';
 
 export interface ShoppingConciergeProps {
@@ -681,12 +682,6 @@ export default function ShoppingConcierge({
             </button>
           </div>
 
-          {/* Privacy Guarantee Micro-Banner */}
-          <div className="bg-lavender/10 border-b border-lilac/20 px-3 py-1.5 text-[9.5px] text-plum-dark flex items-center gap-1.5 shrink-0">
-            <Lock className="w-3.5 h-3.5 text-mauve-deep shrink-0" />
-            <span>100% private in browser. Zero tracking, zero external APIs, zero data stored.</span>
-          </div>
-
           {/* Scrollable Conversation History */}
           <div className="flex-1 p-3.5 overflow-y-auto space-y-3.5 text-xs bg-zinc-50/50">
             {messages.map((msg) => (
@@ -695,13 +690,13 @@ export default function ShoppingConcierge({
                 className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
               >
                 <div
-                  className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 leading-relaxed text-xs ${
+                  className={`max-w-[88%] rounded-2xl px-3.5 py-2.5 leading-relaxed text-xs ${
                     msg.sender === 'user'
                       ? 'bg-plum-dark text-white rounded-br-xs shadow-xs'
                       : 'bg-white text-zinc-800 border border-zinc-200/80 rounded-bl-xs shadow-xs'
                   }`}
                 >
-                  <p className="whitespace-pre-line">{msg.text}</p>
+                  <ConciergeMessageRenderer text={msg.text} sender={msg.sender} />
                 </div>
 
                 <span className="text-[9px] text-zinc-400 px-1 mt-1 font-mono">
