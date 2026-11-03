@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { Ruler, ArrowLeft, ShieldCheck } from 'lucide-react';
+import { Ruler, ArrowLeft } from 'lucide-react';
 import SizeChart from './SizeChart.tsx';
 import { SizingCategory, SizingRegion } from '../sizeChartData.ts';
 
@@ -34,8 +34,8 @@ export default function SizeChartView({
           </button>
 
           <div className="flex items-center gap-1.5 text-xs text-text-light">
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span className="font-semibold text-plum-dark">Verified Tailoring Scale</span>
+            <Ruler className="w-4 h-4 text-lavender" />
+            <span className="font-semibold text-plum-dark">Atelier Size Calibration</span>
           </div>
         </div>
 

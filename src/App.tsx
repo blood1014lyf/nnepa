@@ -789,6 +789,7 @@ export default function App() {
           setPageWithHash('size-chart');
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
+        onAddToCart={handleAddToCart}
       />
     </div>
   );

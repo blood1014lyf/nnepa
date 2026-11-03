@@ -272,4 +272,177 @@ describe('NNEPA Shopping Concierge — Core Knowledge & Intelligence Test Suite'
       }
     }
   });
+
+  // 16. Customer Onboarding: Personal greeting & preferred name collection
+  test('Scenario 16: Customer onboarding captures preferred name naturally', () => {
+    let ctx = createInitialConciergeContext(null);
+    assert.equal(ctx.profile.onboardingStage, 'awaiting_name');
+
+    // Customer responds with name
+    const res = processConciergeMessage('Call me Ama', ctx, CATALOGUE);
+    ctx = res.updatedContext;
+
+    assert.equal(ctx.profile.preferredName, 'Ama');
+    assert.equal(ctx.profile.onboardingStage, 'awaiting_size');
+    assert.ok(res.text.includes('Lovely to meet you, Ama. Let’s find something you’ll love.'), 'Greets customer warmly with their name');
+    assert.ok(res.text.includes('Before we explore the collection, may I ask what clothing size you usually wear?'), 'Asks size question');
+    assert.ok(res.options.some((o) => o.label === 'M'), 'Provides size M option');
+    assert.ok(res.options.some((o) => o.label === 'Not sure'), 'Provides Not sure option');
+  });
+
+  // 17. Size Profiling: User selects size M directly
+  test('Scenario 17: Customer selects size M during profiling', () => {
+    let ctx = createInitialConciergeContext(null);
+    ctx.profile.preferredName = 'Ama';
+    ctx.profile.onboardingStage = 'awaiting_size';
+
+    const res = processConciergeMessage('set_size_m', ctx, CATALOGUE);
+    ctx = res.updatedContext;
+
+    assert.equal(ctx.profile.usualSize, 'M');
+    assert.equal(ctx.profile.onboardingStage, 'onboarded');
+    assert.ok(res.text.includes('Thank you, Ama. I’ve noted that you usually wear size M.'), 'Confirms size M for Ama');
+  });
+
+  // 18. Interactive Sizing Assistant: Full measurement journey (inches)
+  test('Scenario 18: Interactive Sizing Assistant step-by-step measurement (inches)', () => {
+    let ctx = createInitialConciergeContext(gownProduct);
+    ctx.profile.preferredName = 'Ama';
+    ctx.profile.onboardingStage = 'awaiting_size';
+
+    // Step 1: Customer selects "Not sure"
+    const step1 = processConciergeMessage('size_not_sure', ctx, CATALOGUE);
+    ctx = step1.updatedContext;
+    assert.equal(ctx.profile.onboardingStage, 'sizing_assistant_unit');
+    assert.ok(step1.text.includes('would you prefer to measure in inches or centimeters?'));
+
+    // Step 2: Customer selects Inches
+    const step2 = processConciergeMessage('choose_unit_in', ctx, CATALOGUE);
+    ctx = step2.updatedContext;
+    assert.equal(ctx.profile.preferredUnit, 'in');
+    assert.equal(ctx.profile.onboardingStage, 'sizing_assistant_bust');
+    assert.ok(step2.text.includes('bust'));
+
+    // Step 3: Customer provides bust 37"
+    const step3 = processConciergeMessage('37', ctx, CATALOGUE);
+    ctx = step3.updatedContext;
+    assert.equal(ctx.profile.measurements?.bust, 37);
+    assert.equal(ctx.profile.onboardingStage, 'sizing_assistant_waist');
+    assert.ok(step3.text.includes('waist'));
+
+    // Step 4: Customer provides waist 30"
+    const step4 = processConciergeMessage('30', ctx, CATALOGUE);
+    ctx = step4.updatedContext;
+    assert.equal(ctx.profile.measurements?.waist, 30);
+    assert.equal(ctx.profile.onboardingStage, 'sizing_assistant_hips');
+    assert.ok(step4.text.includes('hip'));
+
+    // Step 5: Customer provides hips 40"
+    const step5 = processConciergeMessage('40', ctx, CATALOGUE);
+    ctx = step5.updatedContext;
+    assert.equal(ctx.profile.measurements?.hips, 40);
+    assert.equal(ctx.profile.usualSize, 'M');
+    assert.equal(ctx.profile.onboardingStage, 'onboarded');
+
+    // Section 9 verification: Check response presentation
+    assert.ok(step5.text.includes('Bust: 37", Waist: 30", Hips: 40"'), 'Displays customer measurements');
+    assert.ok(step5.text.includes('Size M'), 'Recommends Size M');
+    assert.ok(step5.text.includes('36–38"'), 'Displays Size M bust spec from published size chart');
+  });
+
+  // 19. Sizing between sizes: Asks about fit preference
+  test('Scenario 19: Interactive sizing between sizes prompts for fit preference', () => {
+    let ctx = createInitialConciergeContext(gownProduct);
+    ctx.profile.preferredName = 'Ama';
+    ctx.profile.preferredUnit = 'in';
+    ctx.profile.measurements = { bust: 35.5, waist: 28.5, unit: 'in' };
+    ctx.profile.onboardingStage = 'sizing_assistant_hips';
+
+    // Bust 35.5 sits between S (max 35) and M (min 36)
+    const res = processConciergeMessage('38.5', ctx, CATALOGUE);
+    ctx = res.updatedContext;
+
+    assert.equal(ctx.profile.onboardingStage, 'sizing_assistant_fit_preference');
+    assert.ok(
+      res.text.includes('Based on your measurements, size M looks like the closest match. Would you prefer a closer fit or a little more room?'),
+      'Matches brief prompt for between sizes'
+    );
+    assert.ok(res.options.some((o) => o.action === 'fit_closer'));
+    assert.ok(res.options.some((o) => o.action === 'fit_relaxed'));
+
+    // Customer chooses closer fit
+    const fitRes = processConciergeMessage('fit_closer', ctx, CATALOGUE);
+    assert.equal(fitRes.updatedContext.profile.fitPreference, 'closer');
+    assert.equal(fitRes.updatedContext.profile.onboardingStage, 'onboarded');
+  });
+
+  // 20. Contextual inquiry: "Will this dress fit me?" using saved profile
+  test('Scenario 20: "Will this dress fit me?" evaluates garment against existing profile', () => {
+    let ctx = createInitialConciergeContext(gownProduct);
+    ctx.profile.preferredName = 'Ama';
+    ctx.profile.usualSize = 'M';
+    ctx.profile.onboardingStage = 'onboarded';
+
+    const res = processConciergeMessage('Will this dress fit me?', ctx, CATALOGUE);
+
+    assert.equal(res.intent, 'garment_fit_profile_evaluated');
+    assert.ok(res.text.includes(gownProduct.name), 'Mentions garment name');
+    assert.ok(res.text.includes('Size M'), 'Mentions customer profile size M');
+    assert.ok(res.text.includes('36') && res.text.includes('38'), 'References exact Size M specifications');
+    assert.ok(res.text.includes('complimentary alterations'), 'Mentions 7-day complimentary alterations');
+    assert.ok(res.options.some((o) => o.action === 'order_assistance'), 'Offers direct order assistance option');
+  });
+
+  // 21. Personal Order Assistance Flow
+  test('Scenario 21: Step-by-step order assistance flow and add to cart', () => {
+    let ctx = createInitialConciergeContext(gownProduct);
+    ctx.profile.preferredName = 'Ama';
+    ctx.profile.usualSize = 'M';
+    ctx.profile.onboardingStage = 'onboarded';
+
+    // Step 1: Customer requests order assistance
+    const orderPrompt = processConciergeMessage('Help me order this', ctx, CATALOGUE);
+    ctx = orderPrompt.updatedContext;
+
+    assert.equal(ctx.profile.orderStage, 'summary_ready');
+    assert.ok(orderPrompt.text.includes(gownProduct.name), 'Mentions garment');
+    assert.ok(orderPrompt.text.includes('Size M'), 'Pre-selected Size M from profile');
+    assert.ok(orderPrompt.text.includes(gownProduct.price.toLocaleString()), 'Shows total price');
+    assert.ok(orderPrompt.options.some((o) => o.action === 'confirm_add_to_cart'), 'Provides confirm add to cart button');
+
+    // Step 2: Customer confirms adding to cart
+    const addRes = processConciergeMessage('confirm_add_to_cart', ctx, CATALOGUE);
+    assert.equal(addRes.intent, 'order_added_to_cart');
+    assert.ok(addRes.text.includes('shopping bag'), 'Confirms addition to shopping bag');
+    assert.ok(addRes.options.some((o) => o.action === 'go_to_checkout'), 'Provides button to proceed to checkout');
+  });
+
+  // 22. Audit: Zero occurrences of banned phrasing in application code
+  test('Scenario 22: Codebase audit contains zero occurrences of banned tailoring phrases', () => {
+    const srcDir = path.resolve(process.cwd(), 'src');
+    const walkSync = (dir: string): string[] => {
+      let results: string[] = [];
+      const list = fs.readdirSync(dir);
+      for (const file of list) {
+        const fullPath = path.join(dir, file);
+        const stat = fs.statSync(fullPath);
+        if (stat.isDirectory()) {
+          results = results.concat(walkSync(fullPath));
+        } else if (/\.(ts|tsx)$/.test(file) && !file.includes('test')) {
+          results.push(fullPath);
+        }
+      }
+      return results;
+    };
+
+    const forbiddenPhrase = ['verified', 'tailoring', 'scale'].join(' ');
+    const allSourceFiles = walkSync(srcDir);
+    for (const filePath of allSourceFiles) {
+      const content = fs.readFileSync(filePath, 'utf8');
+      assert.ok(
+        !content.toLowerCase().includes(forbiddenPhrase),
+        `Forbidden phrase found in ${filePath}`
+      );
+    }
+  });
 });

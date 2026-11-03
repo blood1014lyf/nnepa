@@ -20,7 +20,7 @@ import {
   MessageSquare,
   Ruler,
   ShoppingBag,
-  ShieldCheck,
+  Lock,
   ChevronRight,
   RotateCcw,
   Send,
@@ -45,6 +45,7 @@ export interface ShoppingConciergeProps {
   onNavigate: (page: string, category?: 'all' | 'women' | 'men' | 'bags', product?: Product) => void;
   onOpenCart: () => void;
   onOpenSizeChart: () => void;
+  onAddToCart?: (product: Product, size?: string) => void;
 }
 
 interface ChatMessage {
@@ -64,7 +65,8 @@ export default function ShoppingConcierge({
   isCartOpen = false,
   onNavigate,
   onOpenCart,
-  onOpenSizeChart
+  onOpenSizeChart,
+  onAddToCart
 }: ShoppingConciergeProps) {
   // ═══ CHAT STATE (STRICTLY IN-MEMORY • ZERO PERSISTENCE) ═══
   const [isOpen, setIsOpen] = useState(false);
@@ -81,14 +83,10 @@ export default function ShoppingConcierge({
   const getInitialWelcomeMessage = (): ChatMessage => ({
     id: 'welcome_init',
     sender: 'concierge',
-    text: `Warm greetings. I am ${NNEPA_IDENTITY.name}, ${NNEPA_IDENTITY.title} at ${NNEPA_IDENTITY.shortBrandName}. How may I guide your boutique experience today?`,
+    text: `Hello! I’m NNEPA, your personal shopping assistant. It’s lovely to have you here. What would you like me to call you?`,
     timestamp: getTimeString(),
     options: [
-      { label: '✨ Explore Collections', action: 'explore_collections' },
-      { label: '👗 Find a Garment', action: 'find_product' },
-      { label: '📏 Size & Length Guide', action: 'size_guide' },
-      { label: '📦 Delivery & Ordering', action: 'delivery_info' },
-      { label: '💬 Chat on WhatsApp', action: 'contact_whatsapp' }
+      { label: '✨ Browse Collections Directly', action: 'skip_onboarding' }
     ]
   });
 
@@ -517,6 +515,28 @@ export default function ShoppingConcierge({
         break;
       }
 
+      case 'confirm_add_to_cart': {
+        const prod = contextRef.current.focusedProduct;
+        const size = contextRef.current.profile.selectedSize || contextRef.current.profile.usualSize || 'M';
+        if (prod && onAddToCart) {
+          onAddToCart(prod, size);
+        }
+        dispatchToEngine('confirm_add_to_cart');
+        break;
+      }
+
+      case 'go_to_checkout':
+        onNavigate('checkout');
+        break;
+
+      case 'order_assistance':
+        dispatchToEngine('Help me order this');
+        break;
+
+      case 'check_garment_fit':
+        dispatchToEngine('Will this dress fit me?');
+        break;
+
       default:
         dispatchToEngine(action.replace(/_/g, ' '));
         break;
@@ -647,7 +667,7 @@ export default function ShoppingConcierge({
                   {NNEPA_IDENTITY.name}
                 </h3>
                 <span className="text-[10px] text-lavender/90 flex items-center gap-1 font-light">
-                  <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                  <Sparkles className="w-3 h-3 text-lavender" />
                   <span>{NNEPA_IDENTITY.title}</span>
                 </span>
               </div>
@@ -662,8 +682,8 @@ export default function ShoppingConcierge({
           </div>
 
           {/* Privacy Guarantee Micro-Banner */}
-          <div className="bg-emerald-50/70 border-b border-emerald-100 px-3 py-1.5 text-[9.5px] text-emerald-900 flex items-center gap-1.5 shrink-0">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+          <div className="bg-lavender/10 border-b border-lilac/20 px-3 py-1.5 text-[9.5px] text-plum-dark flex items-center gap-1.5 shrink-0">
+            <Lock className="w-3.5 h-3.5 text-mauve-deep shrink-0" />
             <span>100% private in browser. Zero tracking, zero external APIs, zero data stored.</span>
           </div>
 
@@ -783,7 +803,17 @@ export default function ShoppingConcierge({
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Ask NNEPA about sizes, fabrics, delivery..."
+              placeholder={
+                contextRef.current.profile.onboardingStage === 'awaiting_name'
+                  ? 'What would you like me to call you? (e.g. Ama)'
+                  : contextRef.current.profile.onboardingStage === 'sizing_assistant_bust'
+                  ? `Enter your ${contextRef.current.activeCategory === 'men' ? 'chest' : 'bust'} measurement...`
+                  : contextRef.current.profile.onboardingStage === 'sizing_assistant_waist'
+                  ? 'Enter your waist measurement...'
+                  : contextRef.current.profile.onboardingStage === 'sizing_assistant_hips'
+                  ? 'Enter your hip measurement...'
+                  : 'Ask NNEPA about sizes, fabrics, delivery...'
+              }
               className="flex-1 px-3 py-2 bg-zinc-100 border border-zinc-200 rounded-full text-xs text-zinc-800 placeholder-zinc-400 outline-none focus:border-plum-dark focus:bg-white transition-all"
             />
             <button

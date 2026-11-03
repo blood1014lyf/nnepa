@@ -40,12 +40,56 @@ export interface ConciergeTurnResponse {
   updatedContext: ConversationContext;
 }
 
+export interface CustomerMeasurements {
+  bust?: number;
+  chest?: number;
+  waist?: number;
+  hips?: number;
+  inseam?: number;
+  unit: 'in' | 'cm';
+}
+
+export type OnboardingStage =
+  | 'unstarted'
+  | 'awaiting_name'
+  | 'awaiting_size'
+  | 'sizing_assistant_unit'
+  | 'sizing_assistant_bust'
+  | 'sizing_assistant_waist'
+  | 'sizing_assistant_hips'
+  | 'sizing_assistant_fit_preference'
+  | 'onboarded';
+
+export type OrderAssistanceStage =
+  | 'idle'
+  | 'confirm_product'
+  | 'confirm_color'
+  | 'confirm_size'
+  | 'confirm_quantity'
+  | 'summary_ready'
+  | 'added';
+
+export interface CustomerShoppingProfile {
+  preferredName?: string;
+  usualSize?: string;
+  measurements?: CustomerMeasurements;
+  preferredUnit: 'in' | 'cm';
+  fitPreference?: 'closer' | 'relaxed' | 'standard';
+  onboardingStage: OnboardingStage;
+  orderStage: OrderAssistanceStage;
+  selectedProduct?: Product | null;
+  selectedSize?: string;
+  selectedColor?: string;
+  selectedQuantity?: number;
+}
+
 export interface ConversationContext {
   focusedProduct: Product | null;
   comparedProducts: Product[];
   lastIntent: string | null;
   activeCategory: 'women' | 'men' | 'bags' | 'all' | null;
   turnCount: number;
+  profile: CustomerShoppingProfile;
 }
 
 export function createInitialConciergeContext(initialProduct: Product | null = null): ConversationContext {
@@ -54,7 +98,12 @@ export function createInitialConciergeContext(initialProduct: Product | null = n
     comparedProducts: [],
     lastIntent: null,
     activeCategory: initialProduct?.category ?? null,
-    turnCount: 0
+    turnCount: 0,
+    profile: {
+      preferredUnit: 'in',
+      onboardingStage: 'awaiting_name',
+      orderStage: 'idle'
+    }
   };
 }
 
@@ -75,12 +124,202 @@ function normalizeQuery(text: string): string {
 function matchesAny(normalized: string, phrases: string[]): boolean {
   for (const phrase of phrases) {
     const pNorm = phrase.toLowerCase();
-    // Check if phrase occurs as a substring or bounded match
     if (normalized.includes(pNorm)) {
       return true;
     }
   }
   return false;
+}
+
+/**
+ * Extracts a customer's preferred name naturally from input text.
+ * Handles "Ama", "Call me Ama", "My name is Ama Mensah", "I'm Kofi", etc.
+ * Returns empty string if the input looks like a question rather than a name.
+ */
+export function extractCustomerName(rawInput: string): string {
+  let cleaned = rawInput.trim();
+  cleaned = cleaned.replace(/[.!?]+$/, '').trim();
+
+  // If input starts with clear question or command words, it's an inquiry, not a name
+  if (/^(how|what|where|who|when|why|can|is|do|does|will|tell|show|explore|browse)\b/i.test(cleaned)) {
+    return '';
+  }
+
+  // Regex to strip common introductory phrases
+  const regex = /^(?:hello|hi|hey|good\s+(?:morning|afternoon|evening))?[,\s]*(?:please\s+)?(?:call\s+me|you\s+can\s+call\s+me|my\s+name\s+is|i\s*['’]m|i\s+am|it\s*['’]s)?\s*(.+)$/i;
+  const match = cleaned.match(regex);
+  let name = match && match[1] ? match[1].trim() : cleaned;
+
+  name = name.replace(/^(?:hello|hi|hey|greetings|warm greetings|my name is|i am|i'm)\s+/i, '').trim();
+
+  if (!name || name.length > 40) return '';
+  if (/^(how|what|where|who|when|why|can|is|do|does|will|tell|show|explore|browse)\b/i.test(name)) {
+    return '';
+  }
+
+  // Capitalize each word up to 3 words
+  const words = name.split(/\s+/).slice(0, 3);
+  return words
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ');
+}
+
+export interface SizingEvaluationResult {
+  recommendedSize: string;
+  isBetweenSizes: boolean;
+  alternativeSize?: string;
+  customerMeasurementsSummary: string;
+  brandMeasurementsSummary: string;
+  fitExplanation: string;
+  inquiryForFitPreference?: string;
+}
+
+/**
+ * Compares customer measurements against authentic brand size charts.
+ * Accurately supports inches and centimeters with zero hallucination.
+ */
+export function evaluateSizing(
+  measurements: CustomerMeasurements,
+  category: 'women' | 'men' = 'women'
+): SizingEvaluationResult {
+  const isCm = measurements.unit === 'cm';
+  const toInches = (val?: number) => (val !== undefined ? (isCm ? val / 2.54 : val) : undefined);
+
+  const bustIn = toInches(measurements.bust);
+  const chestIn = toInches(measurements.chest);
+  const waistIn = toInches(measurements.waist);
+  const hipsIn = toInches(measurements.hips);
+
+  if (category === 'men') {
+    const chestVal = chestIn ?? bustIn ?? 38;
+    const waistVal = waistIn ?? 32;
+
+    const ranges = [
+      { alpha: 'XS', chest: [34, 35], waist: [28, 29], chestSpec: isCm ? '86–89 cm' : '34–35"', waistSpec: isCm ? '71–74 cm' : '28–29"' },
+      { alpha: 'S', chest: [36, 37], waist: [30, 31], chestSpec: isCm ? '91–94 cm' : '36–37"', waistSpec: isCm ? '76–79 cm' : '30–31"' },
+      { alpha: 'M', chest: [38, 40], waist: [32, 34], chestSpec: isCm ? '96.5–101.5 cm' : '38–40"', waistSpec: isCm ? '81–86.5 cm' : '32–34"' },
+      { alpha: 'L', chest: [42, 44], waist: [36, 38], chestSpec: isCm ? '106.5–112 cm' : '42–44"', waistSpec: isCm ? '91.5–96.5 cm' : '36–38"' },
+      { alpha: 'XL', chest: [46, 48], waist: [40, 42], chestSpec: isCm ? '117–122 cm' : '46–48"', waistSpec: isCm ? '101.5–106.5 cm' : '40–42"' },
+      { alpha: 'XXL', chest: [50, 52], waist: [44, 46], chestSpec: isCm ? '127–132 cm' : '50–52"', waistSpec: isCm ? '112–117 cm' : '44–46"' }
+    ];
+
+    let best = ranges[2];
+    let minDistance = Infinity;
+
+    for (const r of ranges) {
+      const chestMid = (r.chest[0] + r.chest[1]) / 2;
+      const waistMid = (r.waist[0] + r.waist[1]) / 2;
+      const dist = Math.abs(chestVal - chestMid) * 1.5 + Math.abs(waistVal - waistMid);
+      if (dist < minDistance) {
+        minDistance = dist;
+        best = r;
+      }
+    }
+
+    const idx = ranges.indexOf(best);
+    let isBetween = false;
+    let altSize: string | undefined = undefined;
+
+    if (idx > 0 && chestVal < best.chest[0]) {
+      isBetween = true;
+      altSize = ranges[idx - 1].alpha;
+    } else if (idx < ranges.length - 1 && chestVal > best.chest[1]) {
+      isBetween = true;
+      altSize = ranges[idx + 1].alpha;
+    }
+
+    let primarySize = best.alpha;
+    let secondarySize = altSize;
+    if (isBetween && altSize && ranges.findIndex((r) => r.alpha === altSize) > idx) {
+      primarySize = altSize;
+      secondarySize = best.alpha;
+    }
+
+    const primaryRange = ranges.find((r) => r.alpha === primarySize) || best;
+    const unitStr = isCm ? 'cm' : '"';
+    const customerSummary = `Chest: ${measurements.chest ?? measurements.bust}${unitStr}, Waist: ${measurements.waist}${unitStr}`;
+    const brandSummary = `Chest ${primaryRange.chestSpec}, Waist ${primaryRange.waistSpec}`;
+
+    return {
+      recommendedSize: primarySize,
+      isBetweenSizes: isBetween,
+      alternativeSize: secondarySize,
+      customerMeasurementsSummary: customerSummary,
+      brandMeasurementsSummary: brandSummary,
+      fitExplanation: isBetween
+        ? `Your measurements sit between Size ${secondarySize} and Size ${primarySize}. Size ${primarySize} provides comfortable, traditional ease through the chest, while Size ${secondarySize} offers a closer tailored line.`
+        : `Your measurements align naturally with our Size ${best.alpha} tailoring proportions for a dignified, well-structured drape.`,
+      inquiryForFitPreference: isBetween
+        ? `Based on your measurements, size ${primarySize} looks like the closest match. Would you prefer a closer fit or a little more room?`
+        : undefined
+    };
+  }
+
+  // Womenswear sizing
+  const bustVal = bustIn ?? 36;
+  const waistVal = waistIn ?? 29;
+  const hipsVal = hipsIn ?? 39;
+
+  const ranges = [
+    { alpha: 'XS', bust: [31, 32.5], waist: [23, 25], hips: [33, 35], bustSpec: isCm ? '78–82 cm' : '31–32.5"', waistSpec: isCm ? '58–63.5 cm' : '23–25"', hipsSpec: isCm ? '84–89 cm' : '33–35"' },
+    { alpha: 'S', bust: [33.5, 35], waist: [26, 28], hips: [36, 38], bustSpec: isCm ? '85–89 cm' : '33.5–35"', waistSpec: isCm ? '66–71 cm' : '26–28"', hipsSpec: isCm ? '91.5–96.5 cm' : '36–38"' },
+    { alpha: 'M', bust: [36, 38], waist: [29, 31], hips: [39, 41], bustSpec: isCm ? '91.5–96.5 cm' : '36–38"', waistSpec: isCm ? '73.5–79 cm' : '29–31"', hipsSpec: isCm ? '99–104 cm' : '39–41"' },
+    { alpha: 'L', bust: [39, 41], waist: [32, 34.5], hips: [42, 44.5], bustSpec: isCm ? '99–104 cm' : '39–41"', waistSpec: isCm ? '81–87.5 cm' : '32–34.5"', hipsSpec: isCm ? '106.5–113 cm' : '42–44.5"' },
+    { alpha: 'XL', bust: [42, 45], waist: [35, 38], hips: [45, 48], bustSpec: isCm ? '106.5–114 cm' : '42–45"', waistSpec: isCm ? '89–96.5 cm' : '35–38"', hipsSpec: isCm ? '114–122 cm' : '45–48"' },
+    { alpha: 'XXL', bust: [46, 49], waist: [39, 42], hips: [49, 52], bustSpec: isCm ? '117–124.5 cm' : '46–49"', waistSpec: isCm ? '99–106.5 cm' : '39–42"', hipsSpec: isCm ? '124.5–132 cm' : '49–52"' }
+  ];
+
+  let best = ranges[2];
+  let minDistance = Infinity;
+
+  for (const r of ranges) {
+    const bustMid = (r.bust[0] + r.bust[1]) / 2;
+    const waistMid = (r.waist[0] + r.waist[1]) / 2;
+    const hipsMid = (r.hips[0] + r.hips[1]) / 2;
+    const dist = Math.abs(bustVal - bustMid) * 1.3 + Math.abs(waistVal - waistMid) * 1.2 + Math.abs(hipsVal - hipsMid);
+    if (dist < minDistance) {
+      minDistance = dist;
+      best = r;
+    }
+  }
+
+  const idx = ranges.indexOf(best);
+  let isBetween = false;
+  let altSize: string | undefined = undefined;
+
+  if (idx > 0 && bustVal < best.bust[0]) {
+    isBetween = true;
+    altSize = ranges[idx - 1].alpha;
+  } else if (idx < ranges.length - 1 && bustVal > best.bust[1]) {
+    isBetween = true;
+    altSize = ranges[idx + 1].alpha;
+  }
+
+  let primarySize = best.alpha;
+  let secondarySize = altSize;
+  if (isBetween && altSize && ranges.findIndex((r) => r.alpha === altSize) > idx) {
+    primarySize = altSize;
+    secondarySize = best.alpha;
+  }
+
+  const primaryRange = ranges.find((r) => r.alpha === primarySize) || best;
+  const unitStr = isCm ? 'cm' : '"';
+  const customerSummary = `Bust: ${measurements.bust}${unitStr}, Waist: ${measurements.waist}${unitStr}, Hips: ${measurements.hips}${unitStr}`;
+  const brandSummary = `Bust ${primaryRange.bustSpec}, Waist ${primaryRange.waistSpec}, Hips ${primaryRange.hipsSpec}`;
+
+  return {
+    recommendedSize: primarySize,
+    isBetweenSizes: isBetween,
+    alternativeSize: secondarySize,
+    customerMeasurementsSummary: customerSummary,
+    brandMeasurementsSummary: brandSummary,
+    fitExplanation: isBetween
+      ? `Your measurements sit between Size ${secondarySize} and Size ${primarySize}. Size ${primarySize} provides a relaxed, graceful drape, whereas Size ${secondarySize} will provide a closer, more tailored fit.`
+      : `Your measurements align naturally with our Size ${primarySize} tailoring proportions for a balanced silhouette and comfortable movement.`,
+    inquiryForFitPreference: isBetween
+      ? `Based on your measurements, size ${primarySize} looks like the closest match. Would you prefer a closer fit or a little more room?`
+      : undefined
+  };
 }
 
 /**
@@ -91,7 +330,6 @@ export function classifyCustomerIntent(
   context: ConversationContext
 ): string {
   const norm = normalizeQuery(query);
-
   if (!norm) return 'empty';
 
   // 1. Comparison Intent
@@ -124,53 +362,91 @@ export function classifyCustomerIntent(
     return 'product_care';
   }
 
-  // 7. Specific size availability inquiry (e.g. "Do you have this in medium?")
+  // 7. Garment fit inquiry (e.g. "Will this dress fit me?", "Will this fit me?", "How does this fit?")
+  if (
+    norm.includes('fit me') ||
+    norm.includes('will this fit') ||
+    norm.includes('will this dress fit') ||
+    norm.includes('how does this fit') ||
+    norm.includes('true to size') ||
+    norm.includes('run small') ||
+    norm.includes('run large')
+  ) {
+    return 'check_garment_fit';
+  }
+
+  // 8. Order assistance
+  if (
+    norm.includes('help me order') ||
+    norm.includes('help me buy') ||
+    norm.includes('order this') ||
+    norm.includes('buy this') ||
+    norm.includes('purchase this') ||
+    norm.includes('complete my order') ||
+    norm.includes('complete order') ||
+    norm.includes('place order')
+  ) {
+    return 'order_assistance';
+  }
+
+  // 9. Specific size availability inquiry (e.g. "Do you have this in medium?")
   if (matchesAny(norm, SYNONYM_DICTIONARIES.sizeAvailable)) {
     return 'size_availability';
   }
 
-  // 8. Size chart / measurements inquiry
+  // 10. Sizing help / not sure
+  if (
+    norm.includes('not sure') ||
+    norm.includes('help with my size') ||
+    norm.includes('find my size') ||
+    norm.includes('calculate size') ||
+    norm.includes('measure me')
+  ) {
+    return 'sizing_help';
+  }
+
+  // 11. Size chart / measurements inquiry
   if (matchesAny(norm, SYNONYM_DICTIONARIES.sizeChart)) {
     return 'size_chart_info';
   }
 
-  // 9. Alterations
+  // 12. Alterations
   if (matchesAny(norm, SYNONYM_DICTIONARIES.alterations)) {
     return 'alterations_info';
   }
 
-  // 10. Ordering
+  // 13. Ordering general
   if (matchesAny(norm, SYNONYM_DICTIONARIES.order)) {
     return 'how_to_order';
   }
 
-  // 11. Payment
+  // 14. Payment
   if (matchesAny(norm, SYNONYM_DICTIONARIES.payment)) {
     return 'payment_info';
   }
 
-  // 12. Delivery
+  // 15. Delivery
   if (matchesAny(norm, SYNONYM_DICTIONARIES.delivery)) {
     return 'delivery_info';
   }
 
-  // 13. Returns / Refunds
+  // 16. Returns / Refunds
   if (matchesAny(norm, SYNONYM_DICTIONARIES.returns)) {
     return 'returns_info';
   }
 
-  // 14. Exchanges
+  // 17. Exchanges
   if (matchesAny(norm, SYNONYM_DICTIONARIES.exchanges)) {
     return 'exchanges_info';
   }
 
-  // 15. Contact / Boutique support
+  // 18. Contact / Boutique support
   if (matchesAny(norm, SYNONYM_DICTIONARIES.contact)) {
     return 'contact_boutique';
   }
 
-  // 16. Greeting
-  if (matchesAny(norm, SYNONYM_DICTIONARIES.greeting) && norm.split(' ').length <= 3) {
+  // 19. Greeting
+  if (matchesAny(norm, SYNONYM_DICTIONARIES.greeting) && norm.split(' ').length <= 4) {
     return 'greeting';
   }
 
@@ -189,8 +465,9 @@ export function classifyCustomerIntent(
 }
 
 /**
- * Main engine processing function: takes user query, current context, and live catalogue.
- * Returns structured conversational response, navigation/action options, and updated context.
+ * Main engine processing function.
+ * Manages conversational reasoning, customer onboarding, sizing calculations,
+ * and order assistance in 100% private in-browser memory.
  */
 export function processConciergeMessage(
   userInput: string,
@@ -200,36 +477,517 @@ export function processConciergeMessage(
   const norm = normalizeQuery(userInput);
   const updatedContext: ConversationContext = {
     ...context,
-    turnCount: context.turnCount + 1
+    turnCount: context.turnCount + 1,
+    profile: { ...context.profile }
   };
 
+  const profile = updatedContext.profile;
+  const customerName = profile.preferredName ? `, ${profile.preferredName}` : '';
+  const customerNameSalutation = profile.preferredName ? ` ${profile.preferredName}` : '';
+
   // ─── CONTEXT RESOLUTION ──────────────────────────────────────────────────
-  // Check if a specific product in the catalogue was mentioned in the user message
   const mentionedProduct = findProductMentionedInText(userInput, catalogue);
   if (mentionedProduct) {
     updatedContext.focusedProduct = mentionedProduct;
     updatedContext.activeCategory = mentionedProduct.category;
   }
 
-  // Fallback to currently focused product from previous turn if no new product was mentioned
   const activeProd = updatedContext.focusedProduct;
   const prodKnowledge = activeProd ? buildProductKnowledge(activeProd) : null;
 
+  // ─── DIRECT ACTION PAYLOAD HANDLING ──────────────────────────────────────
+  if (userInput.startsWith('set_size_')) {
+    const chosenSize = userInput.replace('set_size_', '').toUpperCase();
+    profile.usualSize = chosenSize;
+    profile.onboardingStage = 'onboarded';
+
+    const text =
+      `Thank you${customerName}. I’ve noted that you usually wear size ${chosenSize}.\n\n` +
+      `Would you like to explore our latest pieces, check the fit of a specific garment, or find something for an upcoming occasion?`;
+
+    return {
+      text,
+      options: [
+        { label: '✨ Explore Collection', action: 'explore_collections' },
+        { label: '👗 Check Garment Fit', action: 'check_garment_fit' },
+        { label: '📏 Size & Length Guide', action: 'size_guide' },
+        { label: '💬 WhatsApp Concierge', action: 'contact_whatsapp' }
+      ],
+      intent: 'size_profile_completed',
+      updatedContext
+    };
+  }
+
+  if (userInput === 'size_not_sure') {
+    profile.onboardingStage = 'sizing_assistant_unit';
+    const text =
+      `No problem at all${customerName}. I would be glad to help you determine your size using our brand size chart.\n\n` +
+      `To ensure comfortable accuracy, would you prefer to measure in inches or centimeters?`;
+
+    return {
+      text,
+      options: [
+        { label: 'Inches (in)', action: 'choose_unit_in' },
+        { label: 'Centimeters (cm)', action: 'choose_unit_cm' }
+      ],
+      intent: 'sizing_assistant_unit_prompt',
+      updatedContext
+    };
+  }
+
+  if (userInput === 'choose_unit_in' || userInput === 'choose_unit_cm') {
+    const unit = userInput === 'choose_unit_in' ? 'in' : 'cm';
+    profile.preferredUnit = unit;
+    profile.onboardingStage = 'sizing_assistant_bust';
+
+    const isMen = updatedContext.activeCategory === 'men';
+    const promptMeasurement = isMen ? 'chest' : 'bust';
+    const unitLabel = unit === 'in' ? 'inches' : 'centimeters';
+
+    const text =
+      `Understood, we’ll use ${unitLabel}.\n\n` +
+      `First, may I ask for your **${promptMeasurement}** measurement? (Wrap a soft measuring tape horizontally around the fullest part of your chest).`;
+
+    return {
+      text,
+      options: [],
+      intent: 'sizing_assistant_bust_prompt',
+      updatedContext
+    };
+  }
+
+  if (userInput === 'fit_closer' || userInput === 'fit_relaxed') {
+    profile.fitPreference = userInput === 'fit_closer' ? 'closer' : 'relaxed';
+    profile.onboardingStage = 'onboarded';
+
+    const fitLabel = profile.fitPreference === 'closer' ? 'closer tailored fit' : 'relaxed, comfortable drape';
+    const text =
+      `Understood${customerName}. I have saved your preference for a **${fitLabel}** alongside Size ${profile.usualSize}.\n\n` +
+      `Whenever we evaluate garments together, I will factor this in. What would you like to explore next?`;
+
+    return {
+      text,
+      options: [
+        { label: '✨ Explore Collection', action: 'explore_collections' },
+        { label: '👗 Find a Garment', action: 'find_product' },
+        { label: '💬 WhatsApp Concierge', action: 'contact_whatsapp' }
+      ],
+      intent: 'fit_preference_saved',
+      updatedContext
+    };
+  }
+
+  if (userInput === 'confirm_add_to_cart') {
+    if (activeProd) {
+      profile.orderStage = 'added';
+      const orderSize = profile.selectedSize || profile.usualSize || 'M';
+      const orderColor = profile.selectedColor || prodKnowledge?.primaryColor || 'Signature Colourway';
+      const orderQty = profile.selectedQuantity || 1;
+
+      const text =
+        `I’ve added the **${activeProd.name} (Size ${orderSize})** to your shopping bag!\n\n` +
+        `• **Size**: ${orderSize}\n` +
+        `• **Colour**: ${orderColor}\n` +
+        `• **Quantity**: ${orderQty}\n` +
+        `• **Total**: GH₵ ${(activeProd.price * orderQty).toLocaleString()}\n\n` +
+        `You can proceed to checkout now to finalize your delivery coordinates. Our Accra atelier connects on WhatsApp to confirm your measurements before cutting begins.`;
+
+      return {
+        text,
+        options: [
+          { label: '💳 Proceed to Checkout', action: 'go_to_checkout' },
+          { label: '🛍️ View Shopping Bag', action: 'open_bag' },
+          { label: '✨ Continue Shopping', action: 'explore_collections' }
+        ],
+        intent: 'order_added_to_cart',
+        updatedContext
+      };
+    }
+  }
+
+  if (userInput === 'skip_onboarding') {
+    profile.onboardingStage = 'onboarded';
+    return {
+      text:
+        `Welcome${customerNameSalutation} to Nnepa Foriwaa. How may I guide your boutique experience today?`,
+      options: [
+        { label: '✨ Explore Collections', action: 'explore_collections' },
+        { label: '👗 Find a Garment', action: 'find_product' },
+        { label: '📏 Size & Length Guide', action: 'size_guide' },
+        { label: '💬 WhatsApp Concierge', action: 'contact_whatsapp' }
+      ],
+      intent: 'onboarding_skipped',
+      updatedContext
+    };
+  }
+
   // ─── INTENT CLASSIFICATION ───────────────────────────────────────────────
-  const intent = classifyCustomerIntent(userInput, updatedContext);
-  updatedContext.lastIntent = intent;
+  const classifiedIntent = classifyCustomerIntent(userInput, updatedContext);
 
-  // Default actions present across many turns
-  const defaultActions: ConciergeActionOption[] = [
-    { label: '✨ Explore Collections', action: 'explore_collections' },
-    { label: '📏 Size & Length Guide', action: 'size_guide' },
-    { label: '💬 WhatsApp Concierge', action: 'contact_whatsapp' }
-  ];
+  // ─── ONBOARDING & MEASUREMENT STATE MACHINE ──────────────────────────────
+  // If user asks a direct informational question, prioritize answering it immediately!
+  const isDirectQuestion = [
+    'product_price',
+    'size_availability',
+    'product_color',
+    'product_material',
+    'product_care',
+    'compare_products',
+    'similar_products',
+    'delivery_info',
+    'returns_info',
+    'exchanges_info',
+    'alterations_info',
+    'payment_info',
+    'how_to_order',
+    'contact_boutique',
+    'explore_women',
+    'explore_men',
+    'explore_bags'
+  ].includes(classifiedIntent);
 
-  // ─── INTENT HANDLERS ─────────────────────────────────────────────────────
+  if (!isDirectQuestion) {
+    // 1. Stage: awaiting_name
+    if (profile.onboardingStage === 'awaiting_name') {
+      const extractedName = extractCustomerName(userInput);
+      if (extractedName && classifiedIntent !== 'greeting') {
+        profile.preferredName = extractedName;
+        profile.onboardingStage = 'awaiting_size';
 
-  // 1. COMPARISON
-  if (intent === 'compare_products') {
+        const text =
+          `Lovely to meet you, ${extractedName}. Let’s find something you’ll love.\n\n` +
+          `Before we explore the collection, may I ask what clothing size you usually wear?`;
+
+        return {
+          text,
+          options: [
+            { label: 'XS', action: 'set_size_xs' },
+            { label: 'S', action: 'set_size_s' },
+            { label: 'M', action: 'set_size_m' },
+            { label: 'L', action: 'set_size_l' },
+            { label: 'XL', action: 'set_size_xl' },
+            { label: 'XXL', action: 'set_size_xxl' },
+            { label: 'Not sure', action: 'size_not_sure' }
+          ],
+          intent: 'onboarding_name_captured',
+          updatedContext
+        };
+      }
+    }
+
+    // 2. Stage: awaiting_size
+    if (profile.onboardingStage === 'awaiting_size') {
+      if (norm.includes('not sure') || norm.includes('help')) {
+        profile.onboardingStage = 'sizing_assistant_unit';
+        const text =
+          `No problem at all${customerName}. I would be glad to help you determine your size using our brand size chart.\n\n` +
+          `To ensure comfortable accuracy, would you prefer to measure in inches or centimeters?`;
+
+        return {
+          text,
+          options: [
+            { label: 'Inches (in)', action: 'choose_unit_in' },
+            { label: 'Centimeters (cm)', action: 'choose_unit_cm' }
+          ],
+          intent: 'sizing_assistant_unit_prompt',
+          updatedContext
+        };
+      }
+
+      const requestedSize = parseRequestedSizeFromText(userInput, updatedContext.activeCategory ?? 'women');
+      if (requestedSize) {
+        profile.usualSize = requestedSize.alpha;
+        profile.onboardingStage = 'onboarded';
+
+        const text =
+          `Thank you${customerName}. I’ve noted that you usually wear size ${requestedSize.alpha}.\n\n` +
+          `Would you like to explore our latest pieces, check the fit of a specific garment, or find something for an upcoming occasion?`;
+
+        return {
+          text,
+          options: [
+            { label: '✨ Explore Collection', action: 'explore_collections' },
+            { label: '👗 Check Garment Fit', action: 'check_garment_fit' },
+            { label: '📏 Size & Length Guide', action: 'size_guide' },
+            { label: '💬 WhatsApp Concierge', action: 'contact_whatsapp' }
+          ],
+          intent: 'size_profile_completed',
+          updatedContext
+        };
+      }
+    }
+
+    // 3. Stage: sizing_assistant_bust
+    if (profile.onboardingStage === 'sizing_assistant_bust') {
+      const numMatch = userInput.match(/([0-9]+(?:\.[0-9]+)?)/);
+      if (numMatch) {
+        const val = parseFloat(numMatch[1]);
+        if (norm.includes('cm')) profile.preferredUnit = 'cm';
+        if (norm.includes('in') || norm.includes('"')) profile.preferredUnit = 'in';
+
+        profile.measurements = {
+          ...profile.measurements,
+          bust: val,
+          chest: val,
+          unit: profile.preferredUnit
+        };
+        profile.onboardingStage = 'sizing_assistant_waist';
+
+        const text =
+          `Thank you${customerName}. Next, what is your natural **waist** measurement? (Measure at the narrowest point of your torso, typically an inch above your navel).`;
+
+        return {
+          text,
+          options: [],
+          intent: 'sizing_assistant_waist_prompt',
+          updatedContext
+        };
+      }
+    }
+
+    // 4. Stage: sizing_assistant_waist
+    if (profile.onboardingStage === 'sizing_assistant_waist') {
+      const numMatch = userInput.match(/([0-9]+(?:\.[0-9]+)?)/);
+      if (numMatch) {
+        const val = parseFloat(numMatch[1]);
+        if (profile.measurements) {
+          profile.measurements.waist = val;
+        } else {
+          profile.measurements = { waist: val, unit: profile.preferredUnit };
+        }
+        profile.onboardingStage = 'sizing_assistant_hips';
+
+        const isMen = updatedContext.activeCategory === 'men';
+        if (isMen) {
+          // Men's size calculation can complete with chest + waist
+          profile.onboardingStage = 'onboarded';
+          const evalResult = evaluateSizing(profile.measurements, 'men');
+          profile.usualSize = evalResult.recommendedSize;
+
+          let text =
+            `Here is your personalized sizing recommendation${customerName}:\n\n` +
+            `• **Your Measurements**: ${evalResult.customerMeasurementsSummary}\n` +
+            `• **Brand Size Chart**: Size ${evalResult.recommendedSize} (${evalResult.brandMeasurementsSummary})\n` +
+            `• **Recommended Size**: Size ${evalResult.recommendedSize}\n\n` +
+            `${evalResult.fitExplanation}\n\n`;
+
+          if (evalResult.isBetweenSizes && evalResult.inquiryForFitPreference) {
+            profile.onboardingStage = 'sizing_assistant_fit_preference';
+            text += evalResult.inquiryForFitPreference;
+            return {
+              text,
+              options: [
+                { label: 'Closer fit', action: 'fit_closer' },
+                { label: 'A little more room', action: 'fit_relaxed' }
+              ],
+              intent: 'sizing_recommendation_between_sizes',
+              updatedContext
+            };
+          }
+
+          text += `I’ve saved Size ${evalResult.recommendedSize} to your temporary session profile so we can check the fit of any garment as you browse.`;
+          return {
+            text,
+            options: [
+              { label: '✨ Explore Collection', action: 'explore_collections' },
+              { label: '👔 Menswear Pieces', action: 'filter_men' },
+              { label: '💬 WhatsApp Concierge', action: 'contact_whatsapp' }
+            ],
+            intent: 'sizing_recommendation_ready',
+            updatedContext
+          };
+        }
+
+        const text =
+          `Thank you. Lastly, what is your **hip** measurement? (Stand with your feet together and measure around the fullest curve of your hips).`;
+
+        return {
+          text,
+          options: [],
+          intent: 'sizing_assistant_hips_prompt',
+          updatedContext
+        };
+      }
+    }
+
+    // 5. Stage: sizing_assistant_hips
+    if (profile.onboardingStage === 'sizing_assistant_hips') {
+      const numMatch = userInput.match(/([0-9]+(?:\.[0-9]+)?)/);
+      if (numMatch) {
+        const val = parseFloat(numMatch[1]);
+        if (profile.measurements) {
+          profile.measurements.hips = val;
+        }
+
+        profile.onboardingStage = 'onboarded';
+        const evalResult = evaluateSizing(profile.measurements || { hips: val, unit: profile.preferredUnit }, 'women');
+        profile.usualSize = evalResult.recommendedSize;
+
+        let text =
+          `Here is your personalized sizing recommendation${customerName}:\n\n` +
+          `• **Your Measurements**: ${evalResult.customerMeasurementsSummary}\n` +
+          `• **Brand Size Chart**: Size ${evalResult.recommendedSize} (${evalResult.brandMeasurementsSummary})\n` +
+          `• **Recommended Size**: Size ${evalResult.recommendedSize}\n\n` +
+          `${evalResult.fitExplanation}\n\n`;
+
+        if (evalResult.isBetweenSizes && evalResult.inquiryForFitPreference) {
+          profile.onboardingStage = 'sizing_assistant_fit_preference';
+          text += evalResult.inquiryForFitPreference;
+          return {
+            text,
+            options: [
+              { label: 'Closer fit', action: 'fit_closer' },
+              { label: 'A little more room', action: 'fit_relaxed' }
+            ],
+            intent: 'sizing_recommendation_between_sizes',
+            updatedContext
+          };
+        }
+
+        text += `I’ve saved Size ${evalResult.recommendedSize} to your temporary session profile so we can check the fit of any garment as you browse.`;
+        return {
+          text,
+          options: [
+            { label: '✨ Explore Collection', action: 'explore_collections' },
+            { label: '👗 Find a Garment', action: 'find_product' },
+            { label: '💬 WhatsApp Concierge', action: 'contact_whatsapp' }
+          ],
+          intent: 'sizing_recommendation_ready',
+          updatedContext
+        };
+      }
+    }
+  }
+
+  // ─── INTENT: CONTEXTUAL GARMENT FIT ("Will this dress fit me?") ──────────
+  if (classifiedIntent === 'check_garment_fit') {
+    if (prodKnowledge) {
+      if (profile.usualSize) {
+        const size = profile.usualSize;
+        const spec = getSizeSpecificationSummary(size, prodKnowledge.category);
+        const isBoubou = /boubou|kaftan|wrap|cape/i.test(prodKnowledge.name);
+        const silhouette = isBoubou
+          ? 'a flowing, relaxed silhouette designed for breathable ease and elegance'
+          : 'a tailored, sculpted silhouette structured to flatter your natural form';
+
+        const text =
+          `Yes${customerName}. Based on your profile (**Size ${size}**), the **${prodKnowledge.name}** in size ${size} is tailored with:\n\n` +
+          (spec ? `• ${spec}\n\n` : '') +
+          `This piece features ${silhouette}. Every garment is individually hand-tailored in our Accra atelier, and we provide complimentary alterations within 7 days of delivery should you desire minor adjustments.\n\n` +
+          `Would you like me to help you complete your order for this piece?`;
+
+        return {
+          text,
+          options: [
+            { label: `🛍️ Help Me Order in Size ${size}`, action: 'order_assistance' },
+            { label: '📏 Open Full Size Chart', action: 'open_size_chart' },
+            { label: '💬 WhatsApp Atelier', action: 'contact_whatsapp' }
+          ],
+          products: [prodKnowledge.product],
+          intent: 'garment_fit_profile_evaluated',
+          updatedContext
+        };
+      } else {
+        const text =
+          `I would be delighted to check the fit for the **${prodKnowledge.name}**${customerName}. May I ask what clothing size you usually wear?`;
+
+        return {
+          text,
+          options: [
+            { label: 'XS', action: 'set_size_xs' },
+            { label: 'S', action: 'set_size_s' },
+            { label: 'M', action: 'set_size_m' },
+            { label: 'L', action: 'set_size_l' },
+            { label: 'XL', action: 'set_size_xl' },
+            { label: 'XXL', action: 'set_size_xxl' },
+            { label: 'Help me determine my size', action: 'size_not_sure' }
+          ],
+          products: [prodKnowledge.product],
+          intent: 'garment_fit_needs_profile',
+          updatedContext
+        };
+      }
+    } else {
+      const text = `Which garment from our collections would you like me to evaluate the fit for${customerName}?`;
+      return {
+        text,
+        options: [
+          { label: '👗 Browse Womenswear', action: 'filter_women' },
+          { label: '👔 Browse Menswear', action: 'filter_men' }
+        ],
+        products: catalogue.slice(0, 3),
+        intent: 'garment_fit_choose_product',
+        updatedContext
+      };
+    }
+  }
+
+  // ─── INTENT: ORDER ASSISTANCE FLOW ───────────────────────────────────────
+  if (classifiedIntent === 'order_assistance') {
+    if (prodKnowledge) {
+      profile.selectedProduct = prodKnowledge.product;
+      profile.selectedSize = profile.usualSize || 'M';
+      profile.selectedColor = prodKnowledge.primaryColor || 'Signature Colourway';
+      profile.selectedQuantity = 1;
+      profile.orderStage = 'summary_ready';
+
+      const price = prodKnowledge.product.price;
+      const text =
+        `Wonderful${customerName}. Would you like me to help you complete your order for the **${prodKnowledge.name}**?\n\n` +
+        `Here are the confirmed details for your piece:\n` +
+        `• **Garment**: ${prodKnowledge.name}\n` +
+        `• **Colour**: ${profile.selectedColor}\n` +
+        `• **Size**: Size ${profile.selectedSize} (pre-selected from your profile)\n` +
+        `• **Quantity**: 1 piece\n` +
+        `• **Total Price**: GH₵ ${price.toLocaleString()}\n\n` +
+        `All garments are tailored in Accra in 3–7 working days with complimentary alterations.\n\n` +
+        `Would you like me to add this directly to your shopping bag?`;
+
+      return {
+        text,
+        options: [
+          { label: '🛍️ Add to Bag & Proceed', action: 'confirm_add_to_cart' },
+          { label: '📏 Change Size', action: 'size_guide' },
+          { label: '💬 Place Order via WhatsApp', action: 'contact_whatsapp' }
+        ],
+        products: [prodKnowledge.product],
+        intent: 'order_assistance_summary',
+        updatedContext
+      };
+    } else {
+      return {
+        text: `Which piece from our boutique would you like to order today${customerName}?`,
+        options: [
+          { label: '👗 Browse Collections', action: 'filter_all' },
+          { label: '💬 Order via WhatsApp', action: 'contact_whatsapp' }
+        ],
+        products: catalogue.slice(0, 3),
+        intent: 'order_assistance_select_product',
+        updatedContext
+      };
+    }
+  }
+
+  // ─── INTENT: SIZING HELP / NOT SURE ──────────────────────────────────────
+  if (classifiedIntent === 'sizing_help') {
+    profile.onboardingStage = 'sizing_assistant_unit';
+    const text =
+      `No problem at all${customerName}. I would be glad to help you determine your size using our brand size chart.\n\n` +
+      `To ensure comfortable accuracy, would you prefer to measure in inches or centimeters?`;
+
+    return {
+      text,
+      options: [
+        { label: 'Inches (in)', action: 'choose_unit_in' },
+        { label: 'Centimeters (cm)', action: 'choose_unit_cm' }
+      ],
+      intent: 'sizing_assistant_unit_prompt',
+      updatedContext
+    };
+  }
+
+  // ─── INTENT: COMPARISON ──────────────────────────────────────────────────
+  if (classifiedIntent === 'compare_products') {
     const compared = findProductsForComparison(userInput, catalogue);
     if (compared.length >= 2) {
       updatedContext.comparedProducts = compared;
@@ -251,14 +1009,14 @@ export function processConciergeMessage(
           { label: '📏 Size Guide', action: 'size_guide' }
         ],
         products: [p1, p2],
-        intent,
+        intent: classifiedIntent,
         updatedContext
       };
     }
   }
 
-  // 2. PRODUCT PRICE INQUIRY
-  if (intent === 'product_price') {
+  // ─── INTENT: PRODUCT PRICE INQUIRY ───────────────────────────────────────
+  if (classifiedIntent === 'product_price') {
     if (prodKnowledge) {
       const saleNote = prodKnowledge.formattedOriginalPrice
         ? ` (marked down from ${prodKnowledge.formattedOriginalPrice})`
@@ -270,31 +1028,30 @@ export function processConciergeMessage(
       return {
         text,
         options: [
-          { label: `🛍️ Order ${prodKnowledge.name}`, action: 'navigate_product', payload: prodKnowledge.product },
+          { label: `🛍️ Order ${prodKnowledge.name}`, action: 'order_assistance' },
           { label: '📏 Size & Fit', action: 'size_guide' },
           { label: '📦 Delivery Rates', action: 'delivery_info' }
         ],
         products: [prodKnowledge.product],
-        intent,
+        intent: classifiedIntent,
         updatedContext
       };
     } else {
-      // Prompt user to select or name a garment
       return {
-        text: 'Which garment would you like the price for? Please share the name or select from our curated pieces below:',
+        text: `Which garment would you like the price for${customerName}? Please share the name or select from our curated pieces below:`,
         options: [
           { label: '👗 Browse Women’s Pieces', action: 'filter_women' },
           { label: '👔 Browse Men’s Pieces', action: 'filter_men' }
         ],
         products: catalogue.slice(0, 3),
-        intent,
+        intent: classifiedIntent,
         updatedContext
       };
     }
   }
 
-  // 3. SIZE AVAILABILITY (e.g. "Do you have this in medium?", "Is a medium available?", "Can I get this in size M?")
-  if (intent === 'size_availability') {
+  // ─── INTENT: SIZE AVAILABILITY ───────────────────────────────────────────
+  if (classifiedIntent === 'size_availability') {
     const requestedSize = parseRequestedSizeFromText(userInput, activeProd?.category ?? 'women');
 
     if (prodKnowledge) {
@@ -313,12 +1070,12 @@ export function processConciergeMessage(
           return {
             text,
             options: [
-              { label: `View ${prodKnowledge.name}`, action: 'navigate_product', payload: prodKnowledge.product },
+              { label: `🛍️ Order in Size ${requestedSize.alpha}`, action: 'order_assistance' },
               { label: '📏 Open Size Chart', action: 'open_size_chart' },
               { label: '💬 Send Measurements on WhatsApp', action: 'contact_whatsapp' }
             ],
             products: [prodKnowledge.product],
-            intent,
+            intent: classifiedIntent,
             updatedContext
           };
         } else {
@@ -333,12 +1090,11 @@ export function processConciergeMessage(
               { label: '📏 View Full Size Chart', action: 'open_size_chart' }
             ],
             products: [prodKnowledge.product],
-            intent,
+            intent: classifiedIntent,
             updatedContext
           };
         }
       } else {
-        // Did not specify a single size, list all available
         const text =
           `The **${prodKnowledge.name}** is available in sizes: **${prodKnowledge.availableSizes.join(', ')}**.\n\n` +
           `Our garments are calibrated to international sizing standards (US, UK, and EU). Would you like to check specific body measurements on our Size Chart?`;
@@ -347,36 +1103,35 @@ export function processConciergeMessage(
           text,
           options: [
             { label: '📏 Open Size Chart', action: 'open_size_chart' },
-            { label: `View ${prodKnowledge.name}`, action: 'navigate_product', payload: prodKnowledge.product },
+            { label: `🛍️ Order ${prodKnowledge.name}`, action: 'order_assistance' },
             { label: '💬 WhatsApp Atelier', action: 'contact_whatsapp' }
           ],
           products: [prodKnowledge.product],
-          intent,
+          intent: classifiedIntent,
           updatedContext
         };
       }
     } else {
-      // No active product
       const generalSizeNote = requestedSize
         ? `Most Nnepa Foriwaa garments are tailored across standard sizes S through XXL, including Size ${requestedSize.alpha}.`
         : 'Our ready-to-wear collections are tailored in sizes S through XXL, alongside One Size handcrafted bags.';
 
       return {
-        text: `${generalSizeNote} Which piece would you like me to check availability for?`,
+        text: `${generalSizeNote} Which piece would you like me to check availability for${customerName}?`,
         options: [
           { label: '👗 View Women’s Garments', action: 'filter_women' },
           { label: '👔 View Men’s Garments', action: 'filter_men' },
           { label: '📏 View Full Size Chart', action: 'open_size_chart' }
         ],
         products: catalogue.slice(0, 3),
-        intent,
+        intent: classifiedIntent,
         updatedContext
       };
     }
   }
 
-  // 4. ANOTHER COLOUR INQUIRY
-  if (intent === 'product_color') {
+  // ─── INTENT: PRODUCT COLOR INQUIRY ───────────────────────────────────────
+  if (classifiedIntent === 'product_color') {
     if (prodKnowledge) {
       const primary = prodKnowledge.primaryColor ? `shown in **${prodKnowledge.primaryColor}**` : 'shown online';
       const count = prodKnowledge.publishedColorCount;
@@ -396,26 +1151,26 @@ export function processConciergeMessage(
           { label: '✨ Explore Other Pieces', action: 'explore_collections' }
         ],
         products: [prodKnowledge.product],
-        intent,
+        intent: classifiedIntent,
         updatedContext
       };
     } else {
       return {
         text:
-          'Many of our signature boubous, kaftans, and gowns are produced in limited palette variations. Which piece would you like to explore alternative colours for?',
+          `Many of our signature boubous, kaftans, and gowns are produced in limited palette variations. Which piece would you like to explore alternative colours for${customerName}?`,
         options: [
           { label: '👗 Browse Collection', action: 'filter_all' },
           { label: '💬 Ask Atelier on WhatsApp', action: 'contact_whatsapp' }
         ],
         products: catalogue.slice(0, 3),
-        intent,
+        intent: classifiedIntent,
         updatedContext
       };
     }
   }
 
-  // 5. PRODUCT MATERIAL INQUIRY
-  if (intent === 'product_material') {
+  // ─── INTENT: PRODUCT MATERIAL INQUIRY ────────────────────────────────────
+  if (classifiedIntent === 'product_material') {
     if (prodKnowledge) {
       const materials = prodKnowledge.extractedMaterials;
       const materialText = materials.length > 0
@@ -434,7 +1189,7 @@ export function processConciergeMessage(
           { label: '💬 Inquire with Atelier', action: 'contact_whatsapp' }
         ],
         products: [prodKnowledge.product],
-        intent,
+        intent: classifiedIntent,
         updatedContext
       };
     } else {
@@ -446,14 +1201,14 @@ export function processConciergeMessage(
           { label: '👔 Explore Menswear', action: 'filter_men' }
         ],
         products: catalogue.slice(0, 3),
-        intent,
+        intent: classifiedIntent,
         updatedContext
       };
     }
   }
 
-  // 6. CARE INSTRUCTIONS
-  if (intent === 'product_care') {
+  // ─── INTENT: PRODUCT CARE ────────────────────────────────────────────────
+  if (classifiedIntent === 'product_care') {
     if (prodKnowledge?.careInstructions) {
       return {
         text: `**Care Instructions for ${prodKnowledge.name}:**\n${prodKnowledge.careInstructions}`,
@@ -461,11 +1216,10 @@ export function processConciergeMessage(
           { label: `View ${prodKnowledge.name}`, action: 'navigate_product', payload: prodKnowledge.product },
           { label: '💬 WhatsApp Concierge', action: 'contact_whatsapp' }
         ],
-        intent,
+        intent: classifiedIntent,
         updatedContext
       };
     }
-    // Honest published advice: delicate handwoven textiles need specialist dry clean
     const pieceName = prodKnowledge ? ` for the **${prodKnowledge.name}**` : '';
     const text =
       `Because our garments incorporate delicate handwoven Kente, metallic brocade, and hand-dyed West African textiles, specialist dry cleaning is strongly recommended${pieceName} to preserve its structure and lustre.\n\n` +
@@ -477,13 +1231,13 @@ export function processConciergeMessage(
         { label: '💬 WhatsApp Atelier', action: 'contact_whatsapp' },
         { label: '✨ Main Menu', action: 'main_menu' }
       ],
-      intent,
+      intent: classifiedIntent,
       updatedContext
     };
   }
 
-  // 7. SIMILAR PIECES INQUIRY
-  if (intent === 'similar_products') {
+  // ─── INTENT: SIMILAR PRODUCTS ────────────────────────────────────────────
+  if (classifiedIntent === 'similar_products') {
     if (activeProd) {
       const similar = getSimilarProducts(activeProd, catalogue, 3);
       const text =
@@ -496,28 +1250,28 @@ export function processConciergeMessage(
           { label: '📏 Size Guide', action: 'size_guide' }
         ],
         products: similar,
-        intent,
+        intent: classifiedIntent,
         updatedContext
       };
     } else {
       return {
-        text: 'I’d be delighted to recommend pieces. Are you looking for womenswear, menswear, or handcrafted accessories?',
+        text: `I’d be delighted to recommend pieces${customerName}. Are you looking for womenswear, menswear, or handcrafted accessories?`,
         options: [
           { label: '👗 Womenswear', action: 'filter_women' },
           { label: '👔 Menswear', action: 'filter_men' },
           { label: '👜 Bags & Accessories', action: 'filter_bags' }
         ],
         products: catalogue.slice(0, 3),
-        intent,
+        intent: classifiedIntent,
         updatedContext
       };
     }
   }
 
-  // 8. SIZE CHART & LENGTH GUIDE
-  if (intent === 'size_chart_info') {
+  // ─── INTENT: SIZE CHART & LENGTH GUIDE ───────────────────────────────────
+  if (classifiedIntent === 'size_chart_info') {
     const text =
-      `All Nnepa Foriwaa garments are tailored to verified international proportions (US, UK, and EU):\n\n` +
+      `All Nnepa Foriwaa garments are tailored to international proportions (US, UK, and EU):\n\n` +
       `• **Dresses & Gowns**: Mini (34–36"), Knee (39–42"), Midi (45–49"), and Floor Gown/Boubou (55–60").\n` +
       `• **Pants & Trousers**: Inseam (27–35") and Outseam (37–45") calibrated for clean breaks.\n` +
       `• **Custom Calibrations**: Complimentary hem adjustments (Petite under 5'3" or Tall 5'8"+) can be requested in your checkout notes.\n\n` +
@@ -530,13 +1284,13 @@ export function processConciergeMessage(
         { label: '💬 Send Measurements on WhatsApp', action: 'contact_whatsapp' },
         { label: '🛍️ Return to Shopping', action: 'filter_all' }
       ],
-      intent,
+      intent: classifiedIntent,
       updatedContext
     };
   }
 
-  // 9. HOW TO ORDER
-  if (intent === 'how_to_order') {
+  // ─── INTENT: HOW TO ORDER ────────────────────────────────────────────────
+  if (classifiedIntent === 'how_to_order') {
     const text =
       `**How to Place an Order at Nnepa Foriwaa:**\n\n` +
       `1. **Select Your Piece**: Choose your garment from our collections.\n` +
@@ -552,13 +1306,13 @@ export function processConciergeMessage(
         { label: '👗 Browse Collections', action: 'filter_all' },
         { label: '💬 Order via WhatsApp', action: 'contact_whatsapp' }
       ],
-      intent,
+      intent: classifiedIntent,
       updatedContext
     };
   }
 
-  // 10. PAYMENT INQUIRY
-  if (intent === 'payment_info') {
+  // ─── INTENT: PAYMENT INQUIRY ─────────────────────────────────────────────
+  if (classifiedIntent === 'payment_info') {
     const text =
       `**Payment Information:**\n\n` +
       `• **Online Checkout**: No immediate payment is charged at checkout on our website. Submitting your order registers your garment specifications with our Accra boutique.\n` +
@@ -571,13 +1325,13 @@ export function processConciergeMessage(
         { label: '🛍️ How to Order', action: 'how_to_order' },
         { label: '💬 WhatsApp Concierge', action: 'contact_whatsapp' }
       ],
-      intent,
+      intent: classifiedIntent,
       updatedContext
     };
   }
 
-  // 11. DELIVERY INQUIRY
-  if (intent === 'delivery_info') {
+  // ─── INTENT: DELIVERY INQUIRY ────────────────────────────────────────────
+  if (classifiedIntent === 'delivery_info') {
     const text =
       `**Delivery & Shipping Overview:**\n\n` +
       `• **Tailoring Turnaround**: Handcrafted tailoring takes **3 to 7 working days** in our Accra atelier before dispatch.\n` +
@@ -592,13 +1346,13 @@ export function processConciergeMessage(
         { label: '🛍️ How to Place an Order', action: 'how_to_order' },
         { label: '💬 Inquire with Atelier', action: 'contact_whatsapp' }
       ],
-      intent,
+      intent: classifiedIntent,
       updatedContext
     };
   }
 
-  // 12. RETURNS & REFUNDS INQUIRY
-  if (intent === 'returns_info') {
+  // ─── INTENT: RETURNS & REFUNDS ───────────────────────────────────────────
+  if (classifiedIntent === 'returns_info') {
     const text =
       `**Returns & Refund Policy:**\n\n` +
       `In accordance with our published boutique policy, all sales and bespoke commissions are final once an order is placed and fabric is cut. We operate a strict **No Refund** policy.\n\n` +
@@ -611,13 +1365,13 @@ export function processConciergeMessage(
         { label: '📏 Size Chart & Lengths', action: 'size_guide' },
         { label: '💬 Contact Boutique for Alterations', action: 'contact_whatsapp' }
       ],
-      intent,
+      intent: classifiedIntent,
       updatedContext
     };
   }
 
-  // 13. EXCHANGES INQUIRY
-  if (intent === 'exchanges_info') {
+  // ─── INTENT: EXCHANGES ───────────────────────────────────────────────────
+  if (classifiedIntent === 'exchanges_info') {
     const text =
       `**Exchange Policy:**\n\n` +
       `Because each piece is custom-cut or tailored in limited artisan runs, we operate a strict **No Exchange** policy once an order has been confirmed.\n\n` +
@@ -629,13 +1383,13 @@ export function processConciergeMessage(
         { label: '📏 View Size Chart', action: 'open_size_chart' },
         { label: '💬 WhatsApp Atelier', action: 'contact_whatsapp' }
       ],
-      intent,
+      intent: classifiedIntent,
       updatedContext
     };
   }
 
-  // 14. ALTERATIONS INQUIRY
-  if (intent === 'alterations_info') {
+  // ─── INTENT: ALTERATIONS ─────────────────────────────────────────────────
+  if (classifiedIntent === 'alterations_info') {
     const text =
       `**Bespoke Alterations Service:**\n\n` +
       `We provide a **complimentary fitting alteration service** at our Accra atelier within **7 days** of garment receipt.\n\n` +
@@ -647,14 +1401,13 @@ export function processConciergeMessage(
         { label: '💬 Contact Atelier for Alterations', action: 'contact_whatsapp' },
         { label: '📏 View Length Guide', action: 'size_guide' }
       ],
-      intent,
+      intent: classifiedIntent,
       updatedContext
     };
   }
 
-  // 15. CONTACT BOUTIQUE
-  if (intent === 'contact_boutique') {
-    const contextNote = activeProd ? ` regarding the ${activeProd.name}` : '';
+  // ─── INTENT: CONTACT BOUTIQUE ────────────────────────────────────────────
+  if (classifiedIntent === 'contact_boutique') {
     const text =
       `**Connect with Nnepa Foriwaa Concierge:**\n\n` +
       `• **WhatsApp / Phone**: +233 53 879 5669\n` +
@@ -669,13 +1422,13 @@ export function processConciergeMessage(
         { label: '📅 Book a Fitting', action: 'book_fitting' },
         { label: '✨ Return to Main Menu', action: 'main_menu' }
       ],
-      intent,
+      intent: classifiedIntent,
       updatedContext
     };
   }
 
-  // 16. CATEGORY EXPLORATIONS
-  if (intent === 'explore_women') {
+  // ─── INTENT: CATEGORY EXPLORATIONS ───────────────────────────────────────
+  if (classifiedIntent === 'explore_women') {
     const womenProds = catalogue.filter((p) => p.category === 'women').slice(0, 3);
     const text =
       `Navigating you to our **Womenswear** collection, featuring silk-cotton boubous, handwoven Kente gowns, and structured peplum silhouettes.`;
@@ -687,12 +1440,12 @@ export function processConciergeMessage(
         { label: '📏 Sizing & Length Guide', action: 'size_guide' }
       ],
       products: womenProds,
-      intent,
+      intent: classifiedIntent,
       updatedContext
     };
   }
 
-  if (intent === 'explore_men') {
+  if (classifiedIntent === 'explore_men') {
     const menProds = catalogue.filter((p) => p.category === 'men').slice(0, 3);
     const text =
       `Navigating you to our **Menswear** collection, featuring three-piece brocade Agbadas, Kente-yoke linen kaftans, and Northern Fugu smocks.`;
@@ -704,12 +1457,12 @@ export function processConciergeMessage(
         { label: '📏 Men’s Size Guide', action: 'size_guide' }
       ],
       products: menProds,
-      intent,
+      intent: classifiedIntent,
       updatedContext
     };
   }
 
-  if (intent === 'explore_bags') {
+  if (classifiedIntent === 'explore_bags') {
     const bagProds = catalogue.filter((p) => p.category === 'bags').slice(0, 3);
     const text =
       `Navigating you to our **Bags & Accessories** collection, featuring hand-plaited Bolgatanga leather totes, brass Adinkra velvet clutches, and raffia shoulder pieces.`;
@@ -721,29 +1474,36 @@ export function processConciergeMessage(
         { label: '✨ Explore Other Collections', action: 'explore_collections' }
       ],
       products: bagProds,
-      intent,
+      intent: classifiedIntent,
       updatedContext
     };
   }
 
-  // 17. GREETING
-  if (intent === 'greeting') {
+  // ─── INTENT: GREETING ────────────────────────────────────────────────────
+  if (classifiedIntent === 'greeting') {
+    const greetingText = profile.preferredName
+      ? `Warm greetings, ${profile.preferredName}. It’s lovely to have you here at Nnepa Foriwaa. How may I guide your boutique experience today?`
+      : 'Hello! I’m NNEPA, your personal shopping assistant. It’s lovely to have you here. What would you like me to call you?';
+
+    const greetingOptions = profile.preferredName
+      ? [
+          { label: '✨ Explore Collections', action: 'explore_collections' },
+          { label: '👗 Find a Garment', action: 'find_product' },
+          { label: '📏 Size & Length Guide', action: 'size_guide' },
+          { label: '📦 Delivery & Ordering', action: 'delivery_info' },
+          { label: '💬 Chat on WhatsApp', action: 'contact_whatsapp' }
+        ]
+      : [];
+
     return {
-      text:
-        'Warm greetings. I am NNEPA, your personal shopping concierge at Nnepa Foriwaa. How may I guide your boutique experience today?',
-      options: [
-        { label: '✨ Explore Collections', action: 'explore_collections' },
-        { label: '👗 Find a Garment', action: 'find_product' },
-        { label: '📏 Size & Length Guide', action: 'size_guide' },
-        { label: '📦 Delivery & Ordering', action: 'delivery_info' },
-        { label: '💬 Chat on WhatsApp', action: 'contact_whatsapp' }
-      ],
-      intent,
+      text: greetingText,
+      options: greetingOptions,
+      intent: classifiedIntent,
       updatedContext
     };
   }
 
-  // 18. CHECK STRUCTURED FAQ ENTRIES FOR MATCH
+  // ─── INTENT: FAQ LOOKUP ──────────────────────────────────────────────────
   const matchingFaq = findMatchingFAQ(userInput);
   if (matchingFaq) {
     const options: ConciergeActionOption[] = [];
@@ -761,7 +1521,7 @@ export function processConciergeMessage(
     };
   }
 
-  // 19. SEARCH CATALOGUE BY KEYWORDS
+  // ─── INTENT: CATALOGUE SEARCH ────────────────────────────────────────────
   const searchResults = searchCatalogueProducts(userInput, catalogue, 3);
   if (searchResults.length > 0) {
     return {
@@ -777,8 +1537,7 @@ export function processConciergeMessage(
     };
   }
 
-  // 20. STRICT POLITE FALLBACK (EXACT WORDING REQUIRED BY BRAND BRIEF)
-  // “I’d love to help, but I don’t have confirmed information on that just yet. Please contact our boutique for assistance.”
+  // ─── STRICT POLITE FALLBACK ──────────────────────────────────────────────
   return {
     text: `${UNCONFIRMED_FALLBACK_TEXT}\n\nOur Accra atelier team is ready to assist you directly Monday through Saturday, 9:00 AM – 6:00 PM GMT.`,
     options: [
