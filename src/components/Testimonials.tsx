@@ -59,13 +59,13 @@ export default function Testimonials() {
       <div className="max-w-6xl mx-auto">
         {/* Header with Kinetic Typography */}
         <div className="text-center mb-14">
-          <div className="text-[0.6rem] font-bold tracking-[0.4em] uppercase text-mauve-deep flex justify-center items-center gap-3 mb-2.5 animate-eyebrow-tracking">
+          <div className="text-[0.6rem] font-bold tracking-[0.4em] uppercase text-mauve-deep flex justify-center items-center gap-3 mb-2.5">
             <span className="w-5 h-[1px] bg-gradient-to-r from-lavender to-mauve" />
             Client Stories
             <span className="w-5 h-[1px] bg-gradient-to-l from-lavender to-mauve" />
           </div>
           <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-light text-plum-dark">
-            What Our <em className="font-serif italic animate-italic-pulse">Clients</em> Say
+            What Our <em className="font-serif italic font-normal">Clients</em> Say
           </h2>
         </div>
 

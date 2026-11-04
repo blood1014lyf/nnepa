@@ -76,7 +76,7 @@ export default function AboutView() {
         <StoryBeat delayMs={60}>
           <div className="flex items-center gap-3 mb-4">
             <span className="w-8 h-[1px] bg-gradient-to-r from-lavender to-mauve" />
-            <span className="text-[0.62rem] font-bold tracking-[0.42em] uppercase text-mauve-deep animate-eyebrow-tracking">
+            <span className="text-[0.62rem] font-bold tracking-[0.42em] uppercase text-mauve-deep">
               ABOUT NNEPA FORIWAA
             </span>
           </div>
@@ -84,7 +84,7 @@ export default function AboutView() {
 
         <StoryBeat delayMs={140}>
           <h1 className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-plum-dark font-light tracking-tight leading-[1.05] mb-6">
-            Rooted. Refined. <em className="font-serif italic animate-italic-pulse">Regal.</em>
+            Rooted. Refined. <em className="font-serif italic font-normal">Regal.</em>
           </h1>
         </StoryBeat>
 

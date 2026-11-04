@@ -30,12 +30,12 @@ export default function Heritage() {
     <section id="heritage" className="py-20 px-6 sm:px-12 md:px-16 max-w-7xl mx-auto">
       {/* Narrative Section: The Art of African Craft */}
       <div className="max-w-3xl mb-12">
-        <div className="text-[0.6rem] font-bold tracking-[0.4em] uppercase text-mauve-deep flex items-center gap-3.5 mb-2.5 animate-eyebrow-tracking">
+        <div className="text-[0.6rem] font-bold tracking-[0.4em] uppercase text-mauve-deep flex items-center gap-3.5 mb-2.5">
           <span className="w-6.5 h-[1px] bg-gradient-to-r from-lavender to-mauve" />
           Our Heritage
         </div>
         <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-light text-plum-dark leading-tight mb-4">
-          The Art of <em className="font-serif italic animate-italic-pulse">African Craft</em>
+          The Art of <em className="font-serif italic font-normal">African Craft</em>
         </h2>
         <p className="text-sm sm:text-base font-light text-text-muted leading-relaxed max-w-[620px]">
           Every piece from Nnepa Foriwaa is a labour of love — sourced from the finest artisans across West Africa and tailored to perfection for modern African elegance.

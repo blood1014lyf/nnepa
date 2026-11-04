@@ -17,14 +17,7 @@
 }
 
 html {
-  font-size: 19px;
   scroll-behavior: smooth;
-}
-
-@media (min-width: 768px) {
-  html {
-    font-size: 20px;
-  }
 }
 
 body {
@@ -172,38 +165,6 @@ html {
   animation: textRevealUp 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-@keyframes italicGlowPulse {
-  0%, 100% {
-    opacity: 0.94;
-    transform: translateY(0);
-  }
-  50% {
-    opacity: 1;
-    transform: translateY(-2px);
-  }
-}
-
-.animate-italic-pulse {
-  display: inline-block;
-  animation: italicGlowPulse 4.5s ease-in-out infinite;
-  will-change: transform, opacity;
-}
-
-@keyframes eyebrowTrackingBreathing {
-  0%, 100% {
-    letter-spacing: 0.35em;
-  }
-  50% {
-    letter-spacing: 0.44em;
-  }
-}
-
-.animate-eyebrow-tracking {
-  display: inline-flex;
-  animation: eyebrowTrackingBreathing 6.5s ease-in-out infinite;
-  will-change: letter-spacing;
-}
-
 /* Respect accessibility prefers-reduced-motion standard */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -218,9 +179,7 @@ html {
   .animate-kenburns,
   .animate-subtle-drift,
   .animate-subtle-drift-alt,
-  .animate-text-reveal,
-  .animate-italic-pulse,
-  .animate-eyebrow-tracking {
+  .animate-text-reveal {
     animation: none !important;
   }
 }

@@ -762,9 +762,9 @@ export default function ShoppingConcierge({
           ) : (
             <>
               <MessageSquare className="w-6 h-6 text-white" />
-              {/* Subtle pulse indicator when a proactive prompt is active */}
+              {/* Status indicator */}
               {proactivePrompt && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full flex items-center justify-center animate-pulse" />
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full flex items-center justify-center" />
               )}
             </>
           )}
@@ -810,8 +810,8 @@ export default function ShoppingConcierge({
                     Season's Greetings
                   </span>
                 </div>
-                <span className="text-xs text-lavender/90 flex items-center gap-1 font-normal">
-                  <span className={`w-1.5 h-1.5 rounded-full ${isThinking ? 'bg-gold animate-ping' : 'bg-emerald-400 animate-pulse'}`} />
+                <span className="text-xs text-lavender/90 flex items-center gap-1.5 font-normal">
+                  <span className={`w-2 h-2 rounded-full ${isThinking ? 'bg-gold' : 'bg-emerald-400'}`} />
                   <span>{isThinking ? 'Thinking...' : NNEPA_IDENTITY.title}</span>
                 </span>
               </div>
@@ -840,14 +840,14 @@ export default function ShoppingConcierge({
           </div>
 
           {/* Scrollable Conversation History */}
-          <div className="flex-1 p-3.5 sm:p-4 overflow-y-auto space-y-3.5 text-sm sm:text-base bg-zinc-50/60 overscroll-contain">
+          <div className="flex-1 p-3.5 sm:p-4 overflow-y-auto space-y-3 text-xs sm:text-sm bg-zinc-50/60 overscroll-contain">
             {messages.map((msg) => (
               <div
                 key={msg.id}
                 className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
               >
                 <div
-                  className={`max-w-[88%] rounded-2xl px-4 py-3 leading-relaxed text-[15px] sm:text-[15.5px] break-words ${
+                  className={`max-w-[88%] rounded-2xl px-3.5 py-2.5 sm:px-4 sm:py-3 leading-relaxed text-xs sm:text-[13.5px] break-words ${
                     msg.sender === 'user'
                       ? 'bg-plum-dark text-white rounded-br-xs shadow-xs'
                       : 'bg-white text-zinc-900 border border-zinc-200/80 rounded-bl-xs shadow-xs font-normal'
