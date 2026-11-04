@@ -76,7 +76,7 @@ export default function Navbar({
                 href="#/shop"
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`text-[0.66rem] font-bold tracking-[0.2em] uppercase no-underline cursor-pointer relative py-2 inline-block transition-colors duration-300 group ${
+                className={`text-xs sm:text-[13px] font-bold tracking-[0.2em] uppercase no-underline cursor-pointer relative py-2 inline-block transition-colors duration-300 group ${
                   showScrolledStyle ? 'text-mauve-deep hover:text-lavender' : 'text-white/85 hover:text-lilac'
                 }`}
               >
@@ -89,7 +89,7 @@ export default function Navbar({
                   onPageChange(link.page);
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
-                className={`text-[0.66rem] font-bold tracking-[0.2em] uppercase border-none bg-transparent cursor-pointer relative py-2 transition-colors duration-300 group ${
+                className={`text-xs sm:text-[13px] font-bold tracking-[0.2em] uppercase border-none bg-transparent cursor-pointer relative py-2 transition-colors duration-300 group ${
                   showScrolledStyle ? 'text-mauve-deep hover:text-lavender' : 'text-white/85 hover:text-lilac'
                 } ${currentPage === link.page ? 'text-lavender font-extrabold' : ''}`}
               >
@@ -126,7 +126,7 @@ export default function Navbar({
               title="Wishlist"
             >
               <Heart className="w-[18px] h-[18px] text-mauve fill-mauve" />
-              <span className="absolute top-[5px] right-[5px] min-w-3.5 h-3.5 px-1 rounded-full bg-gradient-to-br from-lavender to-mauve text-[0.55rem] font-bold text-white flex items-center justify-center">
+              <span className="absolute top-[3px] right-[3px] min-w-4 h-4 px-1 rounded-full bg-gradient-to-br from-lavender to-mauve text-[10px] font-bold text-white flex items-center justify-center">
                 {wishlistCount}
               </span>
             </a>
@@ -142,7 +142,7 @@ export default function Navbar({
               title="Wishlist"
             >
               <Heart className="w-[18px] h-[18px] text-mauve fill-mauve" />
-              <span className="absolute top-[5px] right-[5px] min-w-3.5 h-3.5 px-1 rounded-full bg-gradient-to-br from-lavender to-mauve text-[0.55rem] font-bold text-white flex items-center justify-center">
+              <span className="absolute top-[3px] right-[3px] min-w-4 h-4 px-1 rounded-full bg-gradient-to-br from-lavender to-mauve text-[10px] font-bold text-white flex items-center justify-center">
                 {wishlistCount}
               </span>
             </button>
@@ -159,7 +159,7 @@ export default function Navbar({
         >
           <ShoppingBag className="w-[18px] h-[18px]" />
           {cartCount > 0 ? (
-            <span className="absolute top-[5px] right-[5px] min-w-4 h-4 px-1 rounded-full bg-gradient-to-br from-lavender to-mauve text-[0.55rem] font-bold text-white flex items-center justify-center">
+            <span className="absolute top-[3px] right-[3px] min-w-4.5 h-4.5 px-1 rounded-full bg-gradient-to-br from-lavender to-mauve text-[10px] font-bold text-white flex items-center justify-center">
               {cartCount}
             </span>
           ) : null}

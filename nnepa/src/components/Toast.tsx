@@ -14,17 +14,28 @@ export default function Toast({ message }: ToastProps) {
   return (
     <AnimatePresence>
       {message && (
-        <div className="fixed top-5 inset-x-0 px-4 flex justify-center pointer-events-none z-[99999]">
+        <aside
+          aria-live="polite"
+          className="fixed left-0 right-0 px-3 sm:px-4 flex justify-center pointer-events-none z-[99999]"
+          style={{
+            top: 'calc(env(safe-area-inset-top, 0px) + 16px)'
+          }}
+        >
           <motion.div
-            initial={{ y: -30, opacity: 0, scale: 0.95 }}
+            initial={{ y: -30, opacity: 0, scale: 0.96 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
-            exit={{ y: -20, opacity: 0, scale: 0.95 }}
-            transition={{ type: 'spring', damping: 20, stiffness: 200 }}
-            className="pointer-events-auto max-w-sm sm:max-w-md w-full bg-[#1e082b] text-white border border-lilac/30 px-5 py-3.5 rounded-xl shadow-2xl text-center text-sm font-medium leading-snug break-words"
+            exit={{ y: -20, opacity: 0, scale: 0.96 }}
+            transition={{ type: 'spring', damping: 22, stiffness: 220 }}
+            className="pointer-events-auto w-auto max-w-[calc(100vw-1.5rem)] sm:max-w-md bg-[#1e082b]/98 text-white border border-lilac/35 px-4.5 py-3 rounded-2xl shadow-2xl text-center text-sm sm:text-base font-medium leading-snug break-words mx-auto"
+            style={{
+              boxSizing: 'border-box',
+              wordBreak: 'break-word',
+              overflowWrap: 'break-word'
+            }}
           >
             {message}
           </motion.div>
-        </div>
+        </aside>
       )}
     </AnimatePresence>
   );

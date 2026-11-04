@@ -726,13 +726,13 @@ export default function CollectionShopView({
                             <div className="w-12 h-12 rounded-full border border-lilac/30 flex items-center justify-center mb-3 text-lavender font-serif italic text-base">
                               NF
                             </div>
-                            <span className="font-serif text-sm text-plum-dark font-medium tracking-wide">
+                            <span className="font-serif text-sm sm:text-base text-plum-dark font-medium tracking-wide">
                               Nnepa Foriwaa
                             </span>
-                            <span className="text-[0.58rem] font-bold tracking-[0.22em] uppercase text-mauve-deep mt-1">
+                            <span className="text-xs font-bold tracking-[0.2em] uppercase text-mauve-deep mt-1">
                               Signature Collection
                             </span>
-                            <span className="text-[0.52rem] tracking-wider text-text-muted mt-2">
+                            <span className="text-xs tracking-wider text-text-muted mt-2">
                               Accra, Ghana
                             </span>
                           </div>
@@ -751,7 +751,7 @@ export default function CollectionShopView({
                         )}
 
                         {product.inStock === false && (
-                          <span className="absolute left-3 top-3 bg-pearl/92 px-2.5 py-1 text-[11px] tracking-[0.06em] text-plum-dark">
+                          <span className="absolute left-3 top-3 bg-pearl/92 px-2.5 py-1 text-xs font-medium tracking-[0.06em] text-plum-dark">
                             Made to order
                           </span>
                         )}
@@ -765,10 +765,10 @@ export default function CollectionShopView({
                             e.stopPropagation();
                             onAddToCart(product, product.sizes?.[0] || 'M');
                           }}
-                          className="absolute bottom-0 left-0 right-0 py-2.5 bg-plum-dark/95 hover:bg-plum-dark text-white text-[0.62rem] font-bold tracking-[0.2em] uppercase transition-all duration-200 opacity-0 group-hover/image:opacity-100 z-10 flex items-center justify-center gap-1.5 border-none cursor-pointer backdrop-blur-xs"
+                          className="absolute bottom-0 left-0 right-0 py-3 bg-plum-dark/95 hover:bg-plum-dark text-white text-xs font-bold tracking-[0.2em] uppercase transition-all duration-200 opacity-0 group-hover/image:opacity-100 z-10 flex items-center justify-center gap-2 border-none cursor-pointer backdrop-blur-xs shadow-md"
                           aria-label={`Add ${product.name} to bag`}
                         >
-                          <ShoppingBag className="w-3.5 h-3.5" />
+                          <ShoppingBag className="w-4 h-4" />
                           <span>Add to Bag</span>
                         </button>
                       )}

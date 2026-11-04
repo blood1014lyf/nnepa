@@ -75,16 +75,16 @@ Please confirm tailoring and delivery details.`;
                   <h3 className="font-serif text-xl sm:text-2xl text-plum-dark font-light mb-1">
                     {product.name}
                   </h3>
-                  <span className="text-[0.62rem] font-bold tracking-[0.24em] uppercase text-mauve-deep mb-2">
+                  <span className="text-xs font-bold tracking-[0.24em] uppercase text-mauve-deep mb-2">
                     Nnepa Foriwaa &bull; Handcrafted
                   </span>
-                  <p className="text-xs text-text-muted max-w-xs leading-relaxed font-light mt-1">
+                  <p className="text-xs sm:text-sm text-text-muted max-w-xs leading-relaxed font-light mt-1">
                     Individually tailored in Accra, Ghana. Inquire via WhatsApp for custom fittings and textile choices.
                   </p>
                 </div>
               )}
               {product.badge && (
-                <span className="absolute top-4 left-4 px-3 py-1.5 bg-gradient-to-r from-lavender to-mauve text-white rounded-full text-[0.52rem] font-bold tracking-[0.18em] uppercase shadow-sm">
+                <span className="absolute top-4 left-4 px-3 py-1.5 bg-gradient-to-r from-lavender to-mauve text-white rounded-full text-xs font-bold tracking-[0.18em] uppercase shadow-sm">
                   {product.badge}
                 </span>
               )}
@@ -94,7 +94,7 @@ Please confirm tailoring and delivery details.`;
           {/* Right Block: Simplified Configuration Hub */}
           <div className="lg:col-span-6 flex flex-col gap-6">
             <div>
-              <span className="text-[0.58rem] font-bold tracking-[0.3em] uppercase text-text-light inline-block mb-2">
+              <span className="text-xs sm:text-sm font-bold tracking-[0.25em] uppercase text-text-light inline-block mb-2">
                 {product.category} · {product.subcategory}
               </span>
               <h1 className="font-serif text-3xl md:text-4xl text-plum-dark font-light leading-snug">
@@ -105,7 +105,7 @@ Please confirm tailoring and delivery details.`;
             {/* Price Line In Ghana Cedis */}
             <div className="py-4 border-y border-solid border-lilac/10 flex items-center justify-between">
               <div>
-                <span className="text-[0.55rem] font-bold tracking-[0.2em] uppercase text-text-light block">Price</span>
+                <span className="text-xs font-bold tracking-[0.2em] uppercase text-text-light block">Price</span>
                 <span className="text-2xl md:text-3xl font-serif text-lavender font-bold mt-1 inline-block">
                   {product.originalPrice && (
                     <del className="text-text-light font-serif font-normal text-base mr-3.5 line-through">
@@ -119,8 +119,8 @@ Please confirm tailoring and delivery details.`;
 
             {/* Product Details */}
             <div>
-              <h3 className="text-[0.58rem] font-bold tracking-[0.2em] uppercase text-plum-dark mb-2.5">Product Details</h3>
-              <p className="text-xs md:text-sm text-text-light leading-relaxed">
+              <h3 className="text-xs sm:text-sm font-bold tracking-[0.2em] uppercase text-plum-dark mb-2.5">Product Details</h3>
+              <p className="text-sm md:text-base text-text-light leading-relaxed">
                 {product.description || `${product.name} is tailored to order in Accra with authentic West African textiles.`}
               </p>
             </div>
@@ -128,14 +128,14 @@ Please confirm tailoring and delivery details.`;
             {/* Sizing Picker Option */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs font-bold tracking-[0.2em] uppercase text-plum-dark">Select Size</h3>
+                <h3 className="text-xs sm:text-sm font-bold tracking-[0.2em] uppercase text-plum-dark">Select Size</h3>
               </div>
               <div className="flex flex-wrap gap-2.5">
                 {(product.sizes && product.sizes.length > 0 ? product.sizes : ['S', 'M', 'L', 'XL']).map((sz) => (
                   <button
                     key={sz}
                     onClick={() => setSelectedSize(sz)}
-                    className={`min-w-11 px-3.5 h-11 border text-xs font-bold tracking-widest rounded-[2px] transition-all cursor-pointer ${
+                    className={`min-w-11 px-4 h-12 border text-sm font-bold tracking-widest rounded-[2px] transition-all cursor-pointer ${
                       selectedSize === sz
                         ? 'bg-gradient-to-br from-lavender to-mauve-deep text-white border-transparent shadow-md'
                         : 'bg-white text-plum-dark border-zinc-200 hover:border-lavender hover:text-lavender'
@@ -149,11 +149,11 @@ Please confirm tailoring and delivery details.`;
 
             {/* Regional Conversion Pill */}
             {(activeWomenRow || activeMenRow) && (
-              <div className="flex items-center justify-between bg-white px-4 py-3 rounded border border-lilac/15 text-xs">
-                <span className="text-xs font-bold tracking-wider uppercase text-text-light">
+              <div className="flex items-center justify-between bg-white px-4 py-3 rounded border border-lilac/15 text-xs sm:text-sm">
+                <span className="font-bold tracking-wider uppercase text-text-light">
                   Standard Conversion:
                 </span>
-                <span className="font-mono text-xs font-bold text-mauve-deep">
+                <span className="font-mono text-xs sm:text-sm font-bold text-mauve-deep">
                   {isMen
                     ? `${activeMenRow?.usSize || 'US'} · ${activeMenRow?.ukSize || 'UK'} · ${activeMenRow?.euSize || 'EU'}`
                     : `${activeWomenRow?.usSize || 'US'} · ${activeWomenRow?.ukSize || 'UK'} · ${activeWomenRow?.euSize || 'EU'}`}
@@ -162,7 +162,7 @@ Please confirm tailoring and delivery details.`;
             )}
 
             {/* Pre-order Delivery Notice / Disclaimer */}
-            <div className="text-xs text-mauve-deep bg-lavender/10 px-3.5 py-2.5 rounded border border-lavender/20 font-medium flex items-center gap-2">
+            <div className="text-xs sm:text-sm text-mauve-deep bg-lavender/10 px-4 py-3 rounded border border-lavender/20 font-medium flex items-center gap-2">
               <span>Tailoring requires 3 to 7 working days before dispatch.</span>
             </div>
 
@@ -173,7 +173,7 @@ Please confirm tailoring and delivery details.`;
                 href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-[2px] font-bold text-[0.65rem] tracking-[0.2em] uppercase border-none cursor-pointer transition-all flex items-center justify-center gap-2.5 shadow-md text-center active:scale-[0.99]"
+                className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-[2px] font-bold text-xs sm:text-sm tracking-[0.2em] uppercase border-none cursor-pointer transition-all flex items-center justify-center gap-2.5 shadow-md text-center active:scale-[0.99]"
                 id="btn-whatsapp-order"
               >
                 <MessageSquare className="w-4 h-4 fill-white text-emerald-600 border-none" />
@@ -185,14 +185,14 @@ Please confirm tailoring and delivery details.`;
                 <button
                   disabled={!product.inStock}
                   onClick={() => onAddToCart(product, selectedSize)}
-                  className={`flex-1 py-4 text-[0.62rem] font-bold tracking-[0.2em] uppercase rounded-[2px] transition-all border-none ${
+                  className={`flex-1 py-4 text-xs sm:text-sm font-bold tracking-[0.2em] uppercase rounded-[2px] transition-all border-none ${
                     product.inStock
                       ? 'bg-zinc-900 text-white hover:bg-black cursor-pointer active:scale-95 shadow-md'
                       : 'bg-zinc-200 text-zinc-400 cursor-not-allowed'
                   }`}
                 >
                   <span className="flex items-center justify-center gap-2">
-                    <ShoppingBag className="w-3.5 h-3.5" />
+                    <ShoppingBag className="w-4 h-4" />
                     {product.inStock ? 'Add to Bag' : 'Out of Stock'}
                   </span>
                 </button>

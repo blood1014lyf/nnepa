@@ -222,20 +222,20 @@ function parseMessageBlocks(rawText: string): ParsedBlock[] {
 export default function ConciergeMessageRenderer({ text, sender, intent }: ConciergeMessageRendererProps) {
   // If user message, render clean aligned paragraph
   if (sender === 'user') {
-    return <p className="leading-relaxed text-sm sm:text-[14.5px]">{text}</p>;
+    return <p className="leading-relaxed text-[15px] sm:text-[15.5px]">{text}</p>;
   }
 
   const blocks = parseMessageBlocks(text);
 
   return (
-    <div className="space-y-2.5 text-sm sm:text-[14px] text-zinc-800 leading-relaxed font-normal">
+    <div className="space-y-3 text-[15px] sm:text-[15.5px] text-zinc-900 leading-relaxed font-normal">
       {blocks.map((block, bIdx) => {
         // ─── 1. HEADING ──────────────────────────────────────────────────────
         if (block.type === 'heading') {
           return (
-            <div key={bIdx} className="pt-1 pb-0.5 border-b border-lilac/20 flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-lavender shrink-0" />
-              <h4 className="font-semibold text-plum-dark text-xs sm:text-[13px] uppercase tracking-wider">
+            <div key={bIdx} className="pt-1 pb-1 border-b border-lilac/25 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-lavender shrink-0" />
+              <h4 className="font-bold text-plum-dark text-sm sm:text-[14.5px] uppercase tracking-wider">
                 {block.headingText}
               </h4>
             </div>
@@ -245,19 +245,19 @@ export default function ConciergeMessageRenderer({ text, sender, intent }: Conci
         // ─── 2. NUMBERED STEPS ──────────────────────────────────────────────
         if (block.type === 'numbered_list' && block.items) {
           return (
-            <div key={bIdx} className="space-y-2 my-2 bg-zinc-50/80 rounded-xl p-3 border border-zinc-200/70">
+            <div key={bIdx} className="space-y-2.5 my-2.5 bg-zinc-50/90 rounded-xl p-3.5 border border-zinc-200/80">
               {block.items.map((item, iIdx) => (
-                <div key={iIdx} className="flex items-start gap-2.5 text-xs sm:text-[13.5px]">
-                  <span className="w-5 h-5 rounded-full bg-plum-dark text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                <div key={iIdx} className="flex items-start gap-2.5 text-[14px] sm:text-[15px]">
+                  <span className="w-5.5 h-5.5 rounded-full bg-plum-dark text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
                     {item.num ?? iIdx + 1}
                   </span>
                   <div className="flex-1 leading-snug">
                     {item.key && (
-                      <strong className="font-semibold text-plum-dark mr-1">
+                      <strong className="font-bold text-plum-dark mr-1.5">
                         {item.key}:
                       </strong>
                     )}
-                    <span className="text-zinc-700">
+                    <span className="text-zinc-800">
                       {renderInlineMarkdown(item.value || item.rawText)}
                     </span>
                   </div>
@@ -273,10 +273,10 @@ export default function ConciergeMessageRenderer({ text, sender, intent }: Conci
           return (
             <div
               key={bIdx}
-              className="flex items-center gap-2 px-3.5 py-2 bg-lavender/15 rounded-lg border border-lilac/30 text-plum-dark shadow-2xs my-1.5"
+              className="flex items-center gap-2 px-3.5 py-2 bg-lavender/15 rounded-lg border border-lilac/30 text-plum-dark shadow-2xs my-2"
             >
               <Clock className="w-4 h-4 text-lavender shrink-0" />
-              <span className="text-xs sm:text-[13px] font-medium leading-tight">
+              <span className="text-[13.5px] sm:text-[14px] font-medium leading-tight">
                 {item.key ? <strong className="font-semibold mr-1">{item.key}:</strong> : null}
                 {renderInlineMarkdown(item.value || item.rawText)}
               </span>
@@ -303,26 +303,26 @@ export default function ConciergeMessageRenderer({ text, sender, intent }: Conci
             return (
               <div
                 key={bIdx}
-                className="my-2 bg-gradient-to-b from-white to-zinc-50/70 border border-zinc-200/90 rounded-xl p-3.5 shadow-xs"
+                className="my-2.5 bg-gradient-to-b from-white to-zinc-50/70 border border-zinc-200/90 rounded-xl p-4 shadow-xs"
               >
-                <div className="flex items-center gap-1.5 text-xs uppercase font-bold tracking-wider text-plum-dark pb-2 mb-2 border-b border-zinc-200/80">
+                <div className="flex items-center gap-2 text-xs sm:text-[13px] uppercase font-bold tracking-wider text-plum-dark pb-2 mb-2 border-b border-zinc-200/80">
                   <ShoppingBag className="w-4 h-4 text-lavender" />
                   <span>Order Specification</span>
                 </div>
-                <div className="space-y-1.5 text-xs sm:text-[13.5px]">
+                <div className="space-y-2 text-[14px] sm:text-[15px]">
                   {block.items.map((item, iIdx) => {
                     const isTotal = item.key && /total/i.test(item.key);
                     return (
                       <div
                         key={iIdx}
                         className={`flex items-center justify-between gap-2 py-0.5 ${
-                          isTotal ? 'pt-2 mt-1.5 border-t border-zinc-200 font-bold text-plum-dark text-sm' : 'text-zinc-700'
+                          isTotal ? 'pt-2 mt-2 border-t border-zinc-200 font-bold text-plum-dark text-[15px] sm:text-[16px]' : 'text-zinc-800'
                         }`}
                       >
-                        <span className={isTotal ? 'text-plum-dark font-bold' : 'text-zinc-500 font-medium'}>
+                        <span className={isTotal ? 'text-plum-dark font-bold' : 'text-zinc-600 font-medium'}>
                           {item.key || 'Item'}
                         </span>
-                        <span className={`text-right ${isTotal ? 'text-plum-dark text-sm font-bold' : 'text-zinc-900 font-medium'}`}>
+                        <span className={`text-right ${isTotal ? 'text-plum-dark text-[15px] sm:text-[16px] font-bold' : 'text-zinc-950 font-medium'}`}>
                           {renderInlineMarkdown(item.value || item.rawText)}
                         </span>
                       </div>
@@ -338,25 +338,25 @@ export default function ConciergeMessageRenderer({ text, sender, intent }: Conci
             return (
               <div
                 key={bIdx}
-                className="my-2 bg-gradient-to-b from-white to-zinc-50/60 border border-lilac/30 rounded-xl p-3.5 shadow-xs space-y-2"
+                className="my-2.5 bg-gradient-to-b from-white to-zinc-50/60 border border-lilac/30 rounded-xl p-4 shadow-xs space-y-2.5"
               >
-                <div className="flex items-center gap-1.5 text-xs uppercase font-bold tracking-wider text-plum-dark pb-1.5 border-b border-lilac/20">
+                <div className="flex items-center gap-2 text-xs sm:text-[13px] uppercase font-bold tracking-wider text-plum-dark pb-2 border-b border-lilac/20">
                   <Ruler className="w-4 h-4 text-lavender" />
                   <span>Size Recommendation</span>
                 </div>
-                <div className="space-y-2 text-xs sm:text-[13.5px]">
+                <div className="space-y-2 text-[14px] sm:text-[15px]">
                   {block.items.map((item, iIdx) => {
                     const isRec = item.key && /recommended size/i.test(item.key);
                     if (isRec) {
                       return (
                         <div
                           key={iIdx}
-                          className="flex items-center justify-between p-2.5 bg-plum-dark text-white rounded-lg shadow-xs mt-1"
+                          className="flex items-center justify-between p-3 bg-plum-dark text-white rounded-lg shadow-xs mt-1.5"
                         >
                           <span className="text-xs uppercase tracking-wider font-semibold text-lavender">
                             {item.key}
                           </span>
-                          <span className="text-sm font-bold px-2 py-0.5 bg-white/15 rounded text-white">
+                          <span className="text-sm sm:text-base font-bold px-2.5 py-0.5 bg-white/15 rounded text-white">
                             {renderInlineMarkdown(item.value || item.rawText)}
                           </span>
                         </div>
@@ -364,13 +364,13 @@ export default function ConciergeMessageRenderer({ text, sender, intent }: Conci
                     }
 
                     return (
-                      <div key={iIdx} className="flex flex-col gap-0.5 text-zinc-700">
+                      <div key={iIdx} className="flex flex-col gap-0.5 text-zinc-800">
                         {item.key && (
-                          <span className="text-[11px] uppercase tracking-wider font-semibold text-zinc-500">
+                          <span className="text-xs uppercase tracking-wider font-semibold text-zinc-500">
                             {item.key}
                           </span>
                         )}
-                        <span className="text-zinc-900 font-medium">
+                        <span className="text-zinc-950 font-medium">
                           {renderInlineMarkdown(item.value || item.rawText)}
                         </span>
                       </div>
@@ -386,25 +386,25 @@ export default function ConciergeMessageRenderer({ text, sender, intent }: Conci
             return (
               <div
                 key={bIdx}
-                className="my-2 bg-white border border-zinc-200/90 rounded-xl p-3.5 shadow-xs space-y-2"
+                className="my-2.5 bg-white border border-zinc-200/90 rounded-xl p-4 shadow-xs space-y-2.5"
               >
-                <div className="flex items-center gap-1.5 text-xs uppercase font-bold tracking-wider text-plum-dark pb-1.5 border-b border-zinc-100">
+                <div className="flex items-center gap-2 text-xs sm:text-[13px] uppercase font-bold tracking-wider text-plum-dark pb-2 border-b border-zinc-100">
                   <Truck className="w-4 h-4 text-lavender" />
                   <span>Delivery Schedule & Transit</span>
                 </div>
-                <div className="space-y-2 text-xs sm:text-[13.5px]">
+                <div className="space-y-2.5 text-[14px] sm:text-[15px]">
                   {block.items.map((item, iIdx) => {
                     const isTurnaround = item.key && /turnaround/i.test(item.key);
                     return (
                       <div
                         key={iIdx}
-                        className={`p-2.5 rounded-lg ${
+                        className={`p-3 rounded-lg ${
                           isTurnaround
                             ? 'bg-lavender/10 border border-lilac/30 text-plum-dark'
                             : 'bg-zinc-50 border border-zinc-200/60'
                         }`}
                       >
-                        <div className="flex items-center gap-1.5 text-xs font-semibold text-plum-dark">
+                        <div className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-plum-dark">
                           {isTurnaround ? (
                             <Clock className="w-3.5 h-3.5 text-lavender" />
                           ) : (
@@ -412,7 +412,7 @@ export default function ConciergeMessageRenderer({ text, sender, intent }: Conci
                           )}
                           <span>{item.key}</span>
                         </div>
-                        <p className="text-zinc-700 text-xs sm:text-[13px] mt-0.5 leading-relaxed">
+                        <p className="text-zinc-800 text-[13.5px] sm:text-[14px] mt-1 leading-relaxed">
                           {renderInlineMarkdown(item.value || item.rawText)}
                         </p>
                       </div>
@@ -425,17 +425,17 @@ export default function ConciergeMessageRenderer({ text, sender, intent }: Conci
 
           // 4d. Default Clean Key-Value / Bullet List
           return (
-            <div key={bIdx} className="space-y-1.5 my-1.5">
+            <div key={bIdx} className="space-y-2 my-2">
               {block.items.map((item, iIdx) => (
-                <div key={iIdx} className="flex items-start gap-2 text-xs sm:text-[13.5px] leading-relaxed">
-                  <span className="w-1.5 h-1.5 rounded-full bg-lavender shrink-0 mt-1.5" />
+                <div key={iIdx} className="flex items-start gap-2.5 text-[14.5px] sm:text-[15px] leading-relaxed">
+                  <span className="w-1.5 h-1.5 rounded-full bg-lavender shrink-0 mt-2" />
                   <div className="flex-1">
                     {item.key && (
-                      <strong className="font-semibold text-plum-dark mr-1">
+                      <strong className="font-semibold text-plum-dark mr-1.5">
                         {item.key}:
                       </strong>
                     )}
-                    <span className="text-zinc-700">
+                    <span className="text-zinc-800">
                       {renderInlineMarkdown(item.value || item.rawText)}
                     </span>
                   </div>
@@ -447,7 +447,7 @@ export default function ConciergeMessageRenderer({ text, sender, intent }: Conci
 
         // ─── 5. REGULAR PARAGRAPH ────────────────────────────────────────────
         return (
-          <p key={bIdx} className="leading-relaxed text-zinc-800 text-xs sm:text-[14px]">
+          <p key={bIdx} className="leading-relaxed text-zinc-900 text-[15px] sm:text-[15.5px]">
             {renderInlineMarkdown(block.paragraphText || '')}
           </p>
         );
