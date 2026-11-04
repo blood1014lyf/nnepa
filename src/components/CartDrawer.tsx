@@ -29,7 +29,7 @@ export default function CartDrawer({
 }: CartDrawerProps) {
   const isCartEmpty = cartItems.length === 0;
   const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.product.price * item.quantity,
+    (sum, item) => sum + (item.product?.price || 0) * (item.quantity || 1),
     0
   );
 
@@ -77,17 +77,18 @@ export default function CartDrawer({
                   <div className="text-[0.9rem] font-medium tracking-wide">
                     Your shopping bag is empty
                   </div>
-                  <a
-                    href="#/shop"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    type="button"
                     onClick={() => {
                       onClose();
+                      if (onStartShopping) {
+                        onStartShopping();
+                      }
                     }}
-                    className="mt-2 py-3 px-6 bg-gradient-to-br from-lavender to-mauve-deep text-white text-[0.62rem] font-semibold tracking-[0.22em] uppercase no-underline cursor-pointer rounded-[4px] shadow-md active:scale-95 duration-200 inline-block"
+                    className="mt-2 py-3 px-6 bg-gradient-to-br from-lavender to-mauve-deep text-white text-[0.62rem] font-semibold tracking-[0.22em] uppercase no-underline cursor-pointer rounded-[4px] shadow-md active:scale-95 duration-200 inline-block border-none"
                   >
                     Start Shopping
-                  </a>
+                  </button>
                 </div>
               ) : (
                 <div className="flex flex-col gap-1">

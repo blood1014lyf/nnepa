@@ -4,6 +4,7 @@
  */
 
 import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { ShoppingBag } from 'lucide-react';
 import type { Product } from '../types.ts';
 
 export type QuickFilterKey =
@@ -755,6 +756,22 @@ export default function CollectionShopView({
                           </span>
                         )}
                       </a>
+
+                      {product.inStock !== false && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onAddToCart(product, product.sizes?.[0] || 'M');
+                          }}
+                          className="absolute bottom-0 left-0 right-0 py-2.5 bg-plum-dark/95 hover:bg-plum-dark text-white text-[0.62rem] font-bold tracking-[0.2em] uppercase transition-all duration-200 opacity-0 group-hover/image:opacity-100 z-10 flex items-center justify-center gap-1.5 border-none cursor-pointer backdrop-blur-xs"
+                          aria-label={`Add ${product.name} to bag`}
+                        >
+                          <ShoppingBag className="w-3.5 h-3.5" />
+                          <span>Add to Bag</span>
+                        </button>
+                      )}
                     </div>
 
                     {/* Product Info Row (Title, Price, Wishlist Icon) */}

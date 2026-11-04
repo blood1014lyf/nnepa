@@ -58,33 +58,46 @@ export function isLegacyMock(p: Product | null | undefined): boolean {
   return false;
 }
 
+export function restoreCartFromStorage(): CartItem[] {
+  try {
+    const cached = localStorage.getItem('nnepa_foriwaa_cart');
+    if (!cached) return [];
+    const parsed = JSON.parse(cached);
+    if (!Array.isArray(parsed)) return [];
+
+    let cachedProducts: Product[] = [];
+    try {
+      const prodStr = localStorage.getItem('nnepa_foriwaa_products');
+      if (prodStr) {
+        cachedProducts = JSON.parse(prodStr);
+      }
+    } catch {}
+
+    return parsed
+      .map((item: any) => {
+        let prod = item.product;
+        if (!prod && item.productId) {
+          prod = cachedProducts.find((p: Product) => p && p.id === item.productId);
+        }
+        if (!prod || isLegacyMock(prod)) return null;
+        return {
+          product: prod,
+          quantity: Math.max(1, Number(item.quantity) || 1),
+          size: item.size || (prod.sizes && prod.sizes.length > 0 ? prod.sizes[0] : 'M')
+        };
+      })
+      .filter(Boolean) as CartItem[];
+  } catch {
+    return [];
+  }
+}
+
 export default function App() {
   // Virtual State-Based Routing
   const [page, setPage] = useState<string>('home');
   const [activeCategory, setActiveCategory] = useState<'all' | 'women' | 'men' | 'bags'>('all');
   const [showWishlistOnly, setShowWishlistOnly] = useState<boolean>(false);
-  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
-    try {
-      const cached = localStorage.getItem('nnepa_foriwaa_cart');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed)) {
-          return parsed
-            .map((item: any) => {
-              const prod = item.product;
-              if (!prod || isLegacyMock(prod)) return null;
-              return {
-                product: prod,
-                quantity: Math.max(1, Number(item.quantity) || 1),
-                size: item.size
-              };
-            })
-            .filter(Boolean) as CartItem[];
-        }
-      }
-    } catch {}
-    return [];
-  });
+  const [cartItems, setCartItems] = useState<CartItem[]>(() => restoreCartFromStorage());
   const [orders, setOrders] = useState<Order[]>(() => {
     try {
       const cached = localStorage.getItem('nnepa_foriwaa_orders');
@@ -103,12 +116,13 @@ export default function App() {
   });
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // Sync cart (only productId, size, quantity — never client prices) and wishlist to localStorage
+  // Sync cart (preserving product object, size, and quantity) and wishlist to localStorage
   useEffect(() => {
     try {
       const storageSafeCart = cartItems
-        .filter((item) => item.product && !isLegacyMock(item.product))
+        .filter((item) => item && item.product && !isLegacyMock(item.product))
         .map((item) => ({
+          product: item.product,
           productId: item.product.id,
           size: item.size,
           quantity: item.quantity
@@ -126,22 +140,9 @@ export default function App() {
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       try {
-        if (e.key === 'nnepa_foriwaa_cart' && e.newValue) {
-          const parsed = JSON.parse(e.newValue);
-          if (Array.isArray(parsed)) {
-            const restored = parsed
-              .map((item: any) => {
-                const prod = item.product;
-                if (!prod || isLegacyMock(prod)) return null;
-                return {
-                  product: prod,
-                  quantity: Math.max(1, Number(item.quantity) || 1),
-                  size: item.size
-                };
-              })
-              .filter(Boolean) as CartItem[];
-            setCartItems(restored);
-          }
+        if (e.key === 'nnepa_foriwaa_cart') {
+          const restored = restoreCartFromStorage();
+          setCartItems(restored);
         } else if (e.key === 'nnepa_foriwaa_wishlist' && e.newValue) {
           setWishlist(JSON.parse(e.newValue));
         }
@@ -397,24 +398,29 @@ export default function App() {
   };
 
   const handleAddToCart = (product: Product, size?: string) => {
+    if (!product || !product.id) return;
     if (!product.inStock) {
       showToast('Out of stock, redirecting to custom order form');
       handleViewDetails(product);
       return;
     }
 
+    const finalSize = size || (product.sizes && product.sizes.length > 0 ? product.sizes[0] : 'M');
+
     setCartItems((prev) => {
-      const match = prev.find((item) => item.product.id === product.id && item.size === size);
-      if (match) {
-        return prev.map((item) =>
-          item.product.id === product.id && item.size === size
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
+      const matchIndex = prev.findIndex(
+        (item) => item?.product?.id === product.id && item.size === finalSize
+      );
+      if (matchIndex > -1) {
+        return prev.map((item, i) =>
+          i === matchIndex ? { ...item, quantity: item.quantity + 1 } : item
         );
       }
-      return [...prev, { product, quantity: 1, size }];
+      return [...prev, { product, quantity: 1, size: finalSize }];
     });
-    showToast(`Added "${product.name}" ${size ? `(${size})` : ''} to cart`);
+
+    setIsCartOpen(true);
+    showToast(`Added "${product.name}" (${finalSize}) to your bag`);
   };
 
   const handleToggleWishlist = (product: Product) => {
