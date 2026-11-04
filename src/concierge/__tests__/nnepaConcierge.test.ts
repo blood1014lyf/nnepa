@@ -871,4 +871,38 @@ describe('NNEPA Shopping Concierge — Core Knowledge & Intelligence Test Suite'
     assert.ok(res.text.includes('high waist to feet'), 'Clarifies high waist to feet');
     assert.ok(res.options.some((o) => o.action === 'contact_whatsapp'), 'Offers WhatsApp stylist option');
   });
+
+  // 49. Expanded FAQ Knowledge Library (100+ entries)
+  test('Scenario 49: FAQ knowledge library contains 100+ comprehensive entries with zero banned words', async () => {
+    const { FAQ_KNOWLEDGE_ENTRIES } = await import('../knowledge/faqKnowledge.ts');
+    assert.ok(FAQ_KNOWLEDGE_ENTRIES.length >= 100, `Expected >= 100 FAQ entries, found ${FAQ_KNOWLEDGE_ENTRIES.length}`);
+
+    // Verify zero occurrences of forbidden words across all FAQ answers
+    for (const entry of FAQ_KNOWLEDGE_ENTRIES) {
+      assert.ok(!/atelier/i.test(entry.answer), `FAQ entry ${entry.id} contains banned word atelier`);
+      assert.ok(!/[\u{1F300}-\u{1F9FF}]/u.test(entry.answer), `FAQ entry ${entry.id} contains emoji`);
+      assert.ok(entry.keywords.length > 0, `FAQ entry ${entry.id} has keywords`);
+    }
+  });
+
+  // 50. Natural Internet Questions Verification
+  test('Scenario 50: Real-world international fashion questions return articulate answers', () => {
+    let ctx = createInitialConciergeContext(null);
+
+    // Question 1: International shipping to Canada
+    const resCanada = processConciergeMessage('Do you ship to Canada and how long does it take?', ctx, CATALOGUE);
+    assert.ok(resCanada.text.toLowerCase().includes('dhl') || resCanada.text.toLowerCase().includes('canada') || resCanada.text.toLowerCase().includes('worldwide'), 'Answers Canada shipping');
+
+    // Question 2: Heritage textile Batakari / Fugu
+    const resFugu = processConciergeMessage('What is Northern Fugu Batakari cloth?', ctx, CATALOGUE);
+    assert.ok(resFugu.text.toLowerCase().includes('fugu') || resFugu.text.toLowerCase().includes('batakari'), 'Explains Fugu Batakari heritage');
+
+    // Question 3: Bridal train coordination
+    const resBridal = processConciergeMessage('Can you dress my entire bridal train and groomsmen?', ctx, CATALOGUE);
+    assert.ok(resBridal.text.toLowerCase().includes('bridal') || resBridal.text.toLowerCase().includes('groomsmen'), 'Answers bridal party inquiry');
+
+    // Question 4: Remittance payment via Sendwave
+    const resSendwave = processConciergeMessage('How can international clients pay using Sendwave or WorldRemit?', ctx, CATALOGUE);
+    assert.ok(resSendwave.text.toLowerCase().includes('sendwave') || resSendwave.text.toLowerCase().includes('remittance') || resSendwave.text.toLowerCase().includes('worldremit'), 'Answers Sendwave payment');
+  });
 });

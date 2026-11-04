@@ -682,7 +682,7 @@ export default function ShoppingConcierge({
         <div
           role="status"
           aria-live="polite"
-          className="fixed bottom-24 right-5 sm:right-6 z-[80] max-w-[320px] sm:max-w-[350px] bg-white rounded-2xl shadow-xl border border-zinc-200/90 p-4 animate-in fade-in slide-in-from-bottom-3 duration-300"
+          className="fixed bottom-24 inset-x-4 sm:inset-x-auto sm:right-6 sm:w-auto sm:max-w-[360px] z-[80] bg-white rounded-2xl shadow-xl border border-zinc-200/90 p-4 animate-in fade-in slide-in-from-bottom-3 duration-300"
         >
           <div className="flex items-start justify-between gap-2.5">
             <div className="flex items-center gap-2">
@@ -690,10 +690,10 @@ export default function ShoppingConcierge({
                 <ShoppingBag className="w-3.5 h-3.5 text-lavender" />
               </div>
               <div>
-                <span className="text-[11px] font-bold text-plum-dark block uppercase tracking-wider">
+                <span className="text-xs font-bold text-plum-dark block uppercase tracking-wider">
                   {NNEPA_IDENTITY.name}
                 </span>
-                <span className="text-[9px] text-zinc-400 block font-light">
+                <span className="text-[10px] text-zinc-400 block font-light">
                   {NNEPA_IDENTITY.title}
                 </span>
               </div>
@@ -707,7 +707,7 @@ export default function ShoppingConcierge({
             </button>
           </div>
 
-          <p className="text-xs text-zinc-700 mt-2.5 leading-relaxed font-normal">
+          <p className="text-sm text-zinc-700 mt-2.5 leading-relaxed font-normal">
             {proactivePrompt.text}
           </p>
 
@@ -718,7 +718,7 @@ export default function ShoppingConcierge({
                   proactivePrompt.onAction?.();
                   dismissProactivePrompt();
                 }}
-                className="px-3.5 py-1.5 bg-plum-dark text-white text-[11px] font-semibold rounded-full hover:bg-plum transition-colors cursor-pointer border-none shadow-xs flex items-center gap-1.5"
+                className="px-4 py-2 bg-plum-dark text-white text-xs font-semibold rounded-full hover:bg-plum transition-colors cursor-pointer border-none shadow-xs flex items-center gap-1.5"
               >
                 <span>{proactivePrompt.actionLabel}</span>
                 <ChevronRight className="w-3 h-3 text-lavender" />
@@ -729,7 +729,7 @@ export default function ShoppingConcierge({
                 setIsOpen(true);
                 dismissProactivePrompt();
               }}
-              className="px-3 py-1.5 bg-zinc-100 text-zinc-700 text-[11px] font-medium rounded-full hover:bg-zinc-200 transition-colors cursor-pointer border-none"
+              className="px-3.5 py-2 bg-zinc-100 text-zinc-700 text-xs font-medium rounded-full hover:bg-zinc-200 transition-colors cursor-pointer border-none"
             >
               Ask Foriwaa
             </button>
@@ -835,14 +835,14 @@ export default function ShoppingConcierge({
           </div>
 
           {/* Scrollable Conversation History */}
-          <div className="flex-1 p-3.5 overflow-y-auto space-y-3.5 text-xs bg-zinc-50/60 overscroll-contain">
+          <div className="flex-1 p-3.5 sm:p-4 overflow-y-auto space-y-3.5 text-sm bg-zinc-50/60 overscroll-contain">
             {messages.map((msg) => (
               <div
                 key={msg.id}
                 className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
               >
                 <div
-                  className={`max-w-[82%] rounded-2xl px-3.5 py-2.5 leading-relaxed text-xs break-words ${
+                  className={`max-w-[86%] rounded-2xl px-4 py-3 leading-relaxed text-sm break-words ${
                     msg.sender === 'user'
                       ? 'bg-plum-dark text-white rounded-br-xs shadow-xs'
                       : 'bg-white text-zinc-800 border border-zinc-200/80 rounded-bl-xs shadow-xs'
@@ -851,7 +851,7 @@ export default function ShoppingConcierge({
                   <ConciergeMessageRenderer text={msg.text} sender={msg.sender} />
                 </div>
 
-                <span className="text-[9px] text-zinc-400 px-1 mt-1 font-mono">
+                <span className="text-[10px] text-zinc-400 px-1 mt-1 font-mono">
                   {msg.timestamp}
                 </span>
 
@@ -864,21 +864,21 @@ export default function ShoppingConcierge({
                         onClick={() => {
                           handleOptionClick('navigate_product', prod);
                         }}
-                        className="bg-white p-2 rounded-xl border border-zinc-200 hover:border-plum-dark flex items-center gap-3 cursor-pointer transition-all shadow-xs hover:shadow-sm"
+                        className="bg-white p-2.5 rounded-xl border border-zinc-200 hover:border-plum-dark flex items-center gap-3 cursor-pointer transition-all shadow-xs hover:shadow-sm"
                       >
                         <img
                           src={prod.imageUrl}
                           alt={prod.name}
-                          className="w-12 h-16 object-cover rounded-lg bg-zinc-100 shrink-0"
+                          className="w-14 h-18 object-cover rounded-lg bg-zinc-100 shrink-0"
                         />
                         <div className="flex-1 min-w-0 text-left">
-                          <h4 className="font-semibold text-zinc-900 text-[11px] truncate">
+                          <h4 className="font-semibold text-zinc-900 text-xs sm:text-[13px] truncate">
                             {prod.name}
                           </h4>
                           <span className="text-[10px] text-zinc-500 uppercase tracking-wider block">
                             {prod.category}
                           </span>
-                          <span className="text-[11px] font-bold text-plum-dark block mt-0.5">
+                          <span className="text-xs sm:text-sm font-bold text-plum-dark block mt-0.5">
                             GH₵ {prod.price.toLocaleString()}
                           </span>
                         </div>
@@ -889,11 +889,11 @@ export default function ShoppingConcierge({
                               e.stopPropagation();
                               handleOptionClick('confirm_add_to_cart', { product: prod }, 'Add to Bag');
                             }}
-                            className="px-2.5 py-1 bg-plum-dark text-white hover:bg-plum rounded text-[10px] font-medium transition-colors cursor-pointer border-none"
+                            className="px-3 py-1.5 bg-plum-dark text-white hover:bg-plum rounded text-xs font-medium transition-colors cursor-pointer border-none"
                           >
                             Add to Bag
                           </button>
-                          <div className="px-2 py-1 bg-zinc-100 text-zinc-700 hover:bg-zinc-200 rounded text-[10px] font-medium transition-colors">
+                          <div className="px-2.5 py-1.5 bg-zinc-100 text-zinc-700 hover:bg-zinc-200 rounded text-xs font-medium transition-colors">
                             View
                           </div>
                         </div>
@@ -904,14 +904,14 @@ export default function ShoppingConcierge({
 
                 {/* Predefined Action Options */}
                 {msg.options && msg.options.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-2.5 w-full">
+                  <div className="flex flex-wrap gap-2 mt-2.5 w-full">
                     {msg.options.slice(0, 6).map((opt, idx) => (
                       <button
                         key={idx}
                         type="button"
                         disabled={isThinking}
                         onClick={() => handleOptionClick(opt.action, opt.payload, opt.label)}
-                        className="px-3 py-1.5 bg-white border border-lilac/40 hover:border-plum-dark hover:bg-lavender/10 text-plum-dark rounded-full text-[10.5px] font-medium transition-all cursor-pointer shadow-xs text-left break-words max-w-full leading-snug min-h-[30px] flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-3.5 py-2 bg-white border border-lilac/40 hover:border-plum-dark hover:bg-lavender/10 text-plum-dark rounded-full text-xs sm:text-[13px] font-medium transition-all cursor-pointer shadow-xs text-left break-words max-w-full leading-snug min-h-[34px] flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {opt.label}
                       </button>
@@ -930,7 +930,7 @@ export default function ShoppingConcierge({
                     <span className="w-1.5 h-1.5 rounded-full bg-plum-dark animate-bounce" style={{ animationDelay: '150ms' }} />
                     <span className="w-1.5 h-1.5 rounded-full bg-plum-dark animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
-                  <span className="text-[11px] text-zinc-500 font-sans font-medium">
+                  <span className="text-xs text-zinc-500 font-sans font-medium">
                     Foriwaa is thinking...
                   </span>
                 </div>
@@ -941,39 +941,39 @@ export default function ShoppingConcierge({
           </div>
 
           {/* Quick Shortcuts Bar */}
-          <div className="px-3 py-1.5 bg-white border-t border-zinc-100 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0 text-[10px]">
+          <div className="px-3 py-2 bg-white border-t border-zinc-100 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0 text-xs">
             <button
               type="button"
               disabled={isThinking}
               onClick={() => handleOptionClick('size_guide')}
-              className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1 transition-colors disabled:opacity-50"
+              className="px-3 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1 transition-colors disabled:opacity-50 font-medium"
             >
-              <Ruler className="w-3 h-3 text-lavender" />
+              <Ruler className="w-3.5 h-3.5 text-lavender" />
               <span>Size Guide</span>
             </button>
             <button
               type="button"
               disabled={isThinking}
               onClick={() => handleOptionClick('delivery_info')}
-              className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1 transition-colors disabled:opacity-50"
+              className="px-3 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1 transition-colors disabled:opacity-50 font-medium"
             >
-              <Truck className="w-3 h-3 text-lavender" />
+              <Truck className="w-3.5 h-3.5 text-lavender" />
               <span>Delivery</span>
             </button>
             <button
               type="button"
               disabled={isThinking}
               onClick={() => handleOptionClick('contact_whatsapp')}
-              className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1 transition-colors disabled:opacity-50"
+              className="px-3 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1 transition-colors disabled:opacity-50 font-medium"
             >
-              <MessageSquare className="w-3 h-3 text-lavender" />
+              <MessageSquare className="w-3.5 h-3.5 text-lavender" />
               <span>WhatsApp</span>
             </button>
             <button
               type="button"
               disabled={isThinking}
               onClick={() => handleOptionClick('connect_human')}
-              className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1 transition-colors disabled:opacity-50"
+              className="px-3 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1 transition-colors disabled:opacity-50 font-medium"
             >
               <span>Stylist</span>
             </button>
@@ -981,9 +981,9 @@ export default function ShoppingConcierge({
               type="button"
               onClick={handleStartNewChat}
               title="Start a new conversation"
-              className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1 transition-colors"
+              className="px-3 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1 transition-colors font-medium"
             >
-              <RotateCcw className="w-3 h-3 text-lavender" />
+              <RotateCcw className="w-3.5 h-3.5 text-lavender" />
               <span>Start Over</span>
             </button>
           </div>
@@ -991,7 +991,7 @@ export default function ShoppingConcierge({
           {/* User Input Field */}
           <form
             onSubmit={handleSendMessage}
-            className="p-2.5 bg-white border-t border-zinc-200 flex items-center gap-2 shrink-0"
+            className="p-3 bg-white border-t border-zinc-200 flex items-center gap-2 shrink-0"
           >
             <input
               type="text"
@@ -1007,15 +1007,15 @@ export default function ShoppingConcierge({
                   ? 'Enter label size (e.g. M, UK 12, or US 8)...'
                   : 'Ask Foriwaa about sizes, fabrics, delivery...'
               }
-              className="flex-1 px-3 py-2 bg-zinc-100 border border-zinc-200 rounded-full text-[16px] sm:text-xs text-zinc-800 placeholder-zinc-400 outline-none focus:border-plum-dark focus:bg-white transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              className="flex-1 px-3.5 py-2.5 bg-zinc-100 border border-zinc-200 rounded-full text-base sm:text-sm text-zinc-800 placeholder-zinc-400 outline-none focus:border-plum-dark focus:bg-white transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             />
             <button
               type="submit"
               disabled={!inputValue.trim() || isThinking}
               aria-label="Send question to Foriwaa"
-              className="w-8 h-8 rounded-full bg-plum-dark text-white flex items-center justify-center shrink-0 border-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-plum transition-colors shadow-xs"
+              className="w-9 h-9 rounded-full bg-plum-dark text-white flex items-center justify-center shrink-0 border-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-plum transition-colors shadow-xs"
             >
-              <Send className="w-3.5 h-3.5" />
+              <Send className="w-4 h-4" />
             </button>
           </form>
         </div>

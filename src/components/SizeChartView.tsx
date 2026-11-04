@@ -41,40 +41,16 @@ export default function SizeChartView({
 
         {/* Page Header */}
         <div className="text-center mb-10">
-          <span className="text-[0.6rem] font-bold tracking-[0.3em] uppercase text-lavender block mb-2">
+          <span className="text-xs font-bold tracking-[0.3em] uppercase text-lavender block mb-2">
             Nnepa Foriwaa • Size & Fit Guide
           </span>
           <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-light text-plum-dark">
             International Size Chart & Length Guide
           </h1>
-          <p className="text-xs sm:text-sm text-text-light max-w-xl mx-auto mt-3 leading-relaxed">
-            Accurate, research-backed sizing conversions across US, UK, and EU standards, paired with our official High-Waist-to-Feet Length Guide for a flawless tailored drape.
+          <p className="text-sm sm:text-base text-text-light max-w-xl mx-auto mt-3 leading-relaxed">
+            Accurate sizing conversions across US, UK, and EU standards, paired with our official High-Waist-to-Feet Length Guide for a flawless tailored drape.
           </p>
-          
-          {/* Quick Section Navigation Jump Links */}
-          <div className="flex items-center justify-center gap-2 flex-wrap mt-5">
-            <a
-              href="#size-chart-root"
-              className="px-3 py-1.5 bg-white border border-lilac/25 rounded-full text-[0.65rem] font-bold uppercase tracking-wider text-plum-dark hover:border-lavender transition-all no-underline shadow-xs"
-            >
-              International Sizing (US / UK / EU)
-            </a>
-            <a
-              href="#official-length-guide"
-              className="px-3 py-1.5 bg-[#240e36] text-amber-200 border border-amber-400/40 rounded-full text-[0.65rem] font-bold uppercase tracking-wider hover:bg-[#31134a] transition-all no-underline shadow-xs flex items-center gap-1.5"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              Official Length Guide (5'0 to 6'+)
-            </a>
-            <a
-              href="#standard-length-guide"
-              className="px-3 py-1.5 bg-white border border-lilac/25 rounded-full text-[0.65rem] font-bold uppercase tracking-wider text-plum-dark hover:border-lavender transition-all no-underline shadow-xs"
-            >
-              Measuring Instructions
-            </a>
-          </div>
-
-          <div className="w-12 h-[1px] bg-gradient-to-r from-lavender to-mauve mx-auto mt-6" />
+          <div className="w-16 h-[1px] bg-gradient-to-r from-lavender to-mauve mx-auto mt-6" />
         </div>
 
         {/* Interactive Size Chart Tool */}
