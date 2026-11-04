@@ -84,7 +84,7 @@ export default function ShoppingConcierge({
   const getInitialWelcomeMessage = (): ChatMessage => ({
     id: 'welcome_init',
     sender: 'concierge',
-    text: `Hello! I’m NNEPA, your personal shopping assistant. It’s lovely to have you here. What would you like me to call you?`,
+    text: `Hello! I’m Foriwaa, your personal shopping assistant. It’s lovely to have you here. What would you like me to call you?`,
     timestamp: getTimeString(),
     options: [
       { label: 'Browse Collections', action: 'explore_collections' },
@@ -253,7 +253,7 @@ export default function ShoppingConcierge({
           setProactivePrompt({
             id: `idle_${activeProduct.id}`,
             text: PROACTIVE_PROMPTS.productIdle,
-            actionLabel: 'Ask NNEPA',
+            actionLabel: 'Ask Foriwaa',
             onAction: () => {
               setIsOpen(true);
               dispatchToEngine(`Tell me about the ${activeProduct.name}`);
@@ -724,7 +724,7 @@ export default function ShoppingConcierge({
               }}
               className="px-3 py-1.5 bg-zinc-100 text-zinc-700 text-[11px] font-medium rounded-full hover:bg-zinc-200 transition-colors cursor-pointer border-none"
             >
-              Ask NNEPA
+              Ask Foriwaa
             </button>
           </div>
         </div>
@@ -741,7 +741,7 @@ export default function ShoppingConcierge({
               if (proactivePrompt) dismissProactivePrompt();
             }
           }}
-          aria-label={isOpen ? 'Close NNEPA shopping assistant' : 'Open NNEPA shopping assistant'}
+          aria-label={isOpen ? 'Close Foriwaa shopping assistant' : 'Open Foriwaa shopping assistant'}
           title={`${NNEPA_IDENTITY.name} — ${NNEPA_IDENTITY.title}`}
           className="relative w-14 h-14 rounded-full bg-plum-dark hover:bg-plum text-white shadow-xl hover:shadow-2xl flex items-center justify-center transition-all duration-200 hover:scale-105 cursor-pointer border border-plum/30 group"
         >
@@ -924,7 +924,7 @@ export default function ShoppingConcierge({
                     <span className="w-1.5 h-1.5 rounded-full bg-plum-dark animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
                   <span className="text-[11px] text-zinc-500 font-sans font-medium">
-                    NNEPA is thinking...
+                    Foriwaa is thinking...
                   </span>
                 </div>
               </div>
@@ -993,19 +993,19 @@ export default function ShoppingConcierge({
               onChange={(e) => setInputValue(e.target.value)}
               placeholder={
                 isThinking
-                  ? 'NNEPA is thinking...'
+                  ? 'Foriwaa is thinking...'
                   : contextRef.current.profile.onboardingStage === 'awaiting_name'
                   ? 'Ask a question or enter your name...'
                   : contextRef.current.profile.onboardingStage === 'sizing_label_inquiry'
                   ? 'Enter label size (e.g. M, UK 12, or US 8)...'
-                  : 'Ask NNEPA about sizes, fabrics, delivery...'
+                  : 'Ask Foriwaa about sizes, fabrics, delivery...'
               }
               className="flex-1 px-3 py-2 bg-zinc-100 border border-zinc-200 rounded-full text-[16px] sm:text-xs text-zinc-800 placeholder-zinc-400 outline-none focus:border-plum-dark focus:bg-white transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             />
             <button
               type="submit"
               disabled={!inputValue.trim() || isThinking}
-              aria-label="Send question to NNEPA"
+              aria-label="Send question to Foriwaa"
               className="w-8 h-8 rounded-full bg-plum-dark text-white flex items-center justify-center shrink-0 border-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-plum transition-colors shadow-xs"
             >
               <Send className="w-3.5 h-3.5" />

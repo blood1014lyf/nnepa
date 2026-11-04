@@ -2495,7 +2495,7 @@ export function processConciergeMessage(
   if (classifiedIntent === 'greeting') {
     const greetingText = profile.preferredName
       ? `Hello, ${profile.preferredName}! What can I help you find today?`
-      : 'Hello! I’m NNEPA, your personal shopping assistant. It’s lovely to have you here. What would you like me to call you?';
+      : 'Hello! I’m Foriwaa, your personal shopping assistant. It’s lovely to have you here. What would you like me to call you?';
 
     const greetingOptions = profile.preferredName
       ? [
