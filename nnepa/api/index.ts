@@ -265,6 +265,50 @@ async function updateOrderStatus(
   return store.orders[orderIndex];
 }
 
+async function batchSyncOrders(incomingOrders: StoredOrder[]): Promise<StoredOrder[]> {
+  const store = readOrderStorage();
+  let modified = false;
+
+  for (const inc of incomingOrders) {
+    if (!inc) continue;
+    const existingIndex = store.orders.findIndex(
+      (o) => (inc.publicId && o.publicId === inc.publicId) || (inc.orderNumber && o.orderNumber === inc.orderNumber)
+    );
+    if (existingIndex === -1) {
+      const orderNumber = inc.orderNumber || store.nextOrderNumber++;
+      const publicId = inc.publicId || `ord_${crypto.randomBytes(8).toString('hex')}`;
+      store.orders.unshift({
+        orderNumber,
+        publicId,
+        customer: inc.customer || { name: 'Customer', phone: '', address: '' },
+        items: inc.items || [],
+        subtotal: inc.subtotal || 0,
+        deliveryFee: inc.deliveryFee || 0,
+        total: inc.total || 0,
+        status: inc.status || 'new',
+        createdAt: inc.createdAt || new Date().toISOString(),
+        updatedAt: inc.updatedAt || new Date().toISOString()
+      });
+      if (orderNumber >= store.nextOrderNumber) {
+        store.nextOrderNumber = orderNumber + 1;
+      }
+      modified = true;
+    } else {
+      if (inc.status && inc.status !== store.orders[existingIndex].status) {
+        store.orders[existingIndex].status = inc.status;
+        store.orders[existingIndex].updatedAt = inc.updatedAt || new Date().toISOString();
+        modified = true;
+      }
+    }
+  }
+
+  if (modified) {
+    store.orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    writeOrderStorage(store);
+  }
+  return store.orders;
+}
+
 // Admin Auth Configuration
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
@@ -530,17 +574,23 @@ app.post(['/api/orders', '/orders'], async (req, res) => {
     return;
   }
 
-  const { name, phone, address, notes, items, idempotencyKey } = req.body || {};
+  const customerObj = req.body?.customer && typeof req.body.customer === 'object' ? req.body.customer : {};
+  const name = String(req.body?.name || customerObj.name || '').trim();
+  const phone = String(req.body?.phone || customerObj.phone || '').trim();
+  const address = String(req.body?.address || customerObj.address || '').trim();
+  const notes = String(req.body?.notes || customerObj.notes || '').trim();
+  const items = req.body?.items;
+  const idempotencyKey = req.body?.idempotencyKey;
 
-  if (!name || typeof name !== 'string' || name.trim().length < 2) {
+  if (!name || name.length < 2) {
     res.status(400).json({ error: 'Customer full name is required.' });
     return;
   }
-  if (!phone || typeof phone !== 'string' || phone.trim().length < 7) {
+  if (!phone || phone.length < 7) {
     res.status(400).json({ error: 'Valid customer phone / WhatsApp number is required.' });
     return;
   }
-  if (!address || typeof address !== 'string' || address.trim().length < 5) {
+  if (!address || address.length < 5) {
     res.status(400).json({ error: 'Detailed delivery address in Ghana or international destination is required.' });
     return;
   }
@@ -578,7 +628,16 @@ app.post(['/api/orders', '/orders'], async (req, res) => {
       res.status(400).json({ error: 'Invalid product entry in cart.' });
       return;
     }
-    const priceInfo = lookupProductPrice(String(it.productId));
+    let priceInfo = lookupProductPrice(String(it.productId));
+    if (!priceInfo && (it.unitPrice || it.price)) {
+      const fallbackPrice = Number(it.unitPrice || it.price);
+      if (!isNaN(fallbackPrice) && fallbackPrice > 0) {
+        priceInfo = {
+          name: String(it.name || 'Bespoke Garment'),
+          price: fallbackPrice
+        };
+      }
+    }
     if (!priceInfo) {
       res.status(400).json({ error: `Garment (${it.productId}) is unrecognized or discontinued.` });
       return;
@@ -665,6 +724,17 @@ app.get(['/api/admin/orders', '/admin/orders'], requireAdmin, async (req, res) =
     res.json({ success: true, orders });
   } catch (err: any) {
     res.status(500).json({ error: `Failed to retrieve orders: ${err.message}` });
+  }
+});
+
+// Admin batch sync orders from client storage into server
+app.post(['/api/admin/orders/sync', '/admin/orders/sync'], requireAdmin, async (req, res) => {
+  try {
+    const incoming = Array.isArray(req.body?.orders) ? req.body.orders : [];
+    const merged = await batchSyncOrders(incoming);
+    res.json({ success: true, orders: merged });
+  } catch (err: any) {
+    res.status(500).json({ error: `Failed to sync orders: ${err.message}` });
   }
 });
 

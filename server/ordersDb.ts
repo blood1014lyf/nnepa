@@ -162,3 +162,47 @@ export async function updateOrderStatus(
 
   return store.orders[orderIndex];
 }
+
+export async function batchSyncOrders(incomingOrders: StoredOrder[]): Promise<StoredOrder[]> {
+  const store = readStorage();
+  let modified = false;
+
+  for (const inc of incomingOrders) {
+    if (!inc) continue;
+    const existingIndex = store.orders.findIndex(
+      (o) => (inc.publicId && o.publicId === inc.publicId) || (inc.orderNumber && o.orderNumber === inc.orderNumber)
+    );
+    if (existingIndex === -1) {
+      const orderNumber = inc.orderNumber || store.nextOrderNumber++;
+      const publicId = inc.publicId || `ord_${crypto.randomBytes(8).toString('hex')}`;
+      store.orders.unshift({
+        orderNumber,
+        publicId,
+        customer: inc.customer || { name: 'Customer', phone: '', address: '' },
+        items: inc.items || [],
+        subtotal: inc.subtotal || 0,
+        deliveryFee: inc.deliveryFee || 0,
+        total: inc.total || 0,
+        status: inc.status || 'new',
+        createdAt: inc.createdAt || new Date().toISOString(),
+        updatedAt: inc.updatedAt || new Date().toISOString()
+      });
+      if (orderNumber >= store.nextOrderNumber) {
+        store.nextOrderNumber = orderNumber + 1;
+      }
+      modified = true;
+    } else {
+      if (inc.status && inc.status !== store.orders[existingIndex].status) {
+        store.orders[existingIndex].status = inc.status;
+        store.orders[existingIndex].updatedAt = inc.updatedAt || new Date().toISOString();
+        modified = true;
+      }
+    }
+  }
+
+  if (modified) {
+    store.orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    writeStorage(store);
+  }
+  return store.orders;
+}

@@ -19,6 +19,7 @@ import {
   getOrderByPublicId,
   listAllOrders,
   updateOrderStatus,
+  batchSyncOrders,
   StoredOrder,
   OrderItem,
   OrderStatus
@@ -595,17 +596,13 @@ app.post('/api/orders', async (req, res) => {
     return;
   }
 
-  const { customer, items, idempotencyKey } = req.body || {};
-
-  // Validate customer fields
-  if (!customer || typeof customer !== 'object') {
-    res.status(400).json({ error: 'Customer information is required.' });
-    return;
-  }
-  const name = String(customer.name || '').trim();
-  const phone = String(customer.phone || '').trim();
-  const address = String(customer.address || '').trim();
-  const notes = customer.notes ? String(customer.notes).trim() : '';
+  const customerObj = req.body?.customer && typeof req.body.customer === 'object' ? req.body.customer : {};
+  const name = String(req.body?.name || customerObj.name || '').trim();
+  const phone = String(req.body?.phone || customerObj.phone || '').trim();
+  const address = String(req.body?.address || customerObj.address || '').trim();
+  const notes = String(req.body?.notes || customerObj.notes || '').trim();
+  const items = req.body?.items;
+  const idempotencyKey = req.body?.idempotencyKey;
 
   if (!name || name.length < 2) {
     res.status(400).json({ error: 'Please enter a valid full name.' });
@@ -657,7 +654,16 @@ app.post('/api/orders', async (req, res) => {
       res.status(400).json({ error: 'Invalid product entry in cart.' });
       return;
     }
-    const priceInfo = lookupProductPrice(String(it.productId));
+    let priceInfo = lookupProductPrice(String(it.productId));
+    if (!priceInfo && (it.unitPrice || it.price)) {
+      const fallbackPrice = Number(it.unitPrice || it.price);
+      if (!isNaN(fallbackPrice) && fallbackPrice > 0) {
+        priceInfo = {
+          name: String(it.name || 'Bespoke Garment'),
+          price: fallbackPrice
+        };
+      }
+    }
     if (!priceInfo) {
       res.status(400).json({ error: `Garment (${it.productId}) is unrecognized or discontinued.` });
       return;
@@ -745,6 +751,17 @@ app.get('/api/admin/orders', requireAdmin, async (req, res) => {
     res.json({ success: true, orders });
   } catch (err: any) {
     res.status(500).json({ error: `Failed to retrieve orders: ${err.message}` });
+  }
+});
+
+// Admin batch sync orders from client storage into server
+app.post('/api/admin/orders/sync', requireAdmin, async (req, res) => {
+  try {
+    const incoming = Array.isArray(req.body?.orders) ? req.body.orders : [];
+    const merged = await batchSyncOrders(incoming);
+    res.json({ success: true, orders: merged });
+  } catch (err: any) {
+    res.status(500).json({ error: `Failed to sync orders: ${err.message}` });
   }
 });
 

@@ -151,6 +151,10 @@ export default function CheckoutView({
         headers: { 'Content-Type': 'application/json' },
         keepalive: true,
         body: JSON.stringify({
+          name: formData.fullName.trim(),
+          phone: formData.phone.trim(),
+          address: fullAddress,
+          notes: formData.deliveryNotes?.trim() || '',
           customer: {
             name: formData.fullName.trim(),
             phone: formData.phone.trim(),
@@ -159,16 +163,29 @@ export default function CheckoutView({
           },
           items: cartItems.map((it) => ({
             productId: it.product.id,
+            name: it.product.name,
             size: it.size,
-            quantity: it.quantity
+            quantity: it.quantity,
+            unitPrice: it.product.price
           }))
         })
       })
         .then(async (res) => {
           if (res.ok) {
             const data = await res.json();
-            if (data?.orderNumber) {
-              setCompletedOrder((prev) => (prev ? { ...prev, id: `#${data.orderNumber}` } : prev));
+            const confirmedId = data?.publicId || (data?.orderNumber ? `#${data.orderNumber}` : undefined);
+            if (confirmedId) {
+              setCompletedOrder((prev) => (prev ? { ...prev, id: confirmedId } : prev));
+              try {
+                const prevSaved = localStorage.getItem('nnepa_foriwaa_orders');
+                const parsed = prevSaved ? JSON.parse(prevSaved) : [];
+                const updatedList = parsed.map((ord: any) =>
+                  ord.id === tempOrderNumber
+                    ? { ...ord, id: confirmedId, publicId: data.publicId, orderNumber: data.orderNumber }
+                    : ord
+                );
+                localStorage.setItem('nnepa_foriwaa_orders', JSON.stringify(updatedList));
+              } catch {}
             }
           }
         })

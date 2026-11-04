@@ -181,9 +181,87 @@ export default function AdminDashboardView({
     return adminToken || localStorage.getItem('nnepa_foriwaa_token') || '';
   };
 
+  const normalizeLocalOrder = (raw: any, index: number): StoredOrder => {
+    const orderNum =
+      typeof raw.orderNumber === 'number'
+        ? raw.orderNumber
+        : parseInt(String(raw.id || '').replace(/\D/g, ''), 10) || 1000 + index;
+
+    const publicId = raw.publicId || raw.id || `ord_local_${orderNum}`;
+    const customerName = raw.customer?.name || raw.customer?.fullName || 'Valued Guest';
+    const customerPhone = raw.customer?.phone || '';
+    const customerAddress =
+      [raw.customer?.address, raw.customer?.city, raw.customer?.region].filter(Boolean).join(', ') ||
+      raw.customer?.address ||
+      'Ghana';
+    const notes = raw.customer?.notes || raw.customer?.deliveryNotes || '';
+
+    const items: OrderItem[] = Array.isArray(raw.items)
+      ? raw.items.map((it: any) => {
+          const prod = it.product || {};
+          const name = it.name || prod.name || 'Bespoke Garment';
+          const unitPrice = Number(it.unitPrice || prod.price || it.price || 0);
+          const quantity = Number(it.quantity || 1);
+          return {
+            productId: String(it.productId || prod.id || 'bespoke'),
+            name,
+            size: it.size || prod.size,
+            quantity,
+            unitPrice,
+            lineTotal: unitPrice * quantity
+          };
+        })
+      : [];
+
+    const subtotal = Number(raw.subtotal || items.reduce((sum, i) => sum + i.lineTotal, 0));
+    const deliveryFee = Number(raw.deliveryFee || 0);
+    const total = Number(raw.total || subtotal + deliveryFee);
+
+    let status: OrderStatus = 'new';
+    if (raw.status === 'confirmed' || raw.status === 'shipped' || raw.status === 'cancelled') {
+      status = raw.status;
+    } else if (raw.deliveryStatus === 'dispatched' || raw.deliveryStatus === 'delivered') {
+      status = 'shipped';
+    } else if (raw.deliveryStatus === 'tailoring') {
+      status = 'confirmed';
+    }
+
+    return {
+      orderNumber: orderNum,
+      publicId,
+      customer: {
+        name: customerName,
+        phone: customerPhone,
+        address: customerAddress,
+        notes
+      },
+      items,
+      subtotal,
+      deliveryFee,
+      total,
+      status,
+      createdAt: raw.createdAt || new Date().toISOString(),
+      updatedAt: raw.updatedAt || raw.createdAt || new Date().toISOString()
+    };
+  };
+
   // ═══ FETCH ORDERS ═══
   const fetchOrders = async () => {
     setOrdersLoading(true);
+    let localList: StoredOrder[] = [];
+    try {
+      const cached = localStorage.getItem('nnepa_foriwaa_orders');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed)) {
+          localList = parsed.map(normalizeLocalOrder);
+          if (localList.length > 0) {
+            setOrders(localList);
+          }
+        }
+      }
+    } catch {}
+
     try {
       const token = getEffectiveToken();
       const res = await fetch('/api/admin/orders', {
@@ -191,14 +269,49 @@ export default function AdminDashboardView({
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.orders && Array.isArray(data.orders)) {
-          setOrders(data.orders);
+        const serverOrders: StoredOrder[] = Array.isArray(data.orders) ? data.orders : [];
+
+        const orderMap = new Map<string, StoredOrder>();
+        for (const ord of localList) {
+          const key = ord.publicId || String(ord.orderNumber);
+          orderMap.set(key, ord);
         }
+        for (const ord of serverOrders) {
+          const key = ord.publicId || String(ord.orderNumber);
+          orderMap.set(key, ord);
+        }
+
+        const mergedOrders = Array.from(orderMap.values()).sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+
+        setOrders(mergedOrders);
+
+        // Sync local orders to server if there are any missing on server
+        const unsynced = localList.filter(
+          (l) => !serverOrders.some((s) => s.publicId === l.publicId || s.orderNumber === l.orderNumber)
+        );
+        if (unsynced.length > 0 && token) {
+          fetch('/api/admin/orders/sync', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ orders: unsynced })
+          }).catch(() => {});
+        }
+      } else if (localList.length > 0) {
+        setOrders(localList);
       } else {
         showToast('Could not load orders from server.');
       }
     } catch {
-      showToast('Network error loading orders.');
+      if (localList.length > 0) {
+        setOrders(localList);
+      } else {
+        showToast('Network error loading orders.');
+      }
     } finally {
       setOrdersLoading(false);
     }
@@ -262,6 +375,37 @@ export default function AdminDashboardView({
   // ═══ ORDER STATUS CHANGE ═══
   const handleStatusChange = async (order: StoredOrder, newStatus: OrderStatus) => {
     setUpdatingOrderId(order.publicId);
+
+    // Optimistically update in state & localStorage
+    setOrders((prev) =>
+      prev.map((o) => (o.publicId === order.publicId ? { ...o, status: newStatus } : o))
+    );
+    try {
+      const raw = localStorage.getItem('nnepa_foriwaa_orders');
+      if (raw) {
+        const list = JSON.parse(raw);
+        if (Array.isArray(list)) {
+          const updated = list.map((o: any) =>
+            o.publicId === order.publicId ||
+            o.id === order.publicId ||
+            String(o.orderNumber) === String(order.orderNumber)
+              ? {
+                  ...o,
+                  status: newStatus,
+                  deliveryStatus:
+                    newStatus === 'shipped'
+                      ? 'dispatched'
+                      : newStatus === 'confirmed'
+                        ? 'tailoring'
+                        : o.deliveryStatus
+                }
+              : o
+          );
+          localStorage.setItem('nnepa_foriwaa_orders', JSON.stringify(updated));
+        }
+      }
+    } catch {}
+
     try {
       const token = getEffectiveToken();
       const res = await fetch(`/api/admin/orders/${order.publicId}/status`, {
@@ -274,15 +418,12 @@ export default function AdminDashboardView({
       });
 
       if (res.ok) {
-        setOrders((prev) =>
-          prev.map((o) => (o.publicId === order.publicId ? { ...o, status: newStatus } : o))
-        );
         showToast(`Order #${order.orderNumber} status changed to ${newStatus}`);
       } else {
-        showToast('Failed to update order status');
+        showToast(`Order #${order.orderNumber} updated locally`);
       }
     } catch {
-      showToast('Network error updating status');
+      showToast(`Order #${order.orderNumber} updated locally`);
     } finally {
       setUpdatingOrderId(null);
     }
