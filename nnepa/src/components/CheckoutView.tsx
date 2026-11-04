@@ -7,17 +7,12 @@ import React, { useState } from 'react';
 import {
   ArrowLeft,
   CheckCircle,
-  CreditCard,
-  Phone,
   ShieldCheck,
   ShoppingBag,
   Truck,
-  MessageSquare,
-  Sparkles,
-  Lock,
   Tag
 } from 'lucide-react';
-import { CartItem, Order, OrderCustomerInfo, PaymentMethod } from '../types.ts';
+import { CartItem, Order, OrderCustomerInfo } from '../types.ts';
 import { WhatsAppIcon } from './WhatsAppIcon.tsx';
 
 interface CheckoutViewProps {
@@ -29,6 +24,7 @@ interface CheckoutViewProps {
 
 const FREE_SHIPPING_THRESHOLD = 1000;
 const STANDARD_SHIPPING_FEE = 45;
+const BOUTIQUE_WHATSAPP_NUMBER = '233538795669';
 
 export default function CheckoutView({
   cartItems,
@@ -46,9 +42,6 @@ export default function CheckoutView({
     deliveryNotes: '',
   });
 
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('momo');
-  const [momoNetwork, setMomoNetwork] = useState<'mtn' | 'telecel' | 'at'>('mtn');
-  const [momoNumber, setMomoNumber] = useState('');
   const [promoCode, setPromoCode] = useState('');
   const [discountPercent, setDiscountPercent] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -85,11 +78,58 @@ export default function CheckoutView({
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Construct complete WhatsApp message with all contact details, destination, and garments
+  const buildWhatsAppOrderUrl = (orderRef?: string) => {
+    const fullAddress = [
+      formData.address.trim(),
+      formData.city?.trim(),
+      formData.region?.trim()
+    ].filter(Boolean).join(', ');
+
+    const lines = [
+      `*NNEPA FORIWAA BESPOKE ORDER${orderRef ? ` (${orderRef})` : ''}*`,
+      ``,
+      `*Customer Information:*`,
+      `• Name: ${formData.fullName.trim()}`,
+      `• Phone: ${formData.phone.trim()}`,
+      formData.email.trim() ? `• Email: ${formData.email.trim()}` : '',
+      `• Delivery Address: ${fullAddress}`,
+      formData.deliveryNotes?.trim() ? `• Fitting / Tailoring Notes: ${formData.deliveryNotes.trim()}` : '',
+      ``,
+      `*Garments Selected:*`,
+      ...cartItems.map(
+        (it) =>
+          `• ${it.product.name} (Size: ${it.size || 'M'}) x${it.quantity} — GH₵ ${(
+            it.product.price * it.quantity
+          ).toLocaleString()}`
+      ),
+      ``,
+      `• Subtotal: GH₵ ${subtotal.toLocaleString()}`,
+      discountAmount > 0
+        ? `• Promo Discount (${discountPercent}%): -GH₵ ${discountAmount.toLocaleString()} (${promoCode.toUpperCase()})`
+        : '',
+      `• Delivery: ${isFreeShipping ? 'Complimentary (Accra)' : `GH₵ ${deliveryFee}`}`,
+      `*Total Payable:* GH₵ ${total.toLocaleString()}`,
+      ``,
+      `Please confirm my tailoring measurements and dispatch timeline. Medasi!`
+    ].filter(Boolean);
+
+    return `https://wa.me/${BOUTIQUE_WHATSAPP_NUMBER}?text=${encodeURIComponent(lines.join('\n'))}`;
+  };
+
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.fullName.trim() || !formData.phone.trim() || !formData.address.trim()) {
-      showToast('Please fill in your name, delivery address, and phone number.');
+    if (!formData.fullName.trim()) {
+      showToast('Please enter your full name.');
+      return;
+    }
+    if (!formData.phone.trim()) {
+      showToast('Please enter your phone number.');
+      return;
+    }
+    if (!formData.address.trim()) {
+      showToast('Please enter your delivery address / landmark.');
       return;
     }
 
@@ -100,16 +140,37 @@ export default function CheckoutView({
 
     setIsSubmitting(true);
 
-    try {
-      const fullAddress = [
-        formData.address.trim(),
-        formData.city?.trim(),
-        formData.region?.trim()
-      ].filter(Boolean).join(', ');
+    const tempOrderNumber = `#NNEPA-${Math.floor(1000 + Math.random() * 9000)}`;
+    const fullAddress = [
+      formData.address.trim(),
+      formData.city?.trim(),
+      formData.region?.trim()
+    ].filter(Boolean).join(', ');
 
-      const res = await fetch('/api/orders', {
+    const whatsappUrl = buildWhatsAppOrderUrl(tempOrderNumber);
+
+    const newOrder: Order = {
+      id: tempOrderNumber,
+      createdAt: new Date().toISOString(),
+      items: [...cartItems],
+      subtotal,
+      deliveryFee,
+      total,
+      customer: { ...formData },
+      paymentMethod: 'whatsapp',
+      paymentStatus: 'pending',
+      deliveryStatus: 'order_received'
+    };
+
+    setCompletedOrder(newOrder);
+    onOrderCompleted(newOrder);
+
+    // Persist order asynchronously in database for store records & admin panel
+    try {
+      fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        keepalive: true,
         body: JSON.stringify({
           customer: {
             name: formData.fullName.trim(),
@@ -123,87 +184,45 @@ export default function CheckoutView({
             quantity: it.quantity
           }))
         })
-      });
+      })
+        .then(async (res) => {
+          if (res.ok) {
+            const data = await res.json();
+            if (data?.orderNumber) {
+              setCompletedOrder((prev) => (prev ? { ...prev, id: `#${data.orderNumber}` } : prev));
+            }
+          }
+        })
+        .catch(() => {});
+    } catch {}
 
-      const data = await res.json();
+    showToast('Directing you to WhatsApp to complete your order...');
 
-      if (!res.ok) {
-        showToast(data.error || 'Failed to record order. Please try again.');
-        setIsSubmitting(false);
-        return;
-      }
-
-      const serverOrder = data.order;
-      const newOrder: Order = {
-        id: `#${data.orderNumber}`,
-        createdAt: serverOrder.createdAt,
-        items: [...cartItems],
-        subtotal: serverOrder.subtotal,
-        deliveryFee: serverOrder.deliveryFee,
-        total: serverOrder.total,
-        customer: { ...formData },
-        paymentMethod: 'whatsapp',
-        paymentStatus: 'pending',
-        deliveryStatus: 'order_received'
-      };
-
-      setCompletedOrder(newOrder);
-      onOrderCompleted(newOrder);
-
-      // Open WhatsApp automatically with prefilled accurate order summary
-      if (data.whatsappUrl) {
-        window.open(data.whatsappUrl, '_blank');
-      }
-
-      showToast(`✨ Order #${data.orderNumber} received!`);
-    } catch (err: any) {
-      showToast('Connection error. Please try again or reach out on WhatsApp.');
-      setIsSubmitting(false);
-    }
+    // Redirect directly to WhatsApp without popup blockers
+    setTimeout(() => {
+      window.location.href = whatsappUrl;
+    }, 300);
   };
 
-  // Pre-filled accurate WhatsApp notification message
-  const createWhatsAppUrl = (order: Order) => {
-    const lines = [
-      `*NNEPA FORIWAA LUXURY ORDER ${order.id}*`,
-      ``,
-      `*Customer Details:*`,
-      `• Name: ${order.customer.fullName}`,
-      `• Phone: ${order.customer.phone}`,
-      `• Delivery Address: ${order.customer.address}${order.customer.city ? `, ${order.customer.city}` : ''}`,
-      order.customer.deliveryNotes ? `• Notes: ${order.customer.deliveryNotes}` : '',
-      ``,
-      `*Items Ordered:*`,
-      ...order.items.map(
-        (it) => `• ${it.product.name} (Size: ${it.size || 'M'}) x${it.quantity} — GH₵ ${(it.product.price * it.quantity).toLocaleString()}`
-      ),
-      ``,
-      `*Total:* GH₵ ${order.total.toLocaleString()}`,
-      ``,
-      `Please confirm tailoring measurements and dispatch timeline. Thank you!`
-    ].filter(Boolean);
-
-    return `https://wa.me/233538795669?text=${encodeURIComponent(lines.join('\n'))}`;
-  };
-
-  // ORDER CONFIRMATION VIEW
+  // ═══ ORDER CONFIRMATION VIEW ═══
   if (completedOrder) {
+    const finalWhatsAppUrl = buildWhatsAppOrderUrl(completedOrder.id);
     return (
       <div className="pt-28 pb-24 bg-pearl min-h-[85vh] animate-fade-in">
         <div className="max-w-3xl mx-auto px-6">
           <div className="bg-white rounded-lg shadow-xl border border-lilac/25 p-8 md:p-12 text-center">
-            <div className="w-16 h-16 bg-gradient-to-br from-lavender to-mauve-deep text-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-md animate-bounce-once">
+            <div className="w-16 h-16 bg-emerald-600 text-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-md animate-bounce-once">
               <CheckCircle className="w-9 h-9" />
             </div>
 
             <span className="text-[0.62rem] font-bold tracking-[0.3em] uppercase text-mauve-deep">
-              Order Confirmed & Logged
+              Order Registered · Complete on WhatsApp
             </span>
             <h1 className="font-serif text-3xl md:text-4xl text-plum-dark mt-2 font-light">
-              Medasi — Your Order is Placed
+              Medasi — Your Order is Prepared
             </h1>
             <p className="text-sm text-text-muted mt-3 max-w-md mx-auto leading-relaxed">
-              Order <strong className="text-plum-dark font-mono font-semibold">{completedOrder.id}</strong> has been registered with our Accra atelier.
+              Order <strong className="text-plum-dark font-mono font-semibold">{completedOrder.id}</strong> has been prepared for our Accra atelier.
             </p>
 
             {/* Receipt Summary Card */}
@@ -213,11 +232,15 @@ export default function CheckoutView({
                   <div className="text-[0.58rem] font-bold tracking-[0.2em] uppercase text-text-light">Client Delivery</div>
                   <div className="text-sm font-semibold text-plum-dark mt-0.5">{completedOrder.customer.fullName}</div>
                   <div className="text-xs text-text-muted">{completedOrder.customer.address}, {completedOrder.customer.city}</div>
+                  <div className="text-xs text-text-muted mt-0.5">{completedOrder.customer.phone}</div>
                 </div>
                 <div className="text-right">
                   <div className="text-[0.58rem] font-bold tracking-[0.2em] uppercase text-text-light">Grand Total</div>
                   <div className="text-xl font-serif font-bold text-lavender">GH₵ {completedOrder.total.toLocaleString()}</div>
-                  <div className="text-[0.6rem] text-emerald-600 font-semibold uppercase">{completedOrder.paymentMethod}</div>
+                  <div className="text-[0.6rem] text-emerald-600 font-semibold uppercase flex items-center justify-end gap-1 mt-0.5">
+                    <WhatsAppIcon className="w-3 h-3 fill-emerald-600" />
+                    Via WhatsApp
+                  </div>
                 </div>
               </div>
 
@@ -238,6 +261,16 @@ export default function CheckoutView({
 
             {/* Order Confirmation Actions */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <a
+                href={finalWhatsAppUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-[3px] text-xs font-bold tracking-[0.2em] uppercase transition-all cursor-pointer no-underline shadow-md"
+              >
+                <WhatsAppIcon className="w-4 h-4 fill-white" />
+                <span>Open in WhatsApp (+233 53 879 5669)</span>
+              </a>
+
               <button
                 type="button"
                 onClick={onBackToShop}
@@ -252,7 +285,7 @@ export default function CheckoutView({
     );
   }
 
-  // EMPTY CART CHECKOUT GUARD
+  // ═══ EMPTY CART CHECKOUT GUARD ═══
   if (cartItems.length === 0) {
     return (
       <div className="pt-28 pb-20 bg-pearl min-h-[80vh] flex items-center justify-center">
@@ -288,7 +321,7 @@ export default function CheckoutView({
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-          {/* ═══ LEFT FORM: CUSTOMER & PAYMENT (7 cols) ═══ */}
+          {/* ═══ LEFT FORM: CUSTOMER & WHATSAPP CHECKOUT (7 cols) ═══ */}
           <div className="lg:col-span-7 flex flex-col gap-8">
             <form onSubmit={handleSubmitOrder} className="flex flex-col gap-8">
               
@@ -320,22 +353,7 @@ export default function CheckoutView({
 
                   <div>
                     <label className="text-[0.62rem] font-bold tracking-[0.18em] uppercase text-text-muted block mb-1.5">
-                      Email Address *
-                    </label>
-                    <input
-                      type="email"
-                      name="email"
-                      required
-                      placeholder="e.g. yaa@example.com"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 bg-pearl/60 border border-lilac/30 rounded-[3px] text-sm text-plum-dark outline-none focus:border-lavender focus:bg-white transition-all"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-[0.62rem] font-bold tracking-[0.18em] uppercase text-text-muted block mb-1.5">
-                      Phone Number *
+                      Phone Number (WhatsApp) *
                     </label>
                     <input
                       type="tel"
@@ -343,6 +361,20 @@ export default function CheckoutView({
                       required
                       placeholder="+233 50 123 4567"
                       value={formData.phone}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-pearl/60 border border-lilac/30 rounded-[3px] text-sm text-plum-dark outline-none focus:border-lavender focus:bg-white transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[0.62rem] font-bold tracking-[0.18em] uppercase text-text-muted block mb-1.5">
+                      Email Address (Optional)
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      placeholder="e.g. yaa@example.com"
+                      value={formData.email}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 bg-pearl/60 border border-lilac/30 rounded-[3px] text-sm text-plum-dark outline-none focus:border-lavender focus:bg-white transition-all"
                     />
@@ -425,7 +457,7 @@ export default function CheckoutView({
                     <textarea
                       name="deliveryNotes"
                       rows={2}
-                      placeholder="e.g. Please hem gown 2 inches shorter, or gate code #492"
+                      placeholder="e.g. Please hem gown 2 inches shorter, or leave at front gate"
                       value={formData.deliveryNotes}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 bg-pearl/60 border border-lilac/30 rounded-[3px] text-sm text-plum-dark outline-none focus:border-lavender focus:bg-white transition-all resize-none"
@@ -434,32 +466,33 @@ export default function CheckoutView({
                 </div>
               </div>
 
-              {/* Step 3: Order Confirmation */}
+              {/* Step 3: Checkout via WhatsApp */}
               <div className="bg-white p-6 sm:p-8 rounded-lg border border-lilac/25 shadow-sm">
                 <div className="flex items-center gap-2 text-[0.62rem] font-bold tracking-[0.25em] uppercase text-mauve-deep mb-2">
-                  <span className="w-5 h-5 rounded-full bg-lavender text-white flex items-center justify-center text-[0.6rem]">3</span>
-                  Order Confirmation
+                  <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[0.6rem]">3</span>
+                  Checkout via WhatsApp
                 </div>
                 <h3 className="font-serif text-2xl font-light text-plum-dark mb-3">
-                  Confirm & Place Order
+                  Place Order via WhatsApp
                 </h3>
                 <p className="text-xs text-text-muted leading-relaxed mb-6">
-                  No payment is required right now. Placing your order registers your garment specifications directly with our boutique for fitting and delivery scheduling.
+                  All Nnepa Foriwaa orders are completed bespoke through WhatsApp. Submitting this form sends your delivery destination, tailoring notes, and chosen garments directly to our boutique concierge (+233 53 879 5669) to confirm measurements and finalize delivery.
                 </p>
 
                 {/* Submission CTA */}
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-4 bg-gradient-to-br from-lavender via-mauve to-mauve-deep text-white text-xs font-bold tracking-[0.22em] uppercase rounded-[3px] shadow-[0_8px_24px_rgba(155,132,204,0.35)] hover:opacity-95 active:scale-[0.99] transition-all cursor-pointer border-none flex items-center justify-center gap-2"
+                  className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white text-xs font-bold tracking-[0.22em] uppercase rounded-[3px] shadow-[0_8px_24px_rgba(16,185,129,0.3)] transition-all cursor-pointer border-none flex items-center justify-center gap-2.5"
                 >
-                  {isSubmitting ? (
-                    'Submitting Order...'
-                  ) : (
-                    <>
-                      Confirm & Place Order · GH₵ {total.toLocaleString()}
-                    </>
-                  )}
+                  <WhatsAppIcon className="w-4 h-4 fill-white shrink-0" />
+                  <span>
+                    {isSubmitting ? (
+                      'Opening WhatsApp...'
+                    ) : (
+                      `Place Order via WhatsApp · GH₵ ${total.toLocaleString()}`
+                    )}
+                  </span>
                 </button>
               </div>
 
@@ -531,7 +564,7 @@ export default function CheckoutView({
 
                 {discountAmount > 0 && (
                   <div className="flex justify-between text-emerald-600 font-semibold">
-                    <span>Promo Discount ({discountPercent}%)</span>
+                    <span>Promo Discount ({discountPercent}%): {promoCode.toUpperCase()}</span>
                     <span>-GH₵ {discountAmount.toLocaleString()}</span>
                   </div>
                 )}
