@@ -764,6 +764,11 @@ export function classifyCustomerIntent(
     return 'order_assistance';
   }
 
+  // Stock & Availability inquiry (e.g. "is this in stock", "out of stock", "check stock")
+  if (matchesAny(norm, SYNONYM_DICTIONARIES.stockInquiry)) {
+    return 'stock_availability_inquiry';
+  }
+
   // 9. Specific size availability inquiry (e.g. "Do you have this in medium?")
   if (matchesAny(norm, SYNONYM_DICTIONARIES.sizeAvailable)) {
     return 'size_availability';
@@ -1586,9 +1591,11 @@ export function processConciergeMessage(
       // 1. Stock validation
       if (prodKnowledge.product.inStock === false) {
         return {
-          text: `The **${prodKnowledge.name}** is currently out of stock. You can contact our store on WhatsApp to check availability, or explore other pieces from the collection.`,
+          text:
+            `The **${prodKnowledge.name}** is currently out of stock.\n\n` +
+            `Please check back soon for restocks, or speak directly with our stylist on WhatsApp to commission a custom outfit tailored to your measurements.`,
           options: [
-            { label: 'Chat on WhatsApp', action: 'contact_whatsapp' },
+            { label: 'Speak to Stylist for Custom Outfit', action: 'contact_whatsapp' },
             { label: 'Browse Collections', action: 'filter_all' }
           ],
           products: catalogue.slice(0, 3),
@@ -1752,6 +1759,21 @@ export function processConciergeMessage(
 
   // ─── INTENT: SIZE AVAILABILITY ───────────────────────────────────────────
   if (classifiedIntent === 'size_availability') {
+    if (prodKnowledge && prodKnowledge.product.inStock === false) {
+      return {
+        text:
+          `The **${prodKnowledge.name}** is currently **out of stock**.\n\n` +
+          `Please check back soon for restocks, or speak directly with our stylist on WhatsApp to commission a custom outfit tailored to your measurements.`,
+        options: [
+          { label: 'Speak to Stylist for Custom Outfit', action: 'contact_whatsapp' },
+          { label: 'Browse Collections', action: 'filter_all' }
+        ],
+        products: catalogue.filter((p) => p.inStock !== false).slice(0, 3),
+        intent: 'product_out_of_stock',
+        updatedContext
+      };
+    }
+
     const requestedSize = parseRequestedSizeFromText(userInput, activeProd?.category ?? 'women');
 
     if (prodKnowledge) {
@@ -1825,6 +1847,60 @@ export function processConciergeMessage(
         ],
         products: catalogue.slice(0, 3),
         intent: classifiedIntent,
+        updatedContext
+      };
+    }
+  }
+
+  // ─── INTENT: STOCK & AVAILABILITY INQUIRY ────────────────────────────────
+  if (classifiedIntent === 'stock_availability_inquiry') {
+    if (prodKnowledge) {
+      if (prodKnowledge.product.inStock === false) {
+        return {
+          text:
+            `The **${prodKnowledge.name}** is currently **out of stock**.\n\n` +
+            `Please check back soon as our artisans restock pieces in limited batches, or speak directly with our boutique stylist on WhatsApp (+233 53 879 5669) to commission a **custom outfit** tailored to your measurements.`,
+          options: [
+            { label: 'Speak to Stylist for Custom Outfit', action: 'contact_whatsapp' },
+            { label: 'Browse Available Collections', action: 'filter_all' },
+            { label: 'Book Studio Fitting', action: 'book_fitting' }
+          ],
+          products: catalogue.filter((p) => p.inStock !== false).slice(0, 3),
+          intent: 'product_out_of_stock',
+          updatedContext
+        };
+      } else {
+        const sizes = prodKnowledge.availableSizes || ['S', 'M', 'L'];
+        return {
+          text:
+            `The **${prodKnowledge.name}** is **in stock** and available in sizes: **${sizes.join(', ')}**.\n\n` +
+            `Every garment is individually tailored in our Accra studio within 3 to 7 working days. If a piece or size is ever not in stock, you can check back soon or speak to our stylist for a custom outfit commission.\n\n` +
+            `Would you like to order this piece or find your size?`,
+          options: [
+            { label: `Order ${prodKnowledge.name}`, action: 'order_assistance' },
+            { label: 'Find My Best Fit', action: 'sizing_path_select' },
+            { label: 'Speak to Stylist for Custom Outfit', action: 'contact_whatsapp' }
+          ],
+          products: [prodKnowledge.product],
+          intent: 'stock_availability_inquiry',
+          updatedContext
+        };
+      }
+    } else {
+      return {
+        text:
+          `Our signature garments are tailored to order in limited artisan batches across standard sizes S through XXL.\n\n` +
+          `• **In Stock Items**: Cut and tailored within 3–7 working days upon confirmation.\n` +
+          `• **Out of Stock Items**: If a piece or size is not in stock, please check back soon for restocks, or speak directly with our stylist on WhatsApp (+233 53 879 5669) to commission a **custom outfit** tailored to your exact measurements.\n\n` +
+          `Which garment would you like to check availability for${customerName}?`,
+        options: [
+          { label: 'Browse Available Pieces', action: 'filter_all' },
+          { label: 'Speak to Stylist for Custom Outfit', action: 'contact_whatsapp' },
+          { label: 'Womenswear', action: 'filter_women' },
+          { label: 'Menswear', action: 'filter_men' }
+        ],
+        products: catalogue.filter((p) => p.inStock !== false).slice(0, 3),
+        intent: 'stock_availability_inquiry',
         updatedContext
       };
     }

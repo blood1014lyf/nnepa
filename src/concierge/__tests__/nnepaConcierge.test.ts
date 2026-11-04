@@ -795,4 +795,27 @@ describe('NNEPA Shopping Concierge — Core Knowledge & Intelligence Test Suite'
     assert.ok(res.text.includes('limited edition') || res.text.includes('artisanal'), 'Explains artisanal boutique policy');
     assert.ok(res.text.includes('GH₵ 1,000'), 'Mentions complimentary delivery threshold');
   });
+
+  // 44. Stock & Availability — Alert out of stock, check back, or speak to stylist
+  test('Scenario 44: Customer asks about stock -> alerts availability, check back, or stylist custom outfit', () => {
+    const oosProduct: Product = {
+      ...gownProduct,
+      id: 'oos_test_garment',
+      inStock: false
+    };
+
+    let oosCtx = createInitialConciergeContext(oosProduct);
+    const oosRes = processConciergeMessage('Is this dress in stock?', oosCtx, CATALOGUE);
+    assert.equal(oosRes.intent, 'product_out_of_stock');
+    assert.ok(oosRes.text.includes('out of stock'), 'Alerts that piece is out of stock');
+    assert.ok(oosRes.text.includes('check back'), 'Advises customer to check back soon');
+    assert.ok(oosRes.text.includes('stylist') && oosRes.text.includes('custom outfit'), 'Advises speaking to stylist for custom outfit');
+    assert.ok(oosRes.options.some((o) => o.action === 'contact_whatsapp'), 'Provides WhatsApp stylist option');
+
+    let inStockCtx = createInitialConciergeContext(gownProduct);
+    const inStockRes = processConciergeMessage('Do you have stock of this?', inStockCtx, CATALOGUE);
+    assert.equal(inStockRes.intent, 'stock_availability_inquiry');
+    assert.ok(inStockRes.text.includes('in stock'), 'Confirms piece is in stock');
+    assert.ok(inStockRes.text.includes('check back') || inStockRes.text.includes('custom outfit'), 'Mentions check back or custom outfit policy');
+  });
 });

@@ -89,9 +89,9 @@ export const FAQ_KNOWLEDGE_ENTRIES: FAQEntry[] = [
     category: 'availability',
     question: 'Are items in stock or made to order?',
     answer:
-      'Garments marked Available are hand-tailored upon order confirmation, typically taking 3 to 7 working days before dispatch. Pieces marked "Made to order" or "Out of stock" can often be commissioned by contacting our studio directly.',
-    keywords: ['in stock', 'out of stock', 'item available', 'availability', 'lead time', 'ready to ship'],
-    suggestedAction: { label: 'Inquire on WhatsApp', action: 'contact_whatsapp' }
+      'Garments marked Available are hand-tailored upon order confirmation, typically taking 3 to 7 working days before dispatch. When a piece or size is not in stock, please check back soon or speak directly with our stylist on WhatsApp (+233 53 879 5669) to commission a bespoke, custom outfit made to your exact measurements.',
+    keywords: ['in stock', 'out of stock', 'item available', 'availability', 'lead time', 'ready to ship', 'custom outfit', 'stylist'],
+    suggestedAction: { label: 'Speak to Stylist for Custom Outfit', action: 'contact_whatsapp' }
   },
 
   // ─── MATERIALS ───────────────────────────────────────────────────────

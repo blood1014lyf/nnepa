@@ -37,6 +37,7 @@ export const PROACTIVE_PROMPTS = {
   home: 'Hello! What can I help you find?',
   shop: 'Looking for a particular style or size?',
   productDetails: 'I can help with sizes, fabrics or ordering this piece.',
+  productOutOfStock: 'This piece is currently out of stock. You can check back soon or speak to our stylist for a custom outfit.',
   productIdle: 'Would you like some help with this item?',
   afterAddToCart: 'Added to your bag. Would you like help checking out?',
   cartOrCheckout: 'Can I help you complete your order?'
@@ -79,6 +80,25 @@ export const SYNONYM_DICTIONARIES = {
     'size xs',
     'which sizes',
     'what sizes do you have'
+  ],
+  stockInquiry: [
+    'in stock',
+    'out of stock',
+    'is this in stock',
+    'is it in stock',
+    'do you have stock',
+    'have stock',
+    'check stock',
+    'stock availability',
+    'available to order',
+    'when will this be back',
+    'restock',
+    'restocked',
+    'sold out',
+    'not in stock',
+    'custom outfit',
+    'custom piece',
+    'speak to stylist'
   ],
   sizeChart: [
     'size chart',

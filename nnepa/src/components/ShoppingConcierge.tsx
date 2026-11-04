@@ -232,19 +232,24 @@ export default function ShoppingConcierge({
 
     // 3. Product Details Page Trigger
     if (currentPage === 'details' && activeProduct && !dismissedPromptsRef.current.has(`details_${activeProduct.id}`)) {
+      const isOos = activeProduct.inStock === false;
       const t1 = setTimeout(() => {
         if (!isOpen && !dismissedPromptsRef.current.has(`details_${activeProduct.id}`)) {
           setProactivePrompt({
             id: `details_${activeProduct.id}`,
-            text: PROACTIVE_PROMPTS.productDetails,
-            actionLabel: 'Size & Fit Advice',
+            text: isOos ? PROACTIVE_PROMPTS.productOutOfStock : PROACTIVE_PROMPTS.productDetails,
+            actionLabel: isOos ? 'Speak to Stylist' : 'Size & Fit Advice',
             onAction: () => {
               setIsOpen(true);
-              handleOptionClick('size_guide');
+              if (isOos) {
+                dispatchToEngine(`Is the ${activeProduct.name} in stock?`);
+              } else {
+                handleOptionClick('size_guide');
+              }
             }
           });
         }
-      }, 10000);
+      }, isOos ? 3000 : 10000);
       addTimer(t1);
 
       // 4. Product browsing idle trigger (approximately 28 seconds without adding to cart)
@@ -601,10 +606,12 @@ export default function ShoppingConcierge({
             {
               id: 'bot_' + (Date.now() + 1),
               sender: 'concierge',
-              text: `The **${prod.name}** is currently out of stock. You can contact our store on WhatsApp to check availability, or explore other pieces from the collection.`,
+              text:
+                `The **${prod.name}** is currently out of stock.\n\n` +
+                `Please check back soon for restocks, or speak directly with our stylist on WhatsApp to commission a custom outfit tailored to your measurements.`,
               timestamp: getTimeString(),
               options: [
-                { label: 'Chat on WhatsApp', action: 'contact_whatsapp' },
+                { label: 'Speak to Stylist for Custom Outfit', action: 'contact_whatsapp' },
                 { label: 'Browse Collections', action: 'filter_all' }
               ]
             }
