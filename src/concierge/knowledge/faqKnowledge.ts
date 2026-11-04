@@ -65,11 +65,36 @@ export const FAQ_KNOWLEDGE_ENTRIES: FAQEntry[] = [
   {
     id: 'faq_size_length_guide',
     category: 'sizes',
-    question: 'How do dress and pants lengths work?',
+    question: 'How do dress, skirt, and pants lengths work at Nnepa Foriwaa?',
     answer:
-      'We publish a Standard Length Guide: mini dresses (34–36"), knee dresses (39–42"), midi dresses (45–49"), and floor gowns / boubous (55–60"). Pants feature 27–35" inseams. Complimentary hem adjustments can be requested in your checkout notes.',
-    keywords: ['length', 'hem', 'tall', 'petite', 'inches', 'inseam', 'outseam', 'short'],
+      'We use an authoritative Length Guide based on high waist to feet measurements in inches:\n\n' +
+      '• Petite (5\'0 – 5\'3): Pants/Skirts 42", Dress 56"\n' +
+      '• Petite + (5\'4 – 5\'5): Pants/Skirts 43", Dress 57"\n' +
+      '• Average (5\'6 – 5\'7): Pants/Skirts 45", Dress 58"\n' +
+      '• Average + (5\'10 – 5\'11): Pants/Skirts 47", Dress 60"\n' +
+      '• Tall (5\'8 – 5\'9): Pants/Skirts 49", Dress 63"\n' +
+      '• Very Tall (6\'+): Pants/Skirts 52", Dress 65"\n\n' +
+      'All measurements are from high waist to feet. If you prefer a longer fit or wear high heels, choose a taller category or share your exact length. Custom lengths are available upon request.',
+    keywords: ['length', 'length guide', 'height', 'tall', 'petite', 'dress length', 'pants length', 'skirt length', 'inches', 'high waist to feet', 'custom length', 'hem'],
+    suggestedAction: { label: 'View Official Length Guide', action: 'size_guide' }
+  },
+  {
+    id: 'faq_length_measurement_standard',
+    category: 'sizes',
+    question: 'How does Nnepa Foriwaa measure garment lengths?',
+    answer:
+      'All Nnepa Foriwaa garment lengths are measured in inches from high waist to feet. If you would like a longer fit for high heels or sweeping drape, simply select a taller category or share your exact measurement in checkout notes or via WhatsApp.',
+    keywords: ['measure length', 'high waist', 'high waist to feet', 'how is length measured', 'measuring standard', 'inches'],
     suggestedAction: { label: 'Size & Length Guide', action: 'size_guide' }
+  },
+  {
+    id: 'faq_custom_length_available',
+    category: 'sizes',
+    question: 'Can I get a custom length for my height?',
+    answer:
+      'Yes, Custom Length is available for every garment. You can share your height and exact high waist to feet measurement in your order notes or directly on WhatsApp with our stylist (+233 53 879 5669).',
+    keywords: ['custom length', 'custom hem', 'alteration', 'hem length', 'my height', 'shorten', 'lengthen', 'custom size'],
+    suggestedAction: { label: 'Speak with Stylist', action: 'contact_whatsapp' }
   },
 
   // ─── COLOURS ─────────────────────────────────────────────────────────

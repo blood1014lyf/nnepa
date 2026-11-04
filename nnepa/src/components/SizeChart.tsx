@@ -15,7 +15,9 @@ import {
   MEN_REGIONAL_MAP,
   MEASURING_TIPS,
   DRESS_LENGTH_GUIDE,
-  PANTS_LENGTH_GUIDE
+  PANTS_LENGTH_GUIDE,
+  OFFICIAL_LENGTH_GUIDE,
+  OFFICIAL_LENGTH_NOTES
 } from '../sizeChartData.ts';
 
 interface SizeChartProps {
@@ -38,6 +40,7 @@ export default function SizeChart({
   const [unit, setUnit] = useState<SizingUnit>('in');
   const [selectedRow, setSelectedRow] = useState<string | null>(highlightAlpha || null);
   const [lengthTab, setLengthTab] = useState<'dresses' | 'pants'>('dresses');
+  const [selectedLengthCat, setSelectedLengthCat] = useState<string | null>(null);
 
   // Quick Finder State
   const [finderRegion, setFinderRegion] = useState<SizingRegion>(defaultRegion);
@@ -444,6 +447,196 @@ export default function SizeChart({
           <span className="font-mono text-text-muted">
             All garments are cut with tailored comfort. Inseam is measured from crotch to hem; outseam is measured from waistband to hem.
           </span>
+        </div>
+      </div>
+
+      {/* ═══ OFFICIAL NNEPA FORIWAA LENGTH GUIDE (FOR A PERFECT FIT) ═══ */}
+      <div className="bg-gradient-to-br from-[#260e38] via-[#1d092c] to-[#140520] text-white rounded-lg border border-amber-400/35 shadow-xl overflow-hidden mb-8 p-5 sm:p-8" id="official-length-guide">
+        {/* Card Header & Brand Identity */}
+        <div className="text-center mb-6">
+          <span className="font-serif text-amber-200/90 text-sm tracking-[0.35em] uppercase font-light block mb-1">
+            Nnepa Foriwaa
+          </span>
+          <span className="text-[0.6rem] font-bold tracking-[0.35em] uppercase text-amber-300/70 block mb-2">
+            Rooted. Refined. Regal.
+          </span>
+          <div className="w-16 h-[1px] bg-gradient-to-r from-transparent via-amber-400/70 to-transparent mx-auto my-2.5" />
+          <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl text-amber-100 font-normal tracking-wider">
+            LENGTH GUIDE
+          </h2>
+          <p className="text-[0.68rem] sm:text-xs font-serif tracking-[0.25em] uppercase text-amber-200/80 mt-1">
+            For a Perfect Fit
+          </p>
+        </div>
+
+        {/* Height Quick Selector Pills */}
+        <div className="mb-6 bg-white/5 p-3 sm:p-4 rounded-md border border-white/10 backdrop-blur-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5">
+            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-amber-200 flex items-center gap-1.5">
+              <Ruler className="w-3.5 h-3.5 text-amber-300" />
+              <span>Click your height category to highlight recommended lengths:</span>
+            </span>
+            {selectedLengthCat && (
+              <button
+                type="button"
+                onClick={() => setSelectedLengthCat(null)}
+                className="text-[0.62rem] text-amber-300/80 hover:text-amber-200 underline cursor-pointer bg-transparent border-none p-0 self-start sm:self-auto"
+              >
+                Reset Highlight
+              </button>
+            )}
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+            {OFFICIAL_LENGTH_GUIDE.map((cat) => {
+              const isSelected = selectedLengthCat === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setSelectedLengthCat(isSelected ? null : cat.id)}
+                  className={`p-2.5 rounded text-center transition-all cursor-pointer border ${
+                    isSelected
+                      ? 'bg-amber-400/25 border-amber-400 text-amber-100 shadow-sm shadow-amber-400/30'
+                      : 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20'
+                  }`}
+                >
+                  <span className="text-[0.72rem] font-bold block text-amber-200">{cat.name}</span>
+                  <span className="text-[0.62rem] text-white/70 font-mono">{cat.heightRange}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Authoritative Length Table */}
+        <div className="overflow-x-auto rounded-md border border-amber-300/25 bg-black/35 mb-6">
+          <table className="w-full text-center text-xs border-collapse min-w-[700px]">
+            <thead>
+              <tr className="bg-[#150620] border-b border-amber-300/25 text-[0.68rem] font-bold tracking-wider uppercase text-amber-200">
+                <th className="p-4 text-left pl-5 w-48 font-serif">Size Category</th>
+                {OFFICIAL_LENGTH_GUIDE.map((cat) => {
+                  const isHighlighted = selectedLengthCat === cat.id;
+                  return (
+                    <th
+                      key={cat.id}
+                      onClick={() => setSelectedLengthCat(cat.id)}
+                      className={`p-3.5 cursor-pointer transition-colors ${
+                        isHighlighted
+                          ? 'bg-amber-400/25 text-amber-100 font-extrabold border-x border-amber-400/50'
+                          : 'hover:bg-white/5 text-amber-200/90'
+                      }`}
+                    >
+                      <div className="text-xs font-bold text-amber-100">{cat.name}</div>
+                      <div className="text-[0.62rem] font-mono text-amber-300/80 mt-0.5">{cat.heightRange}</div>
+                    </th>
+                  );
+                })}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/10 text-[0.78rem]">
+              {/* Pants / Skirts Row */}
+              <tr className="hover:bg-white/5 transition-colors">
+                <td className="p-4 text-left pl-5 font-semibold text-amber-200 flex items-center gap-2.5">
+                  <Scissors className="w-4 h-4 text-amber-300 shrink-0" />
+                  <div>
+                    <span className="block font-bold">Pants / Skirts Length</span>
+                    <span className="text-[0.62rem] text-amber-300/70 font-mono block">
+                      {unit === 'in' ? '(inches)' : '(cm)'}
+                    </span>
+                  </div>
+                </td>
+                {OFFICIAL_LENGTH_GUIDE.map((cat) => {
+                  const isHighlighted = selectedLengthCat === cat.id;
+                  return (
+                    <td
+                      key={cat.id}
+                      onClick={() => setSelectedLengthCat(cat.id)}
+                      className={`p-4 font-mono cursor-pointer ${
+                        isHighlighted
+                          ? 'bg-amber-400/20 text-amber-100 font-bold border-x border-amber-400/50'
+                          : 'text-white/90'
+                      }`}
+                    >
+                      <span className="text-base font-bold text-amber-200">
+                        {unit === 'in' ? `${cat.pantsSkirtsLengthIn}` : `${cat.pantsSkirtsLengthCm} cm`}
+                      </span>
+                    </td>
+                  );
+                })}
+              </tr>
+
+              {/* Dress Length Row */}
+              <tr className="hover:bg-white/5 transition-colors">
+                <td className="p-4 text-left pl-5 font-semibold text-amber-200 flex items-center gap-2.5">
+                  <Ruler className="w-4 h-4 text-amber-300 shrink-0" />
+                  <div>
+                    <span className="block font-bold">Dress Length</span>
+                    <span className="text-[0.62rem] text-amber-300/70 font-mono block">
+                      {unit === 'in' ? '(inches)' : '(cm)'}
+                    </span>
+                  </div>
+                </td>
+                {OFFICIAL_LENGTH_GUIDE.map((cat) => {
+                  const isHighlighted = selectedLengthCat === cat.id;
+                  return (
+                    <td
+                      key={cat.id}
+                      onClick={() => setSelectedLengthCat(cat.id)}
+                      className={`p-4 font-mono cursor-pointer ${
+                        isHighlighted
+                          ? 'bg-amber-400/20 text-amber-100 font-bold border-x border-amber-400/50'
+                          : 'text-white/90'
+                      }`}
+                    >
+                      <span className="text-base font-bold text-amber-200">
+                        {unit === 'in' ? `${cat.dressLengthIn}` : `${cat.dressLengthCm} cm`}
+                      </span>
+                    </td>
+                  );
+                })}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Footer Notes Box with Gold Border & Callout matching original graphic */}
+        <div className="bg-[#150620]/95 rounded-md border border-amber-300/35 p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-5">
+          <div className="flex items-start gap-3.5">
+            <div className="w-8 h-8 rounded-full bg-amber-400/20 text-amber-300 flex items-center justify-center shrink-0 border border-amber-400/50 font-serif font-bold text-xs mt-0.5">
+              i
+            </div>
+            <ul className="space-y-1.5 text-xs text-white/90">
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+                <span>All measurements are in inches.</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+                <span className="font-semibold text-amber-200">These are high waist to feet measurements.</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+                <span>If you would like it to fit longer, please go for a taller length or share your exact length.</span>
+              </li>
+            </ul>
+          </div>
+
+          <div className="flex flex-col items-center sm:items-end justify-center shrink-0 border-t md:border-t-0 md:border-l border-amber-300/25 pt-4 md:pt-0 md:pl-6 text-center sm:text-right">
+            <div className="font-serif italic text-xl sm:text-2xl text-amber-200 font-light tracking-wide mb-2">
+              Custom Length Available
+            </div>
+            <a
+              href={`https://wa.me/233538795669?text=${encodeURIComponent(
+                "Hello Nnepa Foriwaa! I would like to request a custom length for my garment. My height is [insert height] and my desired high-waist-to-feet length is [insert inches/cm]."
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[0.65rem] font-bold tracking-[0.18em] uppercase transition-all shadow-sm no-underline"
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              <span>Share Custom Length on WhatsApp</span>
+            </a>
+          </div>
         </div>
       </div>
 

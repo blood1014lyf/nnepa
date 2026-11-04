@@ -25,7 +25,13 @@ import {
   UNCONFIRMED_FALLBACK_TEXT,
   SYNONYM_DICTIONARIES
 } from '../knowledge/index.ts';
-import { WOMEN_SIZE_CHART, MEN_SIZE_CHART } from '../../sizeChartData.ts';
+import {
+  WOMEN_SIZE_CHART,
+  MEN_SIZE_CHART,
+  OFFICIAL_LENGTH_GUIDE,
+  OfficialLengthCategory,
+  OFFICIAL_LENGTH_NOTES
+} from '../../sizeChartData.ts';
 
 export interface ConciergeActionOption {
   label: string;
@@ -279,6 +285,104 @@ export function validateMeasurementInput(
     value: rawVal,
     unit: detectedUnit
   };
+}
+
+export interface DetectedHeightResult {
+  rawHeight: string;
+  totalInches: number;
+  category: OfficialLengthCategory;
+}
+
+function mapInchesToLengthCategory(totalInches: number, displayStr: string): DetectedHeightResult {
+  let catId = 'average';
+  if (totalInches <= 63) {
+    catId = 'petite';
+  } else if (totalInches <= 65) {
+    catId = 'petite-plus';
+  } else if (totalInches <= 67) {
+    catId = 'average';
+  } else if (totalInches <= 69) {
+    catId = 'tall';
+  } else if (totalInches <= 71) {
+    catId = 'average-plus';
+  } else {
+    catId = 'very-tall';
+  }
+
+  const category = OFFICIAL_LENGTH_GUIDE.find((c) => c.id === catId) || OFFICIAL_LENGTH_GUIDE[2];
+  return {
+    rawHeight: displayStr,
+    totalInches,
+    category
+  };
+}
+
+export function detectCustomerHeight(input: string): DetectedHeightResult | null {
+  const raw = input.toLowerCase();
+
+  // Pattern like: 5'4, 5'4", 5' 4", 5'8, 6'1
+  const apostropheMatch = raw.match(/([4567])'\s*([0-9]{1,2})?/);
+  if (apostropheMatch) {
+    const feet = parseInt(apostropheMatch[1], 10);
+    const inches = apostropheMatch[2] ? parseInt(apostropheMatch[2], 10) : 0;
+    const totalInches = feet * 12 + inches;
+    return mapInchesToLengthCategory(totalInches, `${feet}'${inches}"`);
+  }
+
+  // Pattern like: 5ft 4, 5 feet 4, 5 foot 4, 5ft, 6ft, 6 feet
+  const feetWordMatch = raw.match(/([4567])\s*(?:ft|foot|feet)\s*([0-9]{1,2})?/i);
+  if (feetWordMatch) {
+    const feet = parseInt(feetWordMatch[1], 10);
+    const inches = feetWordMatch[2] ? parseInt(feetWordMatch[2], 10) : 0;
+    const totalInches = feet * 12 + inches;
+    return mapInchesToLengthCategory(totalInches, `${feet}'${inches}"`);
+  }
+
+  // Pattern like: "i am 5 4" or "height 5 8" or "5 4 tall"
+  const spaceMatch = raw.match(/(?:i\s*m|i\s*am|height|tall)\s+([4567])\s+([0-9]{1,2})/i);
+  if (spaceMatch) {
+    const feet = parseInt(spaceMatch[1], 10);
+    const inches = parseInt(spaceMatch[2], 10);
+    const totalInches = feet * 12 + inches;
+    return mapInchesToLengthCategory(totalInches, `${feet}'${inches}"`);
+  }
+
+  // Pattern like: 165 cm, 175cm
+  const cmMatch = raw.match(/([12][0-9]{2})\s*cm/i);
+  if (cmMatch) {
+    const cm = parseInt(cmMatch[1], 10);
+    const totalInches = Math.round(cm / 2.54);
+    const feet = Math.floor(totalInches / 12);
+    const inches = totalInches % 12;
+    return mapInchesToLengthCategory(totalInches, `${feet}'${inches}" (${cm} cm)`);
+  }
+
+  if (raw.includes('very tall') || raw.includes('6+') || raw.includes('6 plus')) {
+    const cat = OFFICIAL_LENGTH_GUIDE.find((c) => c.id === 'very-tall')!;
+    return { rawHeight: '6+', totalInches: 73, category: cat };
+  }
+  if (raw.includes('petite plus') || raw.includes('petite +')) {
+    const cat = OFFICIAL_LENGTH_GUIDE.find((c) => c.id === 'petite-plus')!;
+    return { rawHeight: "5'4 – 5'5", totalInches: 64, category: cat };
+  }
+  if (raw.includes('petite') || raw.includes('short')) {
+    const cat = OFFICIAL_LENGTH_GUIDE.find((c) => c.id === 'petite')!;
+    return { rawHeight: "5'0 – 5'3", totalInches: 62, category: cat };
+  }
+  if (raw.includes('average plus') || raw.includes('average +')) {
+    const cat = OFFICIAL_LENGTH_GUIDE.find((c) => c.id === 'average-plus')!;
+    return { rawHeight: "5'10 – 5'11", totalInches: 70, category: cat };
+  }
+  if (raw.includes('tall')) {
+    const cat = OFFICIAL_LENGTH_GUIDE.find((c) => c.id === 'tall')!;
+    return { rawHeight: "5'8 – 5'9", totalInches: 68, category: cat };
+  }
+  if (raw.includes('average height') || raw.includes('average length')) {
+    const cat = OFFICIAL_LENGTH_GUIDE.find((c) => c.id === 'average')!;
+    return { rawHeight: "5'6 – 5'7", totalInches: 66, category: cat };
+  }
+
+  return null;
 }
 
 export interface ResolvedLabelSizeResult {
@@ -651,6 +755,32 @@ export function classifyCustomerIntent(
   // General sizing run & true-to-size inquiries (when not referencing a specific item)
   if (matchesAny(norm, SYNONYM_DICTIONARIES.generalFitRun)) {
     return 'general_fit_inquiry';
+  }
+
+  // Length Guide & Height inquiry (e.g. "What is your length guide?", "I'm 5'4, what length should I get?", "How long are your dresses?")
+  const detectedHeight = detectCustomerHeight(query);
+  const isExplicitLengthInquiry =
+    matchesAny(norm, SYNONYM_DICTIONARIES.lengthGuide) ||
+    norm.includes('length guide') ||
+    norm.includes('dress length') ||
+    norm.includes('pants length') ||
+    norm.includes('skirt length') ||
+    norm.includes('high waist') ||
+    norm.includes('custom length') ||
+    (Boolean(detectedHeight) &&
+      (norm.includes('length') ||
+        norm.includes('tall') ||
+        norm.includes('petite') ||
+        norm.includes('height') ||
+        norm.includes('fit') ||
+        norm.includes('wear') ||
+        norm.includes('dress') ||
+        norm.includes('pant') ||
+        norm.includes('what') ||
+        norm.includes('my')));
+
+  if (isExplicitLengthInquiry) {
+    return 'length_guide_inquiry';
   }
 
   // Explicit customer size declaration (e.g. "I'm a size 12", "I wear size M", "I am a size 10")
@@ -2041,13 +2171,63 @@ export function processConciergeMessage(
     }
   }
 
+  // ─── INTENT: OFFICIAL LENGTH GUIDE & HEIGHT RECOMMENDATION ─────────────
+  if (classifiedIntent === 'length_guide_inquiry') {
+    const detected = detectCustomerHeight(userInput);
+
+    let text = '';
+    if (detected) {
+      text =
+        `**Nnepa Foriwaa Official Length Recommendation**\n\n` +
+        `For your height (**${detected.rawHeight}**), your calibrated length category is **${detected.category.name}** (${detected.category.heightRange}):\n\n` +
+        `• **Pants / Skirts Length**: **${detected.category.pantsSkirtsLengthIn} inches** (${detected.category.pantsSkirtsLengthCm} cm)\n` +
+        `• **Dress Length**: **${detected.category.dressLengthIn} inches** (${detected.category.dressLengthCm} cm)\n\n` +
+        `*Important Measurement Standard*:\n` +
+        `• All measurements are in inches, taken from **high waist to feet**.\n` +
+        `• If you would like it to fit longer (e.g. for high heels or sweeping drape), you can choose a taller length or share your exact length.\n` +
+        `• **Custom Length Available**: We offer complimentary custom lengths on every order! Simply note your preferred length at checkout or message our stylist on WhatsApp.`;
+    } else {
+      text =
+        `**Nnepa Foriwaa Length Guide (For a Perfect Fit)**\n\n` +
+        `All measurements are in inches, measured from **high waist to feet**:\n\n` +
+        `• **Petite (5'0 – 5'3)**: Pants/Skirts: **42"** | Dress: **56"**\n` +
+        `• **Petite + (5'4 – 5'5)**: Pants/Skirts: **43"** | Dress: **57"**\n` +
+        `• **Average (5'6 – 5'7)**: Pants/Skirts: **45"** | Dress: **58"**\n` +
+        `• **Average + (5'10 – 5'11)**: Pants/Skirts: **47"** | Dress: **60"**\n` +
+        `• **Tall (5'8 – 5'9)**: Pants/Skirts: **49"** | Dress: **63"**\n` +
+        `• **Very Tall (6'+)**: Pants/Skirts: **52"** | Dress: **65"**\n\n` +
+        `*Key Fit Details*:\n` +
+        `• These are high waist to feet measurements.\n` +
+        `• If you would like it to fit longer, please choose a taller length or share your exact length.\n` +
+        `• **Custom Length Available**: Complimentary bespoke hem lengths on every handcrafted piece.`;
+    }
+
+    return {
+      text,
+      options: [
+        { label: 'Open Official Length Guide', action: 'open_size_chart' },
+        { label: 'Custom Length on WhatsApp', action: 'contact_whatsapp' },
+        { label: 'Find My Best Fit', action: 'sizing_path_select' },
+        { label: 'Return to Shopping', action: 'filter_all' }
+      ],
+      intent: classifiedIntent,
+      updatedContext
+    };
+  }
+
   // ─── INTENT: SIZE CHART & LENGTH GUIDE ───────────────────────────────────
   if (classifiedIntent === 'size_chart_info') {
     const text =
-      `All Nnepa Foriwaa garments are tailored to international proportions (US, UK, and EU):\n\n` +
-      `• **Dresses & Gowns**: Mini (34–36"), Knee (39–42"), Midi (45–49"), and Floor Gown/Boubou (55–60").\n` +
-      `• **Pants & Trousers**: Inseam (27–35") and Outseam (37–45") calibrated for clean breaks.\n` +
-      `• **Custom Calibrations**: Complimentary hem adjustments (Petite under 5'3" or Tall 5'8"+) can be requested in your checkout notes.\n\n` +
+      `All Nnepa Foriwaa garments are tailored to international proportions (US, UK, and EU) and calibrated to our official Length Guide:\n\n` +
+      `• **International Sizing**: US (0–22), UK (4–26), EU (32–54) corresponding to alpha sizes XS through XXL.\n` +
+      `• **Official Length Guide (High Waist to Feet)**:\n` +
+      `  - Petite (5'0–5'3): Pants/Skirts 42" | Dress 56"\n` +
+      `  - Petite + (5'4–5'5): Pants/Skirts 43" | Dress 57"\n` +
+      `  - Average (5'6–5'7): Pants/Skirts 45" | Dress 58"\n` +
+      `  - Average + (5'10–5'11): Pants/Skirts 47" | Dress 60"\n` +
+      `  - Tall (5'8–5'9): Pants/Skirts 49" | Dress 63"\n` +
+      `  - Very Tall (6'+): Pants/Skirts 52" | Dress 65"\n\n` +
+      `• **Custom Lengths**: If you would like it to fit longer for heels, go for a taller length or request a custom length at checkout.\n\n` +
       `Would you like to open our interactive Size Chart or find your personal size?`;
 
     return {

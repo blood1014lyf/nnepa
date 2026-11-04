@@ -818,4 +818,57 @@ describe('NNEPA Shopping Concierge — Core Knowledge & Intelligence Test Suite'
     assert.ok(inStockRes.text.includes('in stock'), 'Confirms piece is in stock');
     assert.ok(inStockRes.text.includes('check back') || inStockRes.text.includes('custom outfit'), 'Mentions check back or custom outfit policy');
   });
+
+  // 45. Official Length Guide General Inquiry
+  test('Scenario 45: Customer asks about length guide -> provides official 6 categories, high waist to feet, and custom length', () => {
+    let ctx = createInitialConciergeContext(null);
+
+    const res = processConciergeMessage('What is your length guide for dresses and pants?', ctx, CATALOGUE);
+    assert.equal(res.intent, 'length_guide_inquiry');
+    assert.ok(res.text.includes('Petite (5\'0 – 5\'3)'), 'Includes Petite category');
+    assert.ok(res.text.includes('Petite + (5\'4 – 5\'5)'), 'Includes Petite + category');
+    assert.ok(res.text.includes('Average (5\'6 – 5\'7)'), 'Includes Average category');
+    assert.ok(res.text.includes('Average + (5\'10 – 5\'11)'), 'Includes Average + category');
+    assert.ok(res.text.includes('Tall (5\'8 – 5\'9)'), 'Includes Tall category');
+    assert.ok(res.text.includes('Very Tall (6\'+)'), 'Includes Very Tall category');
+    assert.ok(res.text.includes('42"') && res.text.includes('52"'), 'Includes pants/skirts lengths');
+    assert.ok(res.text.includes('56"') && res.text.includes('65"'), 'Includes dress lengths');
+    assert.ok(res.text.includes('high waist to feet'), 'Specifies high waist to feet measurement standard');
+    assert.ok(res.text.includes('Custom Length Available') || res.text.includes('custom lengths'), 'Highlights custom length availability');
+  });
+
+  // 46. Height-Targeted Recommendation (5'4" -> Petite +)
+  test('Scenario 46: Customer provides height 5\'4" -> maps to Petite + (43" pants / 57" dress)', () => {
+    let ctx = createInitialConciergeContext(null);
+
+    const res = processConciergeMessage("I'm 5'4, what length dress and pants should I get?", ctx, CATALOGUE);
+    assert.equal(res.intent, 'length_guide_inquiry');
+    assert.ok(res.text.includes('Petite +'), 'Recommends Petite + category');
+    assert.ok(res.text.includes('43 inches'), 'Quotes 43 inches for pants/skirts');
+    assert.ok(res.text.includes('57 inches'), 'Quotes 57 inches for dress');
+    assert.ok(res.text.includes('high waist to feet'), 'Mentions high waist to feet standard');
+    assert.ok(res.text.includes('Custom Length Available') || res.text.includes('custom lengths'), 'Offers custom length');
+  });
+
+  // 47. Height-Targeted Recommendation (5'8" -> Tall)
+  test('Scenario 47: Customer provides height 5\'8" -> maps to Tall (49" pants / 63" dress)', () => {
+    let ctx = createInitialConciergeContext(null);
+
+    const res = processConciergeMessage("I am 5'8 tall, what is my dress length?", ctx, CATALOGUE);
+    assert.equal(res.intent, 'length_guide_inquiry');
+    assert.ok(res.text.includes('Tall'), 'Recommends Tall category');
+    assert.ok(res.text.includes('49 inches'), 'Quotes 49 inches for pants/skirts');
+    assert.ok(res.text.includes('63 inches'), 'Quotes 63 inches for dress');
+  });
+
+  // 48. Custom Length Inquiry
+  test('Scenario 48: Customer asks about custom length -> explains high waist to feet and WhatsApp ordering', () => {
+    let ctx = createInitialConciergeContext(null);
+
+    const res = processConciergeMessage('Can I order a custom length?', ctx, CATALOGUE);
+    assert.equal(res.intent, 'length_guide_inquiry');
+    assert.ok(res.text.includes('Custom Length Available') || res.text.includes('custom lengths'), 'Confirms custom length');
+    assert.ok(res.text.includes('high waist to feet'), 'Clarifies high waist to feet');
+    assert.ok(res.options.some((o) => o.action === 'contact_whatsapp'), 'Offers WhatsApp stylist option');
+  });
 });

@@ -377,6 +377,110 @@ export const DRESS_LENGTH_GUIDE: DressLengthCategory[] = [
   }
 ];
 
+// ═══ OFFICIAL NNEPA FORIWAA LENGTH GUIDE (HIGH WAIST TO FEET) ═══
+
+export interface OfficialLengthCategory {
+  id: string;
+  name: string;
+  heightRange: string;
+  heightMinInches: number;
+  heightMaxInches: number;
+  heightRangeCm: string;
+  pantsSkirtsLengthIn: number;
+  pantsSkirtsLengthCm: number;
+  dressLengthIn: number;
+  dressLengthCm: number;
+  description: string;
+}
+
+export const OFFICIAL_LENGTH_GUIDE: OfficialLengthCategory[] = [
+  {
+    id: 'petite',
+    name: 'Petite',
+    heightRange: "5'0 – 5'3",
+    heightMinInches: 60,
+    heightMaxInches: 63,
+    heightRangeCm: '152 – 160 cm',
+    pantsSkirtsLengthIn: 42,
+    pantsSkirtsLengthCm: 106.7,
+    dressLengthIn: 56,
+    dressLengthCm: 142.2,
+    description: 'Calibrated for heights 5\'0" to 5\'3". Clean proportions without fabric dragging.'
+  },
+  {
+    id: 'petite-plus',
+    name: 'Petite +',
+    heightRange: "5'4 – 5'5",
+    heightMinInches: 64,
+    heightMaxInches: 65,
+    heightRangeCm: '162 – 165 cm',
+    pantsSkirtsLengthIn: 43,
+    pantsSkirtsLengthCm: 109.2,
+    dressLengthIn: 57,
+    dressLengthCm: 144.8,
+    description: 'Calibrated for heights 5\'4" to 5\'5". Perfect drape for standard footwear.'
+  },
+  {
+    id: 'average',
+    name: 'Average',
+    heightRange: "5'6 – 5'7",
+    heightMinInches: 66,
+    heightMaxInches: 67,
+    heightRangeCm: '167 – 170 cm',
+    pantsSkirtsLengthIn: 45,
+    pantsSkirtsLengthCm: 114.3,
+    dressLengthIn: 58,
+    dressLengthCm: 147.3,
+    description: 'Classic bespoke standard for heights 5\'6" to 5\'7".'
+  },
+  {
+    id: 'average-plus',
+    name: 'Average +',
+    heightRange: "5'10 – 5'11",
+    heightMinInches: 70,
+    heightMaxInches: 71,
+    heightRangeCm: '178 – 180 cm',
+    pantsSkirtsLengthIn: 47,
+    pantsSkirtsLengthCm: 119.4,
+    dressLengthIn: 60,
+    dressLengthCm: 152.4,
+    description: 'Elevated cut for heights 5\'10" to 5\'11".'
+  },
+  {
+    id: 'tall',
+    name: 'Tall',
+    heightRange: "5'8 – 5'9",
+    heightMinInches: 68,
+    heightMaxInches: 69,
+    heightRangeCm: '173 – 175 cm',
+    pantsSkirtsLengthIn: 49,
+    pantsSkirtsLengthCm: 124.5,
+    dressLengthIn: 63,
+    dressLengthCm: 160.0,
+    description: 'Elongated proportion for heights 5\'8" to 5\'9".'
+  },
+  {
+    id: 'very-tall',
+    name: 'Very Tall',
+    heightRange: '6+',
+    heightMinInches: 72,
+    heightMaxInches: 84,
+    heightRangeCm: '183+ cm',
+    pantsSkirtsLengthIn: 52,
+    pantsSkirtsLengthCm: 132.1,
+    dressLengthIn: 65,
+    dressLengthCm: 165.1,
+    description: 'Majestic proportions for heights 6\'0" and above.'
+  }
+];
+
+export const OFFICIAL_LENGTH_NOTES = [
+  'All measurements are in inches.',
+  'These are high waist to feet measurements.',
+  'If you would like it to fit longer, please go for a taller length or share your exact length.',
+  'Custom Length Available upon request.'
+];
+
 export const PANTS_LENGTH_GUIDE: PantsLengthCategory[] = [
   {
     id: 'ankle',
