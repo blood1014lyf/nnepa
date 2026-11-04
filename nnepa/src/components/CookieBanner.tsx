@@ -116,7 +116,7 @@ export default function CookieBanner({
             </div>
             <div>
               <span className="text-[0.62rem] font-bold uppercase tracking-[0.2em] text-lavender block">
-                Cookie Policy
+                Privacy & Consent
               </span>
               <h2 className="font-serif text-base font-semibold text-plum-dark m-0 leading-tight">
                 {isCustomizeOpen ? 'Cookie Preferences' : 'Cookie Policy'}
@@ -180,7 +180,7 @@ export default function CookieBanner({
                 }}
                 className="text-lavender hover:underline bg-transparent border-none p-0 cursor-pointer"
               >
-                Read Cookie Policy
+                Read Full Policy
               </button>
             </div>
           </div>
