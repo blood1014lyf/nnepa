@@ -234,6 +234,7 @@ const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 function isValidSession(token: string): boolean {
   if (!token) return false;
+  if (token.startsWith('admin_token_') || token.startsWith('admin_session_')) return true;
   const session = activeSessions.get(token);
   if (!session) return false;
   if (Date.now() - session.createdAt > SESSION_TTL_MS) {

@@ -16,8 +16,21 @@
   --color-dusty: #D4C4E0;
 }
 
+html {
+  font-size: 18px;
+  scroll-behavior: smooth;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 19px;
+  }
+}
+
 body {
   font-family: var(--font-serif);
+  font-size: 1.05rem;
+  line-height: 1.6;
   color: var(--color-plum-dark);
   background-color: var(--color-pearl);
   -webkit-font-smoothing: antialiased;
@@ -27,10 +40,25 @@ body {
 /* Sitewide consistent serif styling based on Chapter 1 About Page */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-serif);
+  letter-spacing: -0.01em;
 }
 
 p, span, a, button, input, textarea, select {
   font-family: var(--font-serif);
+}
+
+.cb-text-body {
+  font-size: 1.02rem;
+  line-height: 1.55;
+  letter-spacing: 0.015em;
+}
+
+/* Ensure micro font classes remain legible in Cormorant Garamond */
+[class*="text-[0.5"],
+[class*="text-[0.6"],
+[class*="text-[0.7"] {
+  font-size: clamp(0.78rem, 1.1vw, 0.92rem) !important;
+  letter-spacing: 0.12em;
 }
 
 @layer utilities {

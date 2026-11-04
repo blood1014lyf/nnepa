@@ -128,14 +128,14 @@ Please confirm tailoring and delivery details.`;
             {/* Sizing Picker Option */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-[0.58rem] font-bold tracking-[0.2em] uppercase text-plum-dark">Select Size</h3>
+                <h3 className="text-xs font-bold tracking-[0.2em] uppercase text-plum-dark">Select Size</h3>
               </div>
-              <div className="flex gap-2.5">
-                {(product.sizes || ['S', 'M', 'L', 'XL', 'XXL']).map((sz) => (
+              <div className="flex flex-wrap gap-2.5">
+                {(product.sizes && product.sizes.length > 0 ? product.sizes : ['S', 'M', 'L', 'XL']).map((sz) => (
                   <button
                     key={sz}
                     onClick={() => setSelectedSize(sz)}
-                    className={`min-w-11 h-11 border text-xs font-bold tracking-widest rounded-[2px] transition-all cursor-pointer ${
+                    className={`min-w-11 px-3.5 h-11 border text-xs font-bold tracking-widest rounded-[2px] transition-all cursor-pointer ${
                       selectedSize === sz
                         ? 'bg-gradient-to-br from-lavender to-mauve-deep text-white border-transparent shadow-md'
                         : 'bg-white text-plum-dark border-zinc-200 hover:border-lavender hover:text-lavender'
@@ -148,20 +148,22 @@ Please confirm tailoring and delivery details.`;
             </div>
 
             {/* Regional Conversion Pill */}
-            <div className="flex items-center justify-between bg-white px-4 py-3 rounded border border-lilac/15 text-xs">
-              <span className="text-[0.58rem] font-bold tracking-wider uppercase text-text-light">
-                Standard Conversion:
-              </span>
-              <span className="font-mono text-xs font-bold text-mauve-deep">
-                {isMen
-                  ? `${activeMenRow.usSize} · ${activeMenRow.ukSize} · ${activeMenRow.euSize}`
-                  : `${activeWomenRow.usSize} · ${activeWomenRow.ukSize} · ${activeWomenRow.euSize}`}
-              </span>
-            </div>
+            {(activeWomenRow || activeMenRow) && (
+              <div className="flex items-center justify-between bg-white px-4 py-3 rounded border border-lilac/15 text-xs">
+                <span className="text-xs font-bold tracking-wider uppercase text-text-light">
+                  Standard Conversion:
+                </span>
+                <span className="font-mono text-xs font-bold text-mauve-deep">
+                  {isMen
+                    ? `${activeMenRow?.usSize || 'US'} · ${activeMenRow?.ukSize || 'UK'} · ${activeMenRow?.euSize || 'EU'}`
+                    : `${activeWomenRow?.usSize || 'US'} · ${activeWomenRow?.ukSize || 'UK'} · ${activeWomenRow?.euSize || 'EU'}`}
+                </span>
+              </div>
+            )}
 
             {/* Pre-order Delivery Notice / Disclaimer */}
-            <div className="text-[0.62rem] text-mauve-deep bg-lavender/10 px-3.5 py-2.5 rounded border border-lavender/20 font-medium flex items-center gap-2">
-              <span>Tailoring requires 3–7 working days before dispatch.</span>
+            <div className="text-xs text-mauve-deep bg-lavender/10 px-3.5 py-2.5 rounded border border-lavender/20 font-medium flex items-center gap-2">
+              <span>Tailoring requires 3 to 7 working days before dispatch.</span>
             </div>
 
             {/* Signature Actions */}

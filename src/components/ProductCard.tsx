@@ -157,16 +157,16 @@ export default function ProductCard({
 
       <div className="p-3.5 sm:p-5 flex-1 flex flex-col justify-between">
         <div>
-          <div className="text-[0.55rem] sm:text-[0.58rem] tracking-[0.2em] uppercase text-text-light mb-1.5 selection:bg-transparent">
+          <div className="text-xs tracking-[0.2em] uppercase text-mauve-deep/80 mb-1.5 selection:bg-transparent">
             {product.category} · {product.subcategory}
           </div>
-          <h4 className="font-serif text-sm sm:text-base font-semibold text-plum-dark leading-snug group-hover:text-lavender transition-colors line-clamp-2">
+          <h4 className="font-serif text-base sm:text-lg font-medium text-plum-dark leading-snug group-hover:text-lavender transition-colors line-clamp-2">
             {product.name}
           </h4>
         </div>
 
         <div className="mt-4 flex items-center justify-between">
-          <div className="text-sm font-semibold text-lavender whitespace-nowrap">
+          <div className="text-base sm:text-lg font-semibold text-lavender whitespace-nowrap">
             {product.originalPrice && (
               <del className="text-text-light font-normal text-xs mr-2 line-through">
                 {formatPrice(product.originalPrice)}

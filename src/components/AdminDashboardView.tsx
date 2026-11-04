@@ -27,6 +27,7 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import { Product } from '../types.ts';
+import { LEGACY_MOCK_IDS } from '../App.tsx';
 import { optimizeImageFile, formatFileSize } from '../utils/imageOptimizer.ts';
 
 export type OrderStatus = 'new' | 'confirmed' | 'shipped' | 'cancelled';
@@ -207,12 +208,15 @@ export default function AdminDashboardView({
   const fetchProducts = async () => {
     setProductsLoading(true);
     let cachedList: Product[] = [];
+    const isCleanProd = (p: Product) =>
+      p && p.id && !LEGACY_MOCK_IDS.has(p.id) && (!p.imageUrl || !p.imageUrl.startsWith('/assets/images/lookbook_'));
+
     try {
       const cached = localStorage.getItem('nnepa_foriwaa_products');
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed)) {
-          cachedList = parsed;
+          cachedList = parsed.filter(isCleanProd);
         }
       }
     } catch {}
@@ -221,14 +225,14 @@ export default function AdminDashboardView({
       const response = await fetch('/api/products');
       if (response.ok) {
         const data = await response.json();
-        const serverList: Product[] = data.products || [];
+        const serverList: Product[] = (data.products || []).filter(isCleanProd);
 
         // Retain local custom pieces
         const missingOnServer = cachedList.filter(
           (c) => !serverList.some((s) => s.id === c.id)
         );
 
-        const merged = [...missingOnServer, ...serverList];
+        const merged = [...missingOnServer, ...serverList].filter(isCleanProd);
         setProducts(merged);
         try {
           localStorage.setItem('nnepa_foriwaa_products', JSON.stringify(merged));
@@ -236,10 +240,14 @@ export default function AdminDashboardView({
         onRefreshProducts?.();
       } else if (cachedList.length > 0) {
         setProducts(cachedList);
+      } else {
+        setProducts([]);
       }
     } catch {
       if (cachedList.length > 0) {
         setProducts(cachedList);
+      } else {
+        setProducts([]);
       }
     } finally {
       setProductsLoading(false);
@@ -364,7 +372,7 @@ export default function AdminDashboardView({
     }
 
     setProductsLoading(true);
-    let finalImageUrl = newProduct.imageUrl || '/assets/images/lookbook_01_gold_boubou.jpg';
+    let finalImageUrl = newProduct.imageUrl || '';
 
     try {
       if (uploadFile) {
