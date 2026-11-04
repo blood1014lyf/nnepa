@@ -909,14 +909,14 @@ export default function ShoppingConcierge({
 
                 {/* Predefined Action Options */}
                 {msg.options && msg.options.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-2.5 w-full">
+                  <div className="flex flex-wrap gap-1.5 mt-2 w-full">
                     {msg.options.slice(0, 6).map((opt, idx) => (
                       <button
                         key={idx}
                         type="button"
                         disabled={isThinking}
                         onClick={() => handleOptionClick(opt.action, opt.payload, opt.label)}
-                        className="px-4 py-2.5 bg-white border border-lilac/45 hover:border-plum-dark hover:bg-lavender/10 text-plum-dark rounded-full text-[13.5px] sm:text-[14px] font-semibold transition-all cursor-pointer shadow-xs text-left break-words max-w-full leading-snug min-h-[38px] flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-2.5 py-1.5 bg-white border border-lilac/35 hover:border-plum-dark hover:bg-lavender/10 text-plum-dark rounded-full text-xs font-medium transition-all cursor-pointer shadow-2xs text-left break-words max-w-full leading-tight flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {opt.label}
                       </button>
@@ -929,13 +929,13 @@ export default function ShoppingConcierge({
             {/* ═══ NATURAL CONCIERGE THINKING INDICATOR ═══ */}
             {isThinking && (
               <div className="flex flex-col items-start animate-in fade-in duration-200">
-                <div className="bg-white text-zinc-700 border border-zinc-200/90 rounded-2xl rounded-bl-xs px-4 py-3 shadow-xs flex items-center gap-2.5">
+                <div className="bg-white text-zinc-700 border border-zinc-200/90 rounded-2xl rounded-bl-xs px-3 py-2 shadow-xs flex items-center gap-2">
                   <div className="flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-plum-dark animate-bounce" style={{ animationDelay: '0ms' }} />
                     <span className="w-1.5 h-1.5 rounded-full bg-plum-dark animate-bounce" style={{ animationDelay: '150ms' }} />
                     <span className="w-1.5 h-1.5 rounded-full bg-plum-dark animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
-                  <span className="text-xs sm:text-sm text-zinc-600 font-medium">
+                  <span className="text-xs text-zinc-600 font-medium">
                     Foriwaa is thinking...
                   </span>
                 </div>
@@ -946,39 +946,39 @@ export default function ShoppingConcierge({
           </div>
 
           {/* Quick Shortcuts Bar */}
-          <div className="px-3 py-2 bg-white border-t border-zinc-100 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0 text-xs sm:text-sm">
+          <div className="px-2.5 py-1.5 bg-white border-t border-zinc-100 flex items-center gap-1 overflow-x-auto no-scrollbar shrink-0">
             <button
               type="button"
               disabled={isThinking}
               onClick={() => handleOptionClick('size_guide')}
-              className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1.5 transition-colors disabled:opacity-50 font-medium"
+              className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1 transition-colors disabled:opacity-50 text-[11px] font-medium"
             >
-              <Ruler className="w-3.5 h-3.5 text-lavender" />
+              <Ruler className="w-3 h-3 text-lavender" />
               <span>Size Guide</span>
             </button>
             <button
               type="button"
               disabled={isThinking}
               onClick={() => handleOptionClick('delivery_info')}
-              className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1.5 transition-colors disabled:opacity-50 font-medium"
+              className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1 transition-colors disabled:opacity-50 text-[11px] font-medium"
             >
-              <Truck className="w-3.5 h-3.5 text-lavender" />
+              <Truck className="w-3 h-3 text-lavender" />
               <span>Delivery</span>
             </button>
             <button
               type="button"
               disabled={isThinking}
               onClick={() => handleOptionClick('contact_whatsapp')}
-              className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1.5 transition-colors disabled:opacity-50 font-medium"
+              className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1 transition-colors disabled:opacity-50 text-[11px] font-medium"
             >
-              <MessageSquare className="w-3.5 h-3.5 text-lavender" />
+              <MessageSquare className="w-3 h-3 text-lavender" />
               <span>WhatsApp</span>
             </button>
             <button
               type="button"
               disabled={isThinking}
               onClick={() => handleOptionClick('connect_human')}
-              className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1.5 transition-colors disabled:opacity-50 font-medium"
+              className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1 transition-colors disabled:opacity-50 text-[11px] font-medium"
             >
               <span>Stylist</span>
             </button>
@@ -986,17 +986,17 @@ export default function ShoppingConcierge({
               type="button"
               onClick={handleStartNewChat}
               title="Start a new conversation"
-              className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1.5 transition-colors font-medium"
+              className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1 transition-colors text-[11px] font-medium"
             >
-              <RotateCcw className="w-3.5 h-3.5 text-lavender" />
-              <span>Start Over</span>
+              <RotateCcw className="w-3 h-3 text-lavender" />
+              <span>Reset</span>
             </button>
           </div>
 
           {/* User Input Field */}
           <form
             onSubmit={handleSendMessage}
-            className="p-3 bg-white border-t border-zinc-200 flex items-center gap-2 shrink-0"
+            className="p-2 sm:p-2.5 bg-white border-t border-zinc-200 flex items-center gap-1.5 shrink-0"
           >
             <input
               type="text"
@@ -1012,15 +1012,15 @@ export default function ShoppingConcierge({
                   ? 'Enter label size (e.g. M, UK 12, or US 8)...'
                   : 'Ask Foriwaa about sizes, fabrics, delivery...'
               }
-              className="flex-1 px-4 py-3 bg-zinc-100 border border-zinc-200 rounded-full text-[16px] text-zinc-900 placeholder-zinc-400 outline-none focus:border-plum-dark focus:bg-white transition-all disabled:opacity-60 disabled:cursor-not-allowed font-normal"
+              className="flex-1 px-3 py-2 bg-zinc-100 border border-zinc-200 rounded-full text-xs sm:text-sm text-zinc-900 placeholder-zinc-400 outline-none focus:border-plum-dark focus:bg-white transition-all disabled:opacity-60 disabled:cursor-not-allowed font-normal"
             />
             <button
               type="submit"
               disabled={!inputValue.trim() || isThinking}
               aria-label="Send question to Foriwaa"
-              className="w-10 h-10 rounded-full bg-plum-dark text-white flex items-center justify-center shrink-0 border-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-plum transition-colors shadow-xs"
+              className="w-8 h-8 rounded-full bg-plum-dark text-white flex items-center justify-center shrink-0 border-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-plum transition-colors shadow-xs"
             >
-              <Send className="w-4 h-4" />
+              <Send className="w-3.5 h-3.5" />
             </button>
           </form>
         </div>
