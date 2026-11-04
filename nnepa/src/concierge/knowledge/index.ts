@@ -19,3 +19,4 @@ export * from './orderingKnowledge.ts';
 export * from './deliveryReturnsKnowledge.ts';
 export * from './faqKnowledge.ts';
 export * from './responseGuidelines.ts';
+export * from './seasonalGreetings.ts';

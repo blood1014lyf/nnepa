@@ -35,6 +35,7 @@ import {
 } from '../concierge/engine/conciergeEngine.ts';
 import ConciergeMessageRenderer from '../concierge/components/ConciergeMessageRenderer.tsx';
 import { PROACTIVE_PROMPTS, NNEPA_IDENTITY } from '../concierge/knowledge/index.ts';
+import FloatingWelcomeNotification from './FloatingWelcomeNotification.tsx';
 
 export interface ShoppingConciergeProps {
   currentPage: string;
@@ -697,56 +698,57 @@ export default function ShoppingConcierge({
 
   return (
     <>
-      {/* ═══ PROACTIVE INVITATION BUBBLE ═══ */}
-      {!isOpen && proactivePrompt && (
+      {/* ═══ COMPACT FLOATING WELCOME NOTIFICATION WITH LIVE COUNTDOWN & ROTATING GREETINGS ═══ */}
+      <FloatingWelcomeNotification
+        isOpen={isOpen}
+        onOpenChat={(payload) => {
+          setIsOpen(true);
+          if (payload && payload !== 'open_chat') {
+            handleOptionClick(payload);
+          }
+        }}
+      />
+
+      {/* ═══ CONTEXTUAL ACTION PROMPT (e.g. After Add to Bag) ═══ */}
+      {!isOpen && proactivePrompt && proactivePrompt.id === 'after_add_to_cart' && (
         <aside
           role="status"
           aria-live="polite"
-          className="concierge-root fixed bottom-24 left-3 right-3 sm:left-auto sm:right-6 sm:w-[360px] max-w-[calc(100vw-1.5rem)] z-[95] bg-white rounded-2xl shadow-2xl border border-lilac/35 p-4 animate-in fade-in slide-in-from-bottom-3 duration-300 mx-auto"
-          style={{
-            boxSizing: 'border-box',
-            wordBreak: 'break-word',
-            overflowWrap: 'break-word'
-          }}
+          className="concierge-root fixed z-[83] bottom-20 right-3 sm:right-6 sm:bottom-22 w-[calc(100vw-1.5rem)] max-w-[310px] sm:w-[310px] bg-white/95 backdrop-blur-md rounded-xl shadow-lg border border-lilac/30 p-3 sm:p-3.5 transition-all duration-300 ease-out animate-in fade-in slide-in-from-bottom-2 select-none"
         >
-          <div className="flex items-start justify-between gap-2.5">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-plum-dark text-white flex items-center justify-center shrink-0 shadow-xs">
-                <ShoppingBag className="w-4 h-4 text-lavender" />
+          <div className="flex items-center justify-between gap-2 border-b border-zinc-100 pb-1.5">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <div className="w-5 h-5 rounded-full bg-plum-dark text-white flex items-center justify-center shrink-0 font-serif font-bold text-[9px] shadow-2xs">
+                NF
               </div>
-              <div>
-                <span className="text-sm font-bold text-plum-dark block uppercase tracking-wider">
-                  {NNEPA_IDENTITY.name}
-                </span>
-                <span className="text-xs text-zinc-500 block font-normal">
-                  {NNEPA_IDENTITY.title}
-                </span>
-              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-plum-dark/85 truncate">
+                Shopping Bag
+              </span>
             </div>
             <button
               onClick={dismissProactivePrompt}
               aria-label="Dismiss assistance"
-              className="w-6 h-6 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-400 hover:text-zinc-700 flex items-center justify-center border-none cursor-pointer transition-colors"
+              className="w-5 h-5 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-400 hover:text-zinc-700 flex items-center justify-center border-none cursor-pointer transition-colors shrink-0"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-3 h-3" />
             </button>
           </div>
 
-          <p className="text-[14.5px] sm:text-[15px] text-zinc-800 mt-2.5 leading-relaxed font-medium">
+          <p className="text-[12px] text-zinc-800 mt-2 leading-relaxed font-medium">
             {proactivePrompt.text}
           </p>
 
-          <div className="mt-3.5 flex items-center gap-2">
+          <div className="mt-2.5 flex items-center gap-1.5">
             {proactivePrompt.actionLabel && proactivePrompt.onAction && (
               <button
                 onClick={() => {
                   proactivePrompt.onAction?.();
                   dismissProactivePrompt();
                 }}
-                className="px-4 py-2 bg-plum-dark text-white text-xs sm:text-sm font-semibold rounded-full hover:bg-plum transition-colors cursor-pointer border-none shadow-xs flex items-center gap-1.5"
+                className="px-2.5 py-1 bg-plum-dark text-white text-[11px] font-semibold rounded-full hover:bg-plum transition-colors cursor-pointer border-none shadow-2xs flex items-center gap-1 shrink-0 active:scale-95"
               >
                 <span>{proactivePrompt.actionLabel}</span>
-                <ChevronRight className="w-3.5 h-3.5 text-lavender" />
+                <ChevronRight className="w-3 h-3 text-lavender" />
               </button>
             )}
             <button
@@ -754,7 +756,7 @@ export default function ShoppingConcierge({
                 setIsOpen(true);
                 dismissProactivePrompt();
               }}
-              className="px-4 py-2 bg-zinc-100 text-zinc-800 text-xs sm:text-sm font-semibold rounded-full hover:bg-zinc-200 transition-colors cursor-pointer border-none"
+              className="px-2.5 py-1 bg-zinc-100 text-zinc-700 text-[11px] font-medium rounded-full hover:bg-zinc-200 transition-colors cursor-pointer border-none shrink-0 active:scale-95"
             >
               Ask Foriwaa
             </button>
