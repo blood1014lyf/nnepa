@@ -29,7 +29,6 @@ interface CollectionShopViewProps {
   onViewDetails: (product: Product) => void;
   onOpenSizeGuide: () => void;
   onRequestCustomFitting: () => void;
-  onOpenAdminUpload: () => void;
 }
 
 const QUICK_FILTERS: { key: QuickFilterKey; label: string }[] = [
@@ -112,7 +111,6 @@ export default function CollectionShopView({
   onViewDetails,
   onOpenSizeGuide,
   onRequestCustomFitting,
-  onOpenAdminUpload,
 }: CollectionShopViewProps) {
   const drawerId = useId();
 

@@ -572,13 +572,18 @@ export default function App() {
           {/* ═══ HERO PRESENTATION SLIDESHOW ═══ */}
           <Hero />
 
-          {/* ═══ FEATURED TOP OUTFIT SHOWCASE ═══ */}
-          {topOutfit && (
-            <FeaturedOutfit
-              outfit={topOutfit}
-              onViewDetails={handleViewDetails}
-            />
-          )}
+          {/* ═══ FEATURED TOP OUTFIT SHOWCASE (ALWAYS VISIBLE) ═══ */}
+          <FeaturedOutfit
+            outfit={topOutfit}
+            onViewDetails={(prod) => {
+              if (prod) {
+                handleViewDetails(prod);
+              } else {
+                setPageWithHash('shop');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }}
+          />
 
           {/* ═══ BRAND ETHOS & CRAFT STORIES ═══ */}
           <Heritage />
@@ -603,9 +608,6 @@ export default function App() {
           onRequestCustomFitting={() => {
             setPageWithHash('contact');
             window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-          onOpenAdminUpload={() => {
-            window.open(adminToken ? '#/admin-dashboard' : '#/admin-login', '_blank');
           }}
         />
       )}
