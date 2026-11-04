@@ -259,10 +259,10 @@ export const SYNONYM_DICTIONARIES = {
     'where is your shop',
     'where is the store',
     'store address',
-    'atelier address',
+    'studio address',
     'physical store',
     'visit the store',
-    'visit atelier',
+    'visit studio',
     'accra studio',
     'accra address',
     'showroom'

@@ -494,7 +494,7 @@ export default function App() {
           <div className="flex items-center gap-3">
             <span className="font-serif text-xl tracking-wider font-light">Nnepa Foriwaa</span>
             <span className="text-[0.6rem] font-bold tracking-[0.25em] uppercase text-lavender bg-white/10 px-2.5 py-0.5 rounded">
-              Atelier Studio
+              Admin Portal
             </span>
           </div>
           <div className="flex items-center gap-4">

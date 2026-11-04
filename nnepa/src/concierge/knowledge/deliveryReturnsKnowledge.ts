@@ -47,7 +47,7 @@ export const DELIVERY_RETURNS_KNOWLEDGE: DeliveryReturnsKnowledge = {
   tailoringTimeline: {
     days: '3–7 working days',
     description:
-      'Each bespoke garment is cut and tailored to order by master artisans in our Accra atelier, typically taking 3 to 7 working days before dispatch.'
+      'Each bespoke garment is cut and tailored to order by master artisans in our Accra studio, typically taking 3 to 7 working days before dispatch.'
   },
   shippingRates: {
     freeThresholdAccraGHS: 1000,
@@ -85,7 +85,7 @@ export const DELIVERY_RETURNS_KNOWLEDGE: DeliveryReturnsKnowledge = {
     alterationGuarantee: {
       offered: true,
       windowDays: 7,
-      location: 'Accra Atelier',
+      location: 'Accra Studio',
       description:
         'To ensure an impeccable fit, we offer a complimentary fitting alteration service at our Accra studio within 7 days of garment delivery for any bespoke commission needing minor adjustments.'
     }

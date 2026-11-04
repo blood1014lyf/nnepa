@@ -201,7 +201,7 @@ export default function CheckoutView({
               Medasi — Your Order is Prepared
             </h1>
             <p className="text-sm text-text-muted mt-3 max-w-md mx-auto leading-relaxed">
-              Order <strong className="text-plum-dark font-mono font-semibold">{completedOrder.id}</strong> has been prepared for our Accra atelier.
+              Order <strong className="text-plum-dark font-mono font-semibold">{completedOrder.id}</strong> has been prepared for tailored production.
             </p>
 
             {/* Receipt Summary Card */}

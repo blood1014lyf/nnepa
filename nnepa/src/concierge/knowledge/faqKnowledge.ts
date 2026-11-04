@@ -38,8 +38,8 @@ export const FAQ_KNOWLEDGE_ENTRIES: FAQEntry[] = [
     category: 'products',
     question: 'Where are Nnepa Foriwaa garments made?',
     answer:
-      'Every Nnepa Foriwaa piece is individually cut, tailored, and hand-finished in our atelier in Accra, Ghana, using textiles sourced directly from artisanal weavers across Ghana, Nigeria, and Senegal.',
-    keywords: ['made', 'atelier', 'produced', 'country', 'origin', 'where', 'manufacture'],
+      'Every Nnepa Foriwaa piece is individually cut, tailored, and hand-finished in our studio in Accra, Ghana, using textiles sourced directly from artisanal weavers across Ghana, Nigeria, and Senegal.',
+    keywords: ['made', 'studio', 'produced', 'country', 'origin', 'where', 'manufacture'],
     suggestedAction: { label: 'Explore Collections', action: 'explore_collections' }
   },
   {
@@ -89,7 +89,7 @@ export const FAQ_KNOWLEDGE_ENTRIES: FAQEntry[] = [
     category: 'availability',
     question: 'Are items in stock or made to order?',
     answer:
-      'Garments marked Available are hand-tailored upon order confirmation, typically taking 3 to 7 working days before dispatch. Pieces marked "Made to order" or "Out of stock" can often be commissioned by contacting our atelier directly.',
+      'Garments marked Available are hand-tailored upon order confirmation, typically taking 3 to 7 working days before dispatch. Pieces marked "Made to order" or "Out of stock" can often be commissioned by contacting our studio directly.',
     keywords: ['in stock', 'out of stock', 'item available', 'availability', 'lead time', 'ready to ship'],
     suggestedAction: { label: 'Inquire on WhatsApp', action: 'contact_whatsapp' }
   },
@@ -109,7 +109,7 @@ export const FAQ_KNOWLEDGE_ENTRIES: FAQEntry[] = [
     category: 'materials',
     question: 'How should I care for and wash my garments?',
     answer:
-      'Because our garments incorporate delicate handwoven Kente, metallic brocade, and hand-dyed textiles, specialist dry cleaning is strongly recommended to preserve structural darting and textile lustre. Please consult our atelier for piece-specific advice.',
+      'Because our garments incorporate delicate handwoven Kente, metallic brocade, and hand-dyed textiles, specialist dry cleaning is strongly recommended to preserve structural darting and textile lustre. Please consult our studio for piece-specific advice.',
     keywords: ['wash', 'dry clean', 'care', 'iron', 'laundry', 'clean'],
     suggestedAction: { label: 'Boutique Care Advice', action: 'contact_whatsapp' }
   },
@@ -151,7 +151,7 @@ export const FAQ_KNOWLEDGE_ENTRIES: FAQEntry[] = [
     category: 'delivery',
     question: 'How can I track my order?',
     answer:
-      'Every order is assigned a private tracking URL (#/order/:publicId). You can also message our WhatsApp store (+233 53 879 5669) with your Order Number for real-time atelier and courier updates.',
+      'Every order is assigned a private tracking URL (#/order/:publicId). You can also message our WhatsApp store (+233 53 879 5669) with your Order Number for real-time studio and courier updates.',
     keywords: ['track', 'tracking', 'status', 'where is my order', 'courier number'],
     suggestedAction: { label: 'Track Order', action: 'track_order' }
   },
@@ -162,7 +162,7 @@ export const FAQ_KNOWLEDGE_ENTRIES: FAQEntry[] = [
     category: 'returns',
     question: 'What is your return and refund policy?',
     answer:
-      'In accordance with our published boutique policy, all sales and bespoke commissions are final once placed and cut. We operate a strict No Refund policy. However, we provide a complimentary fitting alteration service at our Accra atelier within 7 days of delivery.',
+      'In accordance with our published boutique policy, all sales and bespoke commissions are final once placed and cut. We operate a strict No Refund policy. However, we provide a complimentary fitting alteration service at our Accra studio within 7 days of delivery.',
     keywords: ['return', 'returns', 'refund', 'refunds', 'money back', 'cancel'],
     suggestedAction: { label: 'Alterations Policy', action: 'delivery_info' }
   },

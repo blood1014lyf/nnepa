@@ -667,9 +667,9 @@ export function classifyCustomerIntent(
     return 'currency_payment_info';
   }
 
-  // Atelier location & studio visit
+  // Studio location & visit
   if (matchesAny(norm, SYNONYM_DICTIONARIES.location)) {
-    return 'location_atelier_info';
+    return 'location_studio_info';
   }
 
   // Brand story & founder
@@ -943,7 +943,7 @@ export function processConciergeMessage(
       `• **Guided Measurements**: Enter your bust, waist, or hips (inches or cm)\n` +
       `• **International Size**: Convert from UK (6–18), US (2–14), or EU (34–46)\n` +
       `• **Comfortable Garment**: Compare with a piece you already own\n` +
-      `• **Stylist Consultation**: WhatsApp assistance or private atelier fitting`;
+      `• **Stylist Consultation**: WhatsApp assistance or private studio fitting`;
 
     return {
       text,
@@ -953,7 +953,7 @@ export function processConciergeMessage(
         { label: 'Compare Existing Garment', action: 'garment_dress' },
         { label: 'View Full Size Chart', action: 'open_size_chart' },
         { label: 'Chat with Stylist on WhatsApp', action: 'contact_whatsapp' },
-        { label: 'Book Accra Atelier Fitting', action: 'book_fitting_yes' }
+        { label: 'Book Accra Studio Fitting', action: 'book_fitting_yes' }
       ],
       intent: 'sizing_path_select',
       updatedContext
@@ -1260,14 +1260,14 @@ export function processConciergeMessage(
     profile.onboardingStage = 'onboarded';
 
     const text =
-      `We can host you for a private fitting at our Accra atelier, or assist you directly through WhatsApp (+233 53 879 5669). Our team will ensure every line and hem is tailored to you.\n\n` +
+      `We can host you for a private fitting at our Accra studio, or assist you directly through WhatsApp (+233 53 879 5669). Our team will ensure every line and hem is tailored to you.\n\n` +
       `How would you like to proceed?`;
 
     return {
       text,
       options: [
         { label: 'Chat on WhatsApp', action: 'contact_whatsapp' },
-        { label: 'View Atelier Contact Details', action: 'book_fitting' },
+        { label: 'View Studio Contact Details', action: 'book_fitting' },
         { label: 'Return to Shopping', action: 'filter_all' }
       ],
       intent: 'book_fitting_accepted',
@@ -1529,7 +1529,7 @@ export function processConciergeMessage(
         const text =
           `Yes${customerName}. Based on your profile (**Size ${size}**), the **${prodKnowledge.name}** in size ${size} is tailored with:\n\n` +
           (spec ? `• ${spec}\n\n` : '') +
-          `This piece features ${silhouette}. Every garment is individually tailored in our Accra atelier, and we provide complimentary alterations within 7 days of delivery should you desire minor adjustments.\n\n` +
+          `This piece features ${silhouette}. Every garment is individually tailored in our Accra studio, and we provide complimentary alterations within 7 days of delivery should you desire minor adjustments.\n\n` +
           `Would you like me to help you complete your order for this piece?`;
 
         return {
@@ -1723,7 +1723,7 @@ export function processConciergeMessage(
         : '';
       const text =
         `The **${prodKnowledge.name}** is **${prodKnowledge.formattedPrice}**${saleNote}.\n\n` +
-        `This price includes tailored construction in our Accra atelier.`;
+        `This price includes tailored construction in our Accra studio.`;
 
       return {
         text,
@@ -1781,7 +1781,7 @@ export function processConciergeMessage(
         } else {
           const text =
             `The **${prodKnowledge.name}** is currently offered in sizes: **${prodKnowledge.availableSizes.join(', ')}**.\n\n` +
-            `Size ${requestedSize.alpha} is not listed in standard sizes for this piece, but our Accra atelier can tailor to your measurements upon request.`;
+            `Size ${requestedSize.alpha} is not listed in standard sizes for this piece, but our Accra studio can tailor to your measurements upon request.`;
 
           return {
             text,
@@ -1879,7 +1879,7 @@ export function processConciergeMessage(
 
       const text =
         `${materialText}\n\n` +
-        `All textiles are sourced directly from artisan weavers in Ghana, Nigeria, and Senegal, and hand-finished in our Accra atelier.`;
+        `All textiles are sourced directly from artisan weavers in Ghana, Nigeria, and Senegal, and hand-finished in our Accra studio.`;
 
       return {
         text,
@@ -2018,13 +2018,13 @@ export function processConciergeMessage(
       `• **Phone**: +233 53 879 5669\n` +
       `• **Email**: sales@nnepaforiwaa.com\n` +
       `• **Boutique Hours**: Monday – Saturday, 9:00 AM – 6:00 PM GMT\n` +
-      `• **Private Studio Fittings**: Accra atelier by appointment.`;
+      `• **Private Studio Fittings**: Accra studio by appointment.`;
 
     return {
       text,
       options: [
         { label: 'Chat on WhatsApp', action: 'contact_whatsapp' },
-        { label: 'Book Atelier Fitting', action: 'book_fitting' },
+        { label: 'Book Studio Fitting', action: 'book_fitting' },
         { label: 'Browse Collections', action: 'filter_all' },
         { label: 'Start Over', action: 'main_menu' }
       ],
@@ -2040,13 +2040,13 @@ export function processConciergeMessage(
       `In addition to our ready-to-wear collections, Nnepa Foriwaa crafts made-to-measure ensembles for brides, grooms, wedding parties, and formal ceremonies.\n\n` +
       `• **Textiles**: Authentic handwoven Asante Kente, Aso-Oke, damask brocade, raw silk, and artisanal embroideries.\n` +
       `• **Timeline**: Custom commissions typically take 3 to 6 weeks from measurement confirmation to completion.\n` +
-      `• **Consultation**: Message our stylist on WhatsApp (+233 53 879 5669) with your wedding date and inspiration, or schedule an atelier fitting in Accra.`;
+      `• **Consultation**: Message our stylist on WhatsApp (+233 53 879 5669) with your wedding date and inspiration, or schedule a studio fitting in Accra.`;
 
     return {
       text,
       options: [
         { label: 'Consult on WhatsApp', action: 'contact_whatsapp' },
-        { label: 'Book Atelier Fitting', action: 'book_fitting' },
+        { label: 'Book Studio Fitting', action: 'book_fitting' },
         { label: 'Explore Collections', action: 'filter_all' }
       ],
       intent: 'bespoke_bridal_inquiry',
@@ -2081,7 +2081,7 @@ export function processConciergeMessage(
       `**Worldwide Express Shipping (UK, US, Europe & Worldwide):**\n\n` +
       `We ship internationally to the United Kingdom, United States, Canada, Europe, Nigeria, and worldwide via **DHL Express**.\n\n` +
       `• **Transit Time**: **3 to 7 business days** from dispatch.\n` +
-      `• **Tracking**: An official DHL Express tracking link is provided as soon as your garment departs our Accra atelier.\n` +
+      `• **Tracking**: An official DHL Express tracking link is provided as soon as your garment departs our Accra studio.\n` +
       `• **Packaging**: Each piece is individually wrapped, boxed, and sealed in boutique packaging.\n` +
       `• **Tailoring Timeline**: Standard ready-to-wear pieces prepare in 1–3 business days; tailored pieces take 3–7 business days before dispatch.`;
 
@@ -2097,12 +2097,12 @@ export function processConciergeMessage(
     };
   }
 
-  // ─── INTENT: ATELIER LOCATION & STUDIO VISIT ─────────────────────────────
-  if (classifiedIntent === 'location_atelier_info') {
+  // ─── INTENT: STUDIO LOCATION & VISIT ─────────────────────────────────────
+  if (classifiedIntent === 'location_studio_info') {
     const text =
-      `**Our Studio & Atelier Location:**\n\n` +
+      `**Our Studio Location:**\n\n` +
       `Nnepa Foriwaa is headquartered and handcrafted in **Accra, Ghana**.\n\n` +
-      `Our creative atelier welcomes clients for private styling appointments, custom fittings, and bespoke measurements from Monday through Saturday, 9:00 AM to 6:00 PM GMT.\n\n` +
+      `Our creative studio welcomes clients for private styling appointments, custom fittings, and bespoke measurements from Monday through Saturday, 9:00 AM to 6:00 PM GMT.\n\n` +
       `To schedule a private visit to our Accra studio, please request an appointment on our Contact page or message us directly on WhatsApp (+233 53 879 5669).`;
 
     return {
@@ -2112,7 +2112,7 @@ export function processConciergeMessage(
         { label: 'Message on WhatsApp', action: 'contact_whatsapp' },
         { label: 'Explore Collections', action: 'filter_all' }
       ],
-      intent: 'location_atelier_info',
+      intent: 'location_studio_info',
       updatedContext
     };
   }
@@ -2161,7 +2161,7 @@ export function processConciergeMessage(
   if (classifiedIntent === 'delivery_info') {
     const text =
       `**Delivery & Shipping Overview:**\n\n` +
-      `• **Tailoring Turnaround**: Handcrafted tailoring takes **3 to 7 working days** in our Accra atelier before dispatch.\n` +
+      `• **Tailoring Turnaround**: Handcrafted tailoring takes **3 to 7 working days** in our Accra studio before dispatch.\n` +
       `• **Accra & Greater Accra**: Complimentary delivery on orders of **GH₵ 1,000+**; standard fee of **GH₵ 45** for smaller orders (1–2 business days transit).\n` +
       `• **Regional Ghana**: Trusted domestic couriers to Kumasi, Takoradi, Cape Coast, Tamale, and other regions (2–3 business days transit).\n` +
       `• **International**: Worldwide door-to-door delivery via **DHL Express** (3–7 business days transit with full tracking).\n\n` +
@@ -2205,7 +2205,7 @@ export function processConciergeMessage(
     const text =
       `**Exchange Policy:**\n\n` +
       `Because each piece is custom-cut or tailored in limited artisan runs, we operate a strict **No Exchange** policy once an order has been confirmed.\n\n` +
-      `If a garment does not fit as desired, our Accra atelier provides **complimentary fitting alterations within 7 days** of delivery.`;
+      `If a garment does not fit as desired, our Accra studio provides **complimentary fitting alterations within 7 days** of delivery.`;
 
     return {
       text,
@@ -2222,7 +2222,7 @@ export function processConciergeMessage(
   if (classifiedIntent === 'alterations_info') {
     const text =
       `**Alterations Service:**\n\n` +
-      `We provide a **complimentary fitting alteration service** at our Accra atelier within **7 days** of garment receipt.\n\n` +
+      `We provide a **complimentary fitting alteration service** at our Accra studio within **7 days** of garment receipt.\n\n` +
       `If you need hem calibration, waist adjustments, or bespoke sizing, our master tailors will gladly make the adjustments. You can also specify custom measurements or hem lengths in your order notes at checkout.`;
 
     return {
@@ -2268,7 +2268,7 @@ export function processConciergeMessage(
         `• **Plum & Emerald Sovereign Kente Gown**: Regal handwoven Bonwire Kente for an unforgettable presence.\n` +
         `• **Royal Gold Silk Boubou**: Graceful, breathable luxury in pure silk-cotton with hand-embroidered neckline.\n` +
         `• **Ivory & Gold Regal Agbada**: Three-piece ceremonial ensemble in heavy damask brocade for gentlemen.\n\n` +
-        `Every piece is crafted in our Accra atelier with 7-day complimentary alterations. Are you shopping as a wedding guest, or planning custom bridal attire?`;
+        `Every piece is crafted in our Accra studio with 7-day complimentary alterations. Are you shopping as a wedding guest, or planning custom bridal attire?`;
       curated = catalogue.filter((p) => /kente|boubou|agbada/i.test(p.name)).slice(0, 3);
     } else if (norm.includes('gala') || norm.includes('black tie') || norm.includes('formal') || norm.includes('dinner') || norm.includes('awards') || norm.includes('banquet')) {
       occasionAdvice =
@@ -2322,7 +2322,7 @@ export function processConciergeMessage(
       const text =
         `I’ve recorded your size as **Size ${resolved.targetSize}** (referenced from ${resolved.matchedLabel}).\n\n` +
         (spec ? `• Calibrated measurements: ${spec}\n\n` : '') +
-        `Every Nnepa Foriwaa piece is individually cut and tailored in our Accra atelier, and we provide **complimentary fitting alterations within 7 days** of delivery.\n\n` +
+        `Every Nnepa Foriwaa piece is individually cut and tailored in our Accra studio, and we provide **complimentary fitting alterations within 7 days** of delivery.\n\n` +
         `Would you like to explore garments available in Size ${resolved.targetSize}, or check specific measurements?`;
 
       return {
@@ -2346,7 +2346,7 @@ export function processConciergeMessage(
       `• **True to Size**: Our garments are cut true to standard international sizing: **US 2–14 / UK 6–18 / EU 34–46**, corresponding to alpha sizes XS through XXL.\n` +
       `• **Silhouettes**: Structured peplum suits and corset gowns are tailored to skim and contour, while our silk-cotton Boubous and Kaftans feature relaxed, flowing cuts designed for effortless elegance.\n` +
       `• **Between Sizes?**: For structured or fitted garments, we recommend selecting the larger size. For loose boubous or wrap ensembles, your standard size is ideal.\n` +
-      `• **Complimentary Alterations**: Every tailored piece includes **7 days complimentary fitting alterations** at our Accra atelier to ensure a flawless fit.`;
+      `• **Complimentary Alterations**: Every tailored piece includes **7 days complimentary fitting alterations** at our Accra studio to ensure a flawless fit.`;
 
     return {
       text,
@@ -2391,7 +2391,7 @@ export function processConciergeMessage(
     const newPieces = catalogue.slice(0, 3);
     const text =
       `**Latest Heritage Collection:**\n\n` +
-      `Our latest atelier release highlights contemporary West African luxury—featuring rich damask brocades, hand-loomed Asante Kente, and structured organza silhouettes tailored fresh from our Accra atelier.\n\n` +
+      `Our latest studio release highlights contemporary West African luxury—featuring rich damask brocades, hand-loomed Asante Kente, and structured organza silhouettes tailored fresh from our Accra studio.\n\n` +
       `Here are highlights from our latest arrivals:`;
 
     return {
@@ -2415,7 +2415,7 @@ export function processConciergeMessage(
       `As an artisanal luxury house, every Nnepa Foriwaa garment is individually tailored in limited edition runs using authentic heritage textiles, and we do not run mass seasonal discounts or promo codes.\n\n` +
       `However, we offer several client courtesies:\n` +
       `• **Complimentary Accra Delivery** on orders of GH₵ 1,000 or more.\n` +
-      `• **Complimentary Fitting Alterations** within 7 days of delivery at our Accra atelier.\n` +
+      `• **Complimentary Fitting Alterations** within 7 days of delivery at our Accra studio.\n` +
       `• **Direct Styling Advice** and consultation with our design team.\n\n` +
       `Would you like to explore our pieces or check delivery information?`;
 
@@ -2457,7 +2457,7 @@ export function processConciergeMessage(
     updatedContext.activeCategory = 'men';
     const menProds = catalogue.filter((p) => p.category === 'men').slice(0, 3);
     const text =
-      `Welcome to our **Menswear** collection${customerName}. Handcrafted in our Accra atelier, our pieces feature heavy damask brocade Agbadas, handwoven Kente-yoke linen kaftans, and traditional Northern Fugu smocks.\n\n` +
+      `Welcome to our **Menswear** collection${customerName}. Handcrafted in our Accra studio, our pieces feature heavy damask brocade Agbadas, handwoven Kente-yoke linen kaftans, and traditional Northern Fugu smocks.\n\n` +
       `Here are signature menswear pieces from the collection:`;
 
     return {
@@ -2547,7 +2547,7 @@ export function processConciergeMessage(
 
   // ─── STRICT POLITE FALLBACK ──────────────────────────────────────────────
   return {
-    text: `${UNCONFIRMED_FALLBACK_TEXT}\n\nOur Accra atelier team is ready to assist you directly Monday through Saturday, 9:00 AM – 6:00 PM GMT.`,
+    text: `${UNCONFIRMED_FALLBACK_TEXT}\n\nOur Accra studio team is ready to assist you directly Monday through Saturday, 9:00 AM – 6:00 PM GMT.`,
     options: [
       { label: 'WhatsApp Boutique (+233 53 879 5669)', action: 'contact_whatsapp' },
       { label: 'Book a Fitting', action: 'book_fitting' },

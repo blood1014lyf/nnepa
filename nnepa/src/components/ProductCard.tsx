@@ -63,7 +63,7 @@ export default function ProductCard({
               NF
             </div>
             <span className="font-serif text-xs text-plum-dark font-medium">Nnepa Foriwaa</span>
-            <span className="text-[0.52rem] font-bold tracking-[0.18em] uppercase text-mauve-deep mt-0.5">Atelier</span>
+            <span className="text-[0.52rem] font-bold tracking-[0.18em] uppercase text-mauve-deep mt-0.5">Handcrafted</span>
           </div>
         )}
 

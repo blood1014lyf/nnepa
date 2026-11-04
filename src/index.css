@@ -17,19 +17,19 @@
 }
 
 html {
-  font-size: 18px;
+  font-size: 16px;
   scroll-behavior: smooth;
 }
 
 @media (min-width: 768px) {
   html {
-    font-size: 19px;
+    font-size: 16.5px;
   }
 }
 
 body {
   font-family: var(--font-serif);
-  font-size: 1.05rem;
+  font-size: 1rem;
   line-height: 1.6;
   color: var(--color-plum-dark);
   background-color: var(--color-pearl);
@@ -48,17 +48,24 @@ p, span, a, button, input, textarea, select {
 }
 
 .cb-text-body {
-  font-size: 1.02rem;
-  line-height: 1.55;
+  font-size: 1rem;
+  line-height: 1.5;
   letter-spacing: 0.015em;
 }
 
-/* Ensure micro font classes remain legible in Cormorant Garamond */
-[class*="text-[0.5"],
-[class*="text-[0.6"],
-[class*="text-[0.7"] {
-  font-size: clamp(0.78rem, 1.1vw, 0.92rem) !important;
-  letter-spacing: 0.12em;
+/* Elegant, restrained footer scale */
+footer {
+  font-size: 0.8rem !important;
+  line-height: 1.5;
+}
+footer h4, footer .footer-heading {
+  font-size: 0.85rem !important;
+}
+footer p, footer li button, footer li a {
+  font-size: 0.8rem !important;
+}
+footer .footer-bottom {
+  font-size: 0.75rem !important;
 }
 
 @layer utilities {

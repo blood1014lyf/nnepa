@@ -643,13 +643,13 @@ export default function CollectionShopView({
         {/* ═══ 4. DUAL-MODE PRODUCT GALLERY GRID ('even' 4-col / 'uneven' 2-wide + 4-up) ═══ */}
         {filteredProducts.length === 0 ? (
           <div className="px-5 md:px-10 py-24 text-center max-w-lg mx-auto">
-            <p className="text-xs tracking-[0.25em] uppercase text-plum/60 mb-3">Atelier Collection</p>
+            <p className="text-xs tracking-[0.25em] uppercase text-plum/60 mb-3">Signature Collection</p>
             <h2 className="font-serif text-2xl md:text-3xl font-light text-plum-dark mb-4">
               {products.length === 0 ? 'Collection in Craft' : 'No matching pieces'}
             </h2>
             <p className="text-sm text-plum/70 mb-8 max-w-md mx-auto leading-relaxed">
               {products.length === 0
-                ? 'Our artisans in Accra are tailoring bespoke pieces for the season. Inquire directly with our atelier concierge for custom commissions.'
+                ? 'Our artisans in Accra are tailoring bespoke pieces for the season. Inquire directly with our team for custom commissions.'
                 : 'Try adjusting your filters or category selection to explore our bespoke garments.'}
             </p>
             {products.length === 0 ? (
@@ -658,7 +658,7 @@ export default function CollectionShopView({
                 onClick={onRequestCustomFitting}
                 className="h-11 px-8 bg-plum-dark hover:bg-plum text-white text-xs tracking-[0.15em] uppercase cursor-pointer border-none transition-colors"
               >
-                Inquire With Atelier
+                Inquire With Us
               </button>
             ) : (
               <button
@@ -729,7 +729,7 @@ export default function CollectionShopView({
                               Nnepa Foriwaa
                             </span>
                             <span className="text-[0.58rem] font-bold tracking-[0.22em] uppercase text-mauve-deep mt-1">
-                              Atelier Collection
+                              Signature Collection
                             </span>
                             <span className="text-[0.52rem] tracking-wider text-text-muted mt-2">
                               Accra, Ghana

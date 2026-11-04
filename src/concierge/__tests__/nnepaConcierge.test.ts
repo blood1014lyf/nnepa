@@ -142,7 +142,7 @@ describe('NNEPA Shopping Concierge — Core Knowledge & Intelligence Test Suite'
         'Response must mention verified extracted material'
       );
     }
-    assert.ok(res.text.includes('Accra'), 'Mentions handcrafted tailoring in Accra atelier');
+    assert.ok(res.text.includes('Accra'), 'Mentions handcrafted tailoring in Accra studio');
   });
 
   // 5. Customer asks a follow-up question using context without repeating garment name
@@ -550,7 +550,7 @@ describe('NNEPA Shopping Concierge — Core Knowledge & Intelligence Test Suite'
   });
 
   // 26. Customer accepts fitting booking
-  test('Scenario 26: Customer accepts fitting booking -> provides Accra atelier and WhatsApp handoff', () => {
+  test('Scenario 26: Customer accepts fitting booking -> provides Accra studio and WhatsApp handoff', () => {
     let ctx = createInitialConciergeContext(gownProduct);
     ctx.profile.preferredName = 'Ama';
     ctx.profile.onboardingStage = 'sizing_fitting_offer';
@@ -559,7 +559,7 @@ describe('NNEPA Shopping Concierge — Core Knowledge & Intelligence Test Suite'
     assert.equal(res.intent, 'book_fitting_accepted');
     assert.equal(res.updatedContext.profile.onboardingStage, 'onboarded');
     assert.ok(res.text.includes('+233 53 879 5669'), 'Provides official WhatsApp number');
-    assert.ok(res.text.includes('Accra atelier'), 'Mentions Accra atelier fitting');
+    assert.ok(res.text.includes('Accra studio'), 'Mentions Accra studio fitting');
     assert.ok(res.options.some((o) => o.action === 'contact_whatsapp'), 'Offers WhatsApp link');
   });
 

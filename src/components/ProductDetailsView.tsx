@@ -76,7 +76,7 @@ Please confirm tailoring and delivery details.`;
                     {product.name}
                   </h3>
                   <span className="text-[0.62rem] font-bold tracking-[0.24em] uppercase text-mauve-deep mb-2">
-                    Nnepa Foriwaa &bull; Atelier Handcrafted
+                    Nnepa Foriwaa &bull; Handcrafted
                   </span>
                   <p className="text-xs text-text-muted max-w-xs leading-relaxed font-light mt-1">
                     Individually tailored in Accra, Ghana. Inquire via WhatsApp for custom fittings and textile choices.

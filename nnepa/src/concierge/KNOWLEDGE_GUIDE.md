@@ -11,7 +11,7 @@ This guide details how NNEPA's knowledge is structured, how live catalogue updat
 NNEPA operates **100% locally in the visitor's browser**. All knowledge modules are stored as clean, typed TypeScript files located in:
 ```
 src/concierge/knowledge/
-├── brandKnowledge.ts            # Module A: Brand story, atelier hours, official channels
+├── brandKnowledge.ts            # Module A: Brand story, studio hours, official channels
 ├── productKnowledge.ts          # Module B: Dynamic live catalogue adapter & supplemental notes
 ├── sizingKnowledge.ts           # Module C: Size chart, international conversions, length guides
 ├── orderingKnowledge.ts         # Module D: 3-step checkout explanation & payment facts

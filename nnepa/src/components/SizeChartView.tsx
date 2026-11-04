@@ -35,7 +35,7 @@ export default function SizeChartView({
 
           <div className="flex items-center gap-1.5 text-xs text-text-light">
             <Ruler className="w-4 h-4 text-lavender" />
-            <span className="font-semibold text-plum-dark">Atelier Size Calibration</span>
+            <span className="font-semibold text-plum-dark">Studio Size Calibration</span>
           </div>
         </div>
 
