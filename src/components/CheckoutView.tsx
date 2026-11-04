@@ -62,10 +62,10 @@ export default function CheckoutView({
     const clean = promoCode.trim().toUpperCase();
     if (clean === 'ROYAL10' || clean === 'NNEPA10') {
       setDiscountPercent(10);
-      showToast('🎉 10% Royal Heritage discount applied!');
+      showToast('10% Royal Heritage discount applied!');
     } else if (clean === 'FIRST20') {
       setDiscountPercent(20);
-      showToast('🎉 20% First Order discount applied!');
+      showToast('20% First Order discount applied!');
     } else {
       showToast('Invalid promo code. Try "ROYAL10"');
     }

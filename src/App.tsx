@@ -405,7 +405,7 @@ export default function App() {
 
   const handleAddToCart = (product: Product, size?: string) => {
     if (!product.inStock) {
-      showToast('⚠️ Out of stock, redirecting to custom order form');
+      showToast('Out of stock, redirecting to custom order form');
       handleViewDetails(product);
       return;
     }
@@ -421,7 +421,7 @@ export default function App() {
       }
       return [...prev, { product, quantity: 1, size }];
     });
-    showToast(`✨ Added "${product.name}" ${size ? `(${size})` : ''} to cart`);
+    showToast(`Added "${product.name}" ${size ? `(${size})` : ''} to cart`);
   };
 
   const handleToggleWishlist = (product: Product) => {
@@ -431,7 +431,7 @@ export default function App() {
         showToast(`Removed from wishlist`);
         return prev.filter((id) => id !== product.id);
       } else {
-        showToast(`♡ Added "${product.name}" to wishlist`);
+        showToast(`Added "${product.name}" to wishlist`);
         return [...prev, product.id];
       }
     });
@@ -660,7 +660,7 @@ export default function App() {
               } catch {}
               setAdminToken(token);
               setPageWithHash('admin-dashboard');
-              showToast('🛡 Administrative session established successfully');
+              showToast('Administrative session established successfully');
             }}
           />
         )}

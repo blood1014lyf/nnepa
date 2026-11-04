@@ -44,7 +44,7 @@ export interface BrandKnowledge {
 
 export const BRAND_KNOWLEDGE: BrandKnowledge = {
   name: 'Nnepa Foriwaa',
-  assistantName: 'NNEPA',
+  assistantName: 'Foriwaa',
   assistantSubtitle: 'Shopping Assistant',
   tagline: 'Rooted. Refined. Regal.',
   foundedYear: 2015,

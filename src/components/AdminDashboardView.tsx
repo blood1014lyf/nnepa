@@ -303,7 +303,7 @@ export default function AdminDashboardView({
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newProduct.name || !newProduct.price) {
-      showToast('⚠️ Product Name and Price are required.');
+      showToast('Product Name and Price are required.');
       return;
     }
 
@@ -313,7 +313,7 @@ export default function AdminDashboardView({
     try {
       if (uploadFile) {
         setUploadingImage(true);
-        showToast('📤 Optimizing & uploading photo...');
+        showToast('Optimizing & uploading photo...');
         finalImageUrl = await uploadImageToServerOrDataUrl(uploadFile, uploadPreview?.url);
         setUploadingImage(false);
       }
@@ -362,7 +362,7 @@ export default function AdminDashboardView({
       } catch {}
 
       onRefreshProducts?.();
-      showToast(`✨ Added "${newProduct.name}" to collection`);
+      showToast(`Added "${newProduct.name}" to collection`);
 
       // Reset form
       setNewProduct({
@@ -381,7 +381,7 @@ export default function AdminDashboardView({
       setUploadPreview(null);
       setIsAddingProduct(false);
     } catch (err: any) {
-      showToast(`⚠️ Error adding product: ${err.message || err}`);
+      showToast(`Error adding product: ${err.message || err}`);
     } finally {
       setProductsLoading(false);
       setUploadingImage(false);
@@ -399,7 +399,7 @@ export default function AdminDashboardView({
     try {
       if (editUploadFile) {
         setEditUploadingImage(true);
-        showToast('📤 Optimizing & uploading photo...');
+        showToast('Optimizing & uploading photo...');
         finalImageUrl = await uploadImageToServerOrDataUrl(editUploadFile, editUploadPreview?.url);
         setEditUploadingImage(false);
       }
@@ -431,13 +431,13 @@ export default function AdminDashboardView({
       } catch {}
 
       onRefreshProducts?.();
-      showToast(`✏️ Saved changes for "${editingProduct.name}"`);
+      showToast(`Saved changes for "${editingProduct.name}"`);
 
       setEditingProduct(null);
       setEditUploadFile(null);
       setEditUploadPreview(null);
     } catch (err: any) {
-      showToast(`⚠️ Error saving changes: ${err.message || err}`);
+      showToast(`Error saving changes: ${err.message || err}`);
     } finally {
       setProductsLoading(false);
       setEditUploadingImage(false);
@@ -462,7 +462,7 @@ export default function AdminDashboardView({
 
     setConfirmDeleteId(null);
     onRefreshProducts?.();
-    showToast('🗑 Product removed from catalogue');
+    showToast('Product removed from catalogue');
   };
 
   const filteredOrders = orders.filter((o) => {

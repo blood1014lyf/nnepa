@@ -8,7 +8,7 @@
  */
 
 export const NNEPA_IDENTITY = {
-  name: 'NNEPA',
+  name: 'Foriwaa',
   title: 'Shopping Assistant',
   shortBrandName: 'Nnepa Foriwaa',
   tone: {

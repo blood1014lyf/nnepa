@@ -10,17 +10,17 @@ import embroiderySewingImg from '../assets/images/regenerated_image_178042842700
 export default function Heritage() {
   const steps = [
     {
-      symbol: '✦',
+      number: '01',
       title: 'Ethically Sourced Fabric',
       desc: 'We partner directly with local weavers in Ghana, Nigeria, and Senegal for authentic Ankara, Kente, and Aso-oke materials.',
     },
     {
-      symbol: '⬡',
+      number: '02',
       title: 'Made to Measure',
       desc: 'Each garment is custom-tailored to your exact measurements, ensuring a flawless fit every single time.',
     },
     {
-      symbol: '◈',
+      number: '03',
       title: 'Heritage Embroidery',
       desc: 'Hand-embroidered details and beadwork inspired by centuries-old African royal traditions adorn every piece.',
     },
@@ -74,8 +74,8 @@ export default function Heritage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 pt-8 border-t border-mauve/15">
         {steps.map((step, idx) => (
           <div key={idx} className="flex gap-4 items-start">
-            <div className="w-11 h-11 flex-shrink-0 rounded-full bg-gradient-to-br from-lavender/15 to-mauve/15 border border-solid border-lilac/25 flex items-center justify-center text-base text-lavender">
-              {step.symbol}
+            <div className="w-11 h-11 flex-shrink-0 rounded-full bg-gradient-to-br from-lavender/15 to-mauve/15 border border-solid border-lilac/25 flex items-center justify-center text-xs font-serif font-bold text-lavender">
+              {step.number}
             </div>
             <div>
               <h4 className="font-serif text-lg font-medium text-plum-dark mb-1">

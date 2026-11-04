@@ -15,7 +15,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  Sparkles,
   X,
   MessageSquare,
   Ruler,
@@ -681,7 +680,7 @@ export default function ShoppingConcierge({
           <div className="flex items-start justify-between gap-2.5">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-full bg-plum-dark text-white flex items-center justify-center shrink-0 shadow-xs">
-                <Sparkles className="w-3.5 h-3.5 text-lavender" />
+                <ShoppingBag className="w-3.5 h-3.5 text-lavender" />
               </div>
               <div>
                 <span className="text-[11px] font-bold text-plum-dark block uppercase tracking-wider">
@@ -791,9 +790,14 @@ export default function ShoppingConcierge({
                 <ShoppingBag className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h3 className="font-serif text-sm font-semibold tracking-wide text-white leading-tight">
-                  {NNEPA_IDENTITY.name}
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-serif text-sm font-semibold tracking-wide text-white leading-tight">
+                    {NNEPA_IDENTITY.name}
+                  </h3>
+                  <span className="text-[9.5px] uppercase tracking-wider bg-white/15 px-2 py-0.5 rounded-full text-lavender-light font-medium">
+                    Season's Greetings
+                  </span>
+                </div>
                 <span className="text-[10px] text-lavender/90 flex items-center gap-1 font-light">
                   <span className={`w-1.5 h-1.5 rounded-full ${isThinking ? 'bg-gold animate-ping' : 'bg-emerald-400 animate-pulse'}`} />
                   <span>{isThinking ? 'Thinking...' : NNEPA_IDENTITY.title}</span>

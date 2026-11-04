@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { Ruler, Sparkles, Check, HelpCircle, MessageSquare, Info, ArrowRight, Scissors } from 'lucide-react';
+import { Ruler, Check, HelpCircle, MessageSquare, Info, ArrowRight, Scissors } from 'lucide-react';
 import {
   SizingRegion,
   SizingCategory,
@@ -200,7 +200,7 @@ export default function SizeChart({
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-start gap-3">
             <div className="w-9 h-9 rounded-full bg-lavender/20 flex items-center justify-center shrink-0 text-mauve-deep mt-0.5">
-              <Sparkles className="w-4 h-4" />
+              <Ruler className="w-4 h-4" />
             </div>
             <div>
               <h4 className="text-xs font-bold uppercase tracking-[0.16em] text-plum-dark">
@@ -278,13 +278,13 @@ export default function SizeChart({
                 <tr className="bg-lavender/10 text-plum-dark border-b border-lilac/15 font-bold tracking-wider text-[0.65rem] uppercase">
                   <th className="p-3.5 pl-5">Tailored Size</th>
                   <th className={`p-3.5 ${region === 'US' ? 'bg-lavender/20 text-plum-dark font-extrabold border-x border-lavender/20' : ''}`}>
-                    US Size {region === 'US' && '★'}
+                    US Size
                   </th>
                   <th className={`p-3.5 ${region === 'UK' ? 'bg-lavender/20 text-plum-dark font-extrabold border-x border-lavender/20' : ''}`}>
-                    UK Size {region === 'UK' && '★'}
+                    UK Size
                   </th>
                   <th className={`p-3.5 ${region === 'EU' ? 'bg-lavender/20 text-plum-dark font-extrabold border-x border-lavender/20' : ''}`}>
-                    EU Size {region === 'EU' && '★'}
+                    EU Size
                   </th>
                   <th className="p-3.5">Bust ({unit})</th>
                   <th className="p-3.5">Waist ({unit})</th>
@@ -359,13 +359,13 @@ export default function SizeChart({
                 <tr className="bg-lavender/10 text-plum-dark border-b border-lilac/15 font-bold tracking-wider text-[0.65rem] uppercase">
                   <th className="p-3.5 pl-5">Tailored Size</th>
                   <th className={`p-3.5 ${region === 'US' ? 'bg-lavender/20 text-plum-dark font-extrabold border-x border-lavender/20' : ''}`}>
-                    US Suit/Chest {region === 'US' && '★'}
+                    US Suit/Chest
                   </th>
                   <th className={`p-3.5 ${region === 'UK' ? 'bg-lavender/20 text-plum-dark font-extrabold border-x border-lavender/20' : ''}`}>
-                    UK Suit/Chest {region === 'UK' && '★'}
+                    UK Suit/Chest
                   </th>
                   <th className={`p-3.5 ${region === 'EU' ? 'bg-lavender/20 text-plum-dark font-extrabold border-x border-lavender/20' : ''}`}>
-                    EU Size {region === 'EU' && '★'}
+                    EU Size
                   </th>
                   <th className="p-3.5">Chest ({unit})</th>
                   <th className="p-3.5">Waist ({unit})</th>
