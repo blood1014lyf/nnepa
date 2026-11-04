@@ -632,6 +632,7 @@ export default function ShoppingConcierge({
       }
 
       case 'go_to_checkout':
+        setIsOpen(false);
         onNavigate('checkout');
         break;
 

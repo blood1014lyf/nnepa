@@ -774,6 +774,7 @@ export default function App() {
         cartItemsCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)}
         isCartOpen={isCartOpen}
         onNavigate={(targetPage, targetCategory, targetProduct) => {
+          setIsCartOpen(false);
           if (targetCategory) {
             setActiveCategory(targetCategory);
           }
