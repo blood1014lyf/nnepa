@@ -452,11 +452,11 @@ export default function SizeChart({
 
       {/* ═══ OFFICIAL NNEPA FORIWAA LENGTH GUIDE (FOR A PERFECT FIT) ═══ */}
       <div className="bg-white rounded-md border border-lilac/20 shadow-xs overflow-hidden mb-6" id="official-length-guide">
-        {/* Card Header & Brand Identity */}
+        {/* Card Header & Brand Identity matching Size Guide */}
         <div className="p-4 sm:p-5 border-b border-zinc-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-zinc-50/70">
           <div>
             <span className="text-[0.62rem] font-bold tracking-[0.25em] uppercase text-text-light block">
-              Nnepa Foriwaa • High Waist to Feet
+              High Waist to Feet Calibration
             </span>
             <h3 className="font-serif text-lg sm:text-xl text-plum-dark font-light flex items-center gap-2 mt-0.5">
               <Ruler className="w-4 h-4 text-lavender" />
@@ -470,148 +470,68 @@ export default function SizeChart({
           </div>
         </div>
 
-        {/* Height Quick Selector Pills */}
-        <div className="p-4 bg-zinc-50/50 border-b border-zinc-100">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5">
-            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-plum-dark flex items-center gap-1.5">
-              <Ruler className="w-3.5 h-3.5 text-lavender" />
-              <span>Select your height category to highlight recommended lengths:</span>
-            </span>
-            {selectedLengthCat && (
-              <button
-                type="button"
-                onClick={() => setSelectedLengthCat(null)}
-                className="text-[0.65rem] text-lavender hover:text-plum-dark underline cursor-pointer bg-transparent border-none p-0 self-start sm:self-auto font-medium"
-              >
-                Reset Highlight
-              </button>
-            )}
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
-            {OFFICIAL_LENGTH_GUIDE.map((cat) => {
-              const isSelected = selectedLengthCat === cat.id;
-              return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => setSelectedLengthCat(isSelected ? null : cat.id)}
-                  className={`p-2.5 rounded text-center transition-all cursor-pointer border ${
-                    isSelected
-                      ? 'bg-lavender/15 border-lavender text-plum-dark font-bold shadow-xs'
-                      : 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300'
-                  }`}
-                >
-                  <span className="text-xs font-bold block text-plum-dark">{cat.name}</span>
-                  <span className="text-[0.68rem] text-text-muted font-mono">{cat.heightRange}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Authoritative Length Table */}
+        {/* Clean Table styled consistently with the Size Guide Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-center text-xs border-collapse min-w-[700px]">
+          <table className="w-full text-left text-xs border-collapse min-w-[760px]">
             <thead>
-              <tr className="bg-lavender/10 border-b border-lavender/20 text-[0.68rem] font-bold tracking-wider uppercase text-plum-dark">
-                <th className="p-3.5 text-left pl-5 font-serif w-48">Size Category</th>
-                {OFFICIAL_LENGTH_GUIDE.map((cat) => {
-                  const isHighlighted = selectedLengthCat === cat.id;
-                  return (
-                    <th
-                      key={cat.id}
-                      onClick={() => setSelectedLengthCat(cat.id)}
-                      className={`p-3.5 cursor-pointer transition-colors ${
-                        isHighlighted
-                          ? 'bg-lavender/20 text-plum-dark font-extrabold border-x border-lavender/30'
-                          : 'hover:bg-lavender/10 text-plum-dark'
-                      }`}
-                    >
-                      <div className="text-xs font-bold">{cat.name}</div>
-                      <div className="text-[0.65rem] font-mono text-lavender mt-0.5">{cat.heightRange}</div>
-                    </th>
-                  );
-                })}
+              <tr className="bg-lavender/10 text-plum-dark border-b border-lilac/15 font-bold tracking-wider text-[0.65rem] uppercase">
+                <th className="p-3.5 pl-5">Size Category</th>
+                <th className="p-3.5">Height Range</th>
+                <th className="p-3.5">Pants / Skirts Length ({unit === 'in' ? 'in' : 'cm'})</th>
+                <th className="p-3.5">Dress Length ({unit === 'in' ? 'in' : 'cm'})</th>
+                <th className="p-3.5 pr-5">Proportion & Drape Notes</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-100 text-xs text-plum-dark">
-              {/* Pants / Skirts Row */}
-              <tr className="hover:bg-zinc-50/70 transition-colors">
-                <td className="p-3.5 text-left pl-5 font-semibold text-plum-dark flex items-center gap-2.5">
-                  <Scissors className="w-4 h-4 text-lavender shrink-0" />
-                  <div>
-                    <span className="block font-bold">Pants / Skirts Length</span>
-                    <span className="text-[0.65rem] text-text-muted font-mono block">
-                      {unit === 'in' ? '(inches)' : '(cm)'}
-                    </span>
-                  </div>
-                </td>
-                {OFFICIAL_LENGTH_GUIDE.map((cat) => {
-                  const isHighlighted = selectedLengthCat === cat.id;
-                  return (
-                    <td
-                      key={cat.id}
-                      onClick={() => setSelectedLengthCat(cat.id)}
-                      className={`p-3.5 font-mono cursor-pointer ${
-                        isHighlighted
-                          ? 'bg-lavender/15 font-bold text-plum-dark border-x border-lavender/30'
-                          : 'text-zinc-700'
-                      }`}
-                    >
-                      <span className="text-sm font-bold text-plum-dark">
-                        {unit === 'in' ? `${cat.pantsSkirtsLengthIn}` : `${cat.pantsSkirtsLengthCm} cm`}
+            <tbody className="divide-y divide-zinc-100 text-[0.72rem] text-plum-dark">
+              {OFFICIAL_LENGTH_GUIDE.map((cat) => {
+                const isSelected = selectedLengthCat === cat.id;
+                return (
+                  <tr
+                    key={cat.id}
+                    onClick={() => setSelectedLengthCat(isSelected ? null : cat.id)}
+                    className={`cursor-pointer transition-colors ${
+                      isSelected
+                        ? 'bg-lavender/15 font-semibold text-plum-dark'
+                        : 'hover:bg-zinc-50'
+                    }`}
+                  >
+                    <td className="p-3.5 pl-5 font-sans font-bold flex items-center gap-2">
+                      {isSelected && <Check className="w-3.5 h-3.5 text-lavender shrink-0" />}
+                      <span className="px-2.5 py-1 rounded bg-zinc-100 font-mono text-xs text-plum-dark">
+                        {cat.name}
                       </span>
                     </td>
-                  );
-                })}
-              </tr>
-
-              {/* Dress Length Row */}
-              <tr className="hover:bg-zinc-50/70 transition-colors">
-                <td className="p-3.5 text-left pl-5 font-semibold text-plum-dark flex items-center gap-2.5">
-                  <Ruler className="w-4 h-4 text-lavender shrink-0" />
-                  <div>
-                    <span className="block font-bold">Dress Length</span>
-                    <span className="text-[0.65rem] text-text-muted font-mono block">
-                      {unit === 'in' ? '(inches)' : '(cm)'}
-                    </span>
-                  </div>
-                </td>
-                {OFFICIAL_LENGTH_GUIDE.map((cat) => {
-                  const isHighlighted = selectedLengthCat === cat.id;
-                  return (
-                    <td
-                      key={cat.id}
-                      onClick={() => setSelectedLengthCat(cat.id)}
-                      className={`p-3.5 font-mono cursor-pointer ${
-                        isHighlighted
-                          ? 'bg-lavender/15 font-bold text-plum-dark border-x border-lavender/30'
-                          : 'text-zinc-700'
-                      }`}
-                    >
-                      <span className="text-sm font-bold text-plum-dark">
-                        {unit === 'in' ? `${cat.dressLengthIn}` : `${cat.dressLengthCm} cm`}
-                      </span>
+                    <td className="p-3.5 font-mono text-xs font-semibold text-plum-dark">
+                      {cat.heightRange} {unit === 'cm' && <span className="text-[0.65rem] text-text-muted">({cat.heightRangeCm})</span>}
                     </td>
-                  );
-                })}
-              </tr>
+                    <td className="p-3.5 font-mono text-xs font-bold text-mauve-deep">
+                      {unit === 'in' ? `${cat.pantsSkirtsLengthIn}"` : `${cat.pantsSkirtsLengthCm} cm`}
+                    </td>
+                    <td className="p-3.5 font-mono text-xs font-bold text-mauve-deep">
+                      {unit === 'in' ? `${cat.dressLengthIn}"` : `${cat.dressLengthCm} cm`}
+                    </td>
+                    <td className="p-3.5 pr-5 text-text-light text-xs leading-relaxed">
+                      {cat.description}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
 
-        {/* Footer Notes Box with Clean Design */}
+        {/* Footer Notes Box with Clean Understated Styling */}
         <div className="p-4 sm:p-5 bg-zinc-50 border-t border-zinc-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-start gap-3">
-            <div className="w-7 h-7 rounded-full bg-lavender/15 text-lavender flex items-center justify-center shrink-0 border border-lavender/30 font-serif font-bold text-xs mt-0.5">
+            <div className="w-6 h-6 rounded-full bg-lavender/15 text-lavender flex items-center justify-center shrink-0 border border-lavender/30 font-serif font-bold text-xs mt-0.5">
               i
             </div>
             <ul className="space-y-1 text-xs text-zinc-700">
               <li className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-lavender shrink-0" />
-                <span>All measurements are in inches (or cm using the toggle above).</span>
+                <span>All measurements are in {unit === 'in' ? 'inches' : 'centimeters'} (high waist to feet).</span>
               </li>
-              <li className="flex items-center gap-2 font-semibold text-plum-dark">
+              <li className="flex items-center gap-2 font-medium text-plum-dark">
                 <span className="w-1.5 h-1.5 rounded-full bg-lavender shrink-0" />
                 <span>These are high waist to feet measurements.</span>
               </li>
@@ -623,7 +543,7 @@ export default function SizeChart({
           </div>
 
           <div className="flex flex-col items-start md:items-end justify-center shrink-0 border-t md:border-t-0 md:border-l border-zinc-200 pt-3 md:pt-0 md:pl-5">
-            <div className="font-serif italic text-lg sm:text-xl text-plum-dark font-light mb-1.5">
+            <div className="font-serif italic text-base sm:text-lg text-plum-dark font-light mb-1">
               Custom Length Available
             </div>
             <a
