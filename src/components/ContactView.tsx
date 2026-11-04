@@ -93,7 +93,7 @@ export default function ContactView() {
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="e.g. abena@example.com"
+                    placeholder="e.g. name@domain.com"
                     className="px-4 py-3 bg-zinc-50 border border-zinc-200 outline-none focus:border-lavender text-xs rounded-[2px]"
                   />
                 </div>

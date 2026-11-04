@@ -113,6 +113,62 @@ export default function AdminDashboardView({
   const addGalleryInputRef = useRef<HTMLInputElement | null>(null);
   const addCameraInputRef = useRef<HTMLInputElement | null>(null);
 
+  // Available Sizes Management State
+  const PRESET_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', 'Bespoke'];
+  const [customSizeInput, setCustomSizeInput] = useState('');
+  const [editCustomSizeInput, setEditCustomSizeInput] = useState('');
+
+  const handleToggleNewSize = (sz: string) => {
+    const current = newProduct.sizes || [];
+    if (current.includes(sz)) {
+      setNewProduct({ ...newProduct, sizes: current.filter((s) => s !== sz) });
+    } else {
+      setNewProduct({ ...newProduct, sizes: [...current, sz] });
+    }
+  };
+
+  const handleAddNewCustomSize = () => {
+    const trimmed = customSizeInput.trim();
+    if (!trimmed) return;
+    const current = newProduct.sizes || [];
+    if (!current.includes(trimmed)) {
+      setNewProduct({ ...newProduct, sizes: [...current, trimmed] });
+    }
+    setCustomSizeInput('');
+  };
+
+  const handleRemoveNewSize = (sz: string) => {
+    const current = newProduct.sizes || [];
+    setNewProduct({ ...newProduct, sizes: current.filter((s) => s !== sz) });
+  };
+
+  const handleToggleEditSize = (sz: string) => {
+    if (!editingProduct) return;
+    const current = editingProduct.sizes || [];
+    if (current.includes(sz)) {
+      setEditingProduct({ ...editingProduct, sizes: current.filter((s) => s !== sz) });
+    } else {
+      setEditingProduct({ ...editingProduct, sizes: [...current, sz] });
+    }
+  };
+
+  const handleAddEditCustomSize = () => {
+    if (!editingProduct) return;
+    const trimmed = editCustomSizeInput.trim();
+    if (!trimmed) return;
+    const current = editingProduct.sizes || [];
+    if (!current.includes(trimmed)) {
+      setEditingProduct({ ...editingProduct, sizes: [...current, trimmed] });
+    }
+    setEditCustomSizeInput('');
+  };
+
+  const handleRemoveEditSize = (sz: string) => {
+    if (!editingProduct) return;
+    const current = editingProduct.sizes || [];
+    setEditingProduct({ ...editingProduct, sizes: current.filter((s) => s !== sz) });
+  };
+
   // Edit Product Upload State
   const [editUploadFile, setEditUploadFile] = useState<File | null>(null);
   const [editUploadPreview, setEditUploadPreview] = useState<ImagePreviewState | null>(null);
@@ -379,6 +435,7 @@ export default function AdminDashboardView({
       });
       setUploadFile(null);
       setUploadPreview(null);
+      setCustomSizeInput('');
       setIsAddingProduct(false);
     } catch (err: any) {
       showToast(`Error adding product: ${err.message || err}`);
@@ -636,7 +693,13 @@ export default function AdminDashboardView({
                       {/* Action buttons */}
                       <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between gap-2">
                         <button
-                          onClick={() => setEditingProduct(prod)}
+                          onClick={() => {
+                            setEditingProduct({
+                              ...prod,
+                              sizes: prod.sizes && prod.sizes.length > 0 ? [...prod.sizes] : ['S', 'M', 'L', 'XL']
+                            });
+                            setEditCustomSizeInput('');
+                          }}
                           className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-semibold rounded cursor-pointer transition-colors"
                         >
                           <Edit className="w-3.5 h-3.5" />
@@ -1072,6 +1135,86 @@ export default function AdminDashboardView({
                     </select>
                   </div>
 
+                  {/* Available Sizes Picker & Adder */}
+                  <div className="sm:col-span-2 flex flex-col gap-2 p-3 bg-zinc-50/70 border border-zinc-200 rounded">
+                    <div className="flex items-center justify-between">
+                      <label className="font-semibold text-zinc-700 text-xs uppercase tracking-wider">
+                        Available Sizes
+                      </label>
+                      <span className="text-[11px] text-zinc-400">
+                        Select presets or add custom size
+                      </span>
+                    </div>
+
+                    {/* Presets */}
+                    <div className="flex flex-wrap gap-1.5">
+                      {PRESET_SIZES.map((sz) => {
+                        const isSelected = (newProduct.sizes || []).includes(sz);
+                        return (
+                          <button
+                            key={sz}
+                            type="button"
+                            onClick={() => handleToggleNewSize(sz)}
+                            className={`px-3 py-1 text-xs font-semibold rounded-full border transition-all cursor-pointer ${
+                              isSelected
+                                ? 'bg-plum-dark text-white border-plum-dark shadow-xs'
+                                : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300'
+                            }`}
+                          >
+                            {sz}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Custom Size Input */}
+                    <div className="flex items-center gap-2 mt-1">
+                      <input
+                        type="text"
+                        placeholder="Add size (e.g. UK 12, Free Size, 42R)..."
+                        value={customSizeInput}
+                        onChange={(e) => setCustomSizeInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddNewCustomSize();
+                          }
+                        }}
+                        className="flex-1 px-3 py-1.5 text-xs bg-white border border-zinc-200 rounded outline-none focus:border-plum-dark"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddNewCustomSize}
+                        className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider bg-zinc-800 text-white hover:bg-zinc-700 rounded cursor-pointer transition-colors"
+                      >
+                        + Add
+                      </button>
+                    </div>
+
+                    {/* Active Selected Sizes List */}
+                    {newProduct.sizes && newProduct.sizes.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1 pt-2 border-t border-zinc-200/60">
+                        <span className="text-[11px] text-zinc-400 mr-1">Active:</span>
+                        {newProduct.sizes.map((sz) => (
+                          <span
+                            key={sz}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-white border border-zinc-300 text-plum-dark rounded text-xs font-medium"
+                          >
+                            <span>{sz}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveNewSize(sz)}
+                              className="text-zinc-400 hover:text-rose-600 cursor-pointer ml-0.5 text-xs font-bold leading-none border-none bg-transparent"
+                              title={`Remove ${sz}`}
+                            >
+                              &times;
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
                   <div className="sm:col-span-2 flex flex-col gap-1">
                     <label className="font-semibold text-zinc-700">Garment Description</label>
                     <textarea
@@ -1091,6 +1234,7 @@ export default function AdminDashboardView({
                       setIsAddingProduct(false);
                       setUploadFile(null);
                       setUploadPreview(null);
+                      setCustomSizeInput('');
                     }}
                     className="flex-1 py-2.5 text-zinc-600 border border-zinc-200 bg-white rounded cursor-pointer font-bold uppercase tracking-wider hover:bg-zinc-50"
                   >
@@ -1305,6 +1449,86 @@ export default function AdminDashboardView({
                       <option value="true">In Stock & Active</option>
                       <option value="false">Out of Stock</option>
                     </select>
+                  </div>
+
+                  {/* Available Sizes Picker & Adder for Edit Modal */}
+                  <div className="sm:col-span-2 flex flex-col gap-2 p-3 bg-zinc-50/70 border border-zinc-200 rounded">
+                    <div className="flex items-center justify-between">
+                      <label className="font-semibold text-zinc-700 text-xs uppercase tracking-wider">
+                        Available Sizes
+                      </label>
+                      <span className="text-[11px] text-zinc-400">
+                        Select presets or add custom size
+                      </span>
+                    </div>
+
+                    {/* Presets */}
+                    <div className="flex flex-wrap gap-1.5">
+                      {PRESET_SIZES.map((sz) => {
+                        const isSelected = (editingProduct.sizes || []).includes(sz);
+                        return (
+                          <button
+                            key={sz}
+                            type="button"
+                            onClick={() => handleToggleEditSize(sz)}
+                            className={`px-3 py-1 text-xs font-semibold rounded-full border transition-all cursor-pointer ${
+                              isSelected
+                                ? 'bg-plum-dark text-white border-plum-dark shadow-xs'
+                                : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300'
+                            }`}
+                          >
+                            {sz}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Custom Size Input */}
+                    <div className="flex items-center gap-2 mt-1">
+                      <input
+                        type="text"
+                        placeholder="Add size (e.g. UK 12, Free Size, 42R)..."
+                        value={editCustomSizeInput}
+                        onChange={(e) => setEditCustomSizeInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddEditCustomSize();
+                          }
+                        }}
+                        className="flex-1 px-3 py-1.5 text-xs bg-white border border-zinc-200 rounded outline-none focus:border-plum-dark"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddEditCustomSize}
+                        className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider bg-zinc-800 text-white hover:bg-zinc-700 rounded cursor-pointer transition-colors"
+                      >
+                        + Add
+                      </button>
+                    </div>
+
+                    {/* Active Selected Sizes List */}
+                    {editingProduct.sizes && editingProduct.sizes.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1 pt-2 border-t border-zinc-200/60">
+                        <span className="text-[11px] text-zinc-400 mr-1">Active:</span>
+                        {editingProduct.sizes.map((sz) => (
+                          <span
+                            key={sz}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-white border border-zinc-300 text-plum-dark rounded text-xs font-medium"
+                          >
+                            <span>{sz}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveEditSize(sz)}
+                              className="text-zinc-400 hover:text-rose-600 cursor-pointer ml-0.5 text-xs font-bold leading-none border-none bg-transparent"
+                              title={`Remove ${sz}`}
+                            >
+                              &times;
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div className="sm:col-span-2 flex flex-col gap-1">

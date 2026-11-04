@@ -9,8 +9,7 @@ import {
   CheckCircle,
   ShieldCheck,
   ShoppingBag,
-  Truck,
-  Tag
+  Truck
 } from 'lucide-react';
 import { CartItem, Order, OrderCustomerInfo } from '../types.ts';
 import { WhatsAppIcon } from './WhatsAppIcon.tsx';
@@ -42,8 +41,6 @@ export default function CheckoutView({
     deliveryNotes: '',
   });
 
-  const [promoCode, setPromoCode] = useState('');
-  const [discountPercent, setDiscountPercent] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
 
@@ -52,24 +49,9 @@ export default function CheckoutView({
     0
   );
 
-  const discountAmount = Math.round((subtotal * discountPercent) / 100);
   const isFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
   const deliveryFee = isFreeShipping ? 0 : STANDARD_SHIPPING_FEE;
-  const total = Math.max(0, subtotal - discountAmount + deliveryFee);
-
-  const handleApplyPromo = (e: React.FormEvent) => {
-    e.preventDefault();
-    const clean = promoCode.trim().toUpperCase();
-    if (clean === 'ROYAL10' || clean === 'NNEPA10') {
-      setDiscountPercent(10);
-      showToast('10% Royal Heritage discount applied!');
-    } else if (clean === 'FIRST20') {
-      setDiscountPercent(20);
-      showToast('20% First Order discount applied!');
-    } else {
-      showToast('Invalid promo code. Try "ROYAL10"');
-    }
-  };
+  const total = Math.max(0, subtotal + deliveryFee);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -105,9 +87,6 @@ export default function CheckoutView({
       ),
       ``,
       `• Subtotal: GH₵ ${subtotal.toLocaleString()}`,
-      discountAmount > 0
-        ? `• Promo Discount (${discountPercent}%): -GH₵ ${discountAmount.toLocaleString()} (${promoCode.toUpperCase()})`
-        : '',
       `• Delivery: ${isFreeShipping ? 'Complimentary (Accra)' : `GH₵ ${deliveryFee}`}`,
       `*Total Payable:* GH₵ ${total.toLocaleString()}`,
       ``,
@@ -373,7 +352,7 @@ export default function CheckoutView({
                     <input
                       type="email"
                       name="email"
-                      placeholder="e.g. yaa@example.com"
+                      placeholder="e.g. name@domain.com"
                       value={formData.email}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 bg-pearl/60 border border-lilac/30 rounded-[3px] text-sm text-plum-dark outline-none focus:border-lavender focus:bg-white transition-all"
@@ -535,39 +514,12 @@ export default function CheckoutView({
                 ))}
               </div>
 
-              {/* Promo Code Form */}
-              <form onSubmit={handleApplyPromo} className="flex gap-2 mb-6">
-                <div className="relative flex-1">
-                  <Tag className="w-3.5 h-3.5 text-text-muted absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    placeholder="Coupon / Promo (e.g. ROYAL10)"
-                    value={promoCode}
-                    onChange={(e) => setPromoCode(e.target.value)}
-                    className="w-full pl-8 pr-3 py-2.5 bg-pearl/60 border border-lilac/30 rounded-[3px] text-xs text-plum-dark outline-none focus:border-lavender uppercase tracking-wider"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="px-4 py-2.5 bg-plum-dark text-white text-[0.62rem] font-bold tracking-[0.16em] uppercase rounded-[3px] hover:bg-plum transition-all cursor-pointer border-none"
-                >
-                  Apply
-                </button>
-              </form>
-
               {/* Cost Calculations */}
               <div className="space-y-2.5 border-t border-lilac/15 pt-4 text-xs">
                 <div className="flex justify-between text-text-muted">
                   <span>Subtotal</span>
                   <span className="font-semibold text-plum-dark">GH₵ {subtotal.toLocaleString()}</span>
                 </div>
-
-                {discountAmount > 0 && (
-                  <div className="flex justify-between text-emerald-600 font-semibold">
-                    <span>Promo Discount ({discountPercent}%): {promoCode.toUpperCase()}</span>
-                    <span>-GH₵ {discountAmount.toLocaleString()}</span>
-                  </div>
-                )}
 
                 <div className="flex justify-between text-text-muted">
                   <span>Delivery</span>

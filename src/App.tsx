@@ -10,7 +10,6 @@ import MobileMenu from './components/MobileMenu.tsx';
 import Hero from './components/Hero.tsx';
 import FeaturedOutfit from './components/FeaturedOutfit.tsx';
 import Heritage from './components/Heritage.tsx';
-import Stats from './components/Stats.tsx';
 import Testimonials from './components/Testimonials.tsx';
 import Footer from './components/Footer.tsx';
 import CartDrawer from './components/CartDrawer.tsx';
@@ -567,7 +566,6 @@ export default function App() {
 
           {/* ═══ BRAND ETHOS & CRAFT STORIES ═══ */}
           <Heritage />
-          <Stats />
           <Testimonials />
         </div>
       )}
