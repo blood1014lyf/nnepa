@@ -162,7 +162,7 @@ export default function LegalView({ initialTab = 'terms', onNavigateToContact }:
                   2. Use of Your Information
                 </h2>
                 <p>
-                  Your details are utilized strictly for order verification, measurement logging, delivery coordination, and direct customer concierge communications via WhatsApp.
+                  Your details are utilized strictly for order verification, measurement logging, delivery coordination, and direct customer assistance communications via WhatsApp.
                 </p>
               </div>
 

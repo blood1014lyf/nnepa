@@ -19,7 +19,9 @@ import {
 } from '../concierge/knowledge/seasonalGreetings.ts';
 
 const SESSION_STORAGE_DISMISSED_KEY = 'nnepa_welcome_dismissed';
-const ROTATION_INTERVAL_MS = 8000;
+const INITIAL_DELAY_MS = 20000;
+const VISIBLE_DURATION_MS = 10000;
+const HIDDEN_DURATION_MS = 30000;
 
 interface FloatingWelcomeNotificationProps {
   isOpen: boolean;
@@ -42,10 +44,12 @@ export default function FloatingWelcomeNotification({
   const [pool] = useState<SeasonalGreetingItem[]>(() => getSeasonalGreetingPool(new Date()));
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [isPaused, setIsPaused] = useState<boolean>(false);
+  const [isVisible, setIsVisible] = useState<boolean>(false);
+  const hasShownFirstRef = useRef<boolean>(false);
 
-  // Live countdown state (updated every 1 second)
+  // Live countdown state (updated every 1 second when notification is visible)
   const currentGreeting = pool[currentIndex] || pool[0];
-  const targetDate = currentGreeting.countdownTarget?.targetDate;
+  const targetDate = currentGreeting?.countdownTarget?.targetDate;
 
   const [countdown, setCountdown] = useState<CountdownBreakdown>(() => {
     return targetDate
@@ -53,9 +57,9 @@ export default function FloatingWelcomeNotification({
       : { days: 0, hours: 0, minutes: 0, seconds: 0, formatted: '', isPast: true };
   });
 
-  // 1. Live ticking countdown timer (1s interval)
+  // 1. Live ticking countdown timer (1s interval, only active when visible)
   useEffect(() => {
-    if (!targetDate || isDismissed || isOpen) return;
+    if (!targetDate || isDismissed || isOpen || !isVisible) return;
 
     const tick = () => {
       setCountdown(calculateLiveCountdown(targetDate, new Date()));
@@ -64,22 +68,39 @@ export default function FloatingWelcomeNotification({
     tick();
     const timer = setInterval(tick, 1000);
     return () => clearInterval(timer);
-  }, [targetDate, isDismissed, isOpen]);
+  }, [targetDate, isDismissed, isOpen, isVisible]);
 
-  // 2. Automatic non-repeating greeting rotation (8s interval)
+  // 2. Lifecycle rotation: 20s initial wait, 10s visible, 30s hidden before next greeting
   useEffect(() => {
-    if (isDismissed || isOpen || isPaused || pool.length <= 1) return;
+    if (isDismissed || isOpen || pool.length === 0) {
+      setIsVisible(false);
+      return;
+    }
 
-    const rotationTimer = setInterval(() => {
-      setCurrentIndex((prev) => getNextGreetingIndex(prev, pool.length));
-    }, ROTATION_INTERVAL_MS);
+    let timer: NodeJS.Timeout;
 
-    return () => clearInterval(rotationTimer);
-  }, [isDismissed, isOpen, isPaused, pool.length]);
+    if (!isVisible) {
+      const delay = !hasShownFirstRef.current ? INITIAL_DELAY_MS : HIDDEN_DURATION_MS;
+      timer = setTimeout(() => {
+        hasShownFirstRef.current = true;
+        setIsVisible(true);
+      }, delay);
+    } else {
+      if (isPaused) return;
+
+      timer = setTimeout(() => {
+        setIsVisible(false);
+        setCurrentIndex((prev) => getNextGreetingIndex(prev, pool.length));
+      }, VISIBLE_DURATION_MS);
+    }
+
+    return () => clearTimeout(timer);
+  }, [isVisible, isPaused, isDismissed, isOpen, pool.length]);
 
   const handleDismiss = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setIsDismissed(true);
+    setIsVisible(false);
     try {
       sessionStorage.setItem(SESSION_STORAGE_DISMISSED_KEY, 'true');
     } catch {
@@ -92,8 +113,8 @@ export default function FloatingWelcomeNotification({
     onOpenChat(payload);
   };
 
-  // Never render if chat is open or dismissed
-  if (isDismissed || isOpen || !currentGreeting) {
+  // Never render if chat is open, dismissed, or currently in hidden interval
+  if (isDismissed || isOpen || !isVisible || !currentGreeting) {
     return null;
   }
 

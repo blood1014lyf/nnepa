@@ -1965,7 +1965,7 @@ export const FAQ_KNOWLEDGE_ENTRIES: FAQEntry[] = [
     "id": "faq_style_styling_service",
     "category": "support",
     "question": "Can a Nnepa Foriwaa stylist help me curate a complete look?",
-    "answer": "Yes. Our private styling concierge provides complimentary digital styling consultations via WhatsApp (+233 53 879 5669), assisting with color matching, silhouettes, accessories, and shoes.",
+    "answer": "Yes. Our styling team provides complimentary digital styling consultations via WhatsApp (+233 53 879 5669), assisting with color matching, silhouettes, accessories, and shoes.",
     "keywords": [
       "stylist help",
       "personal shopper",

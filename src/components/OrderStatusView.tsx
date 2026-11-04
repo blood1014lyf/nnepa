@@ -220,7 +220,7 @@ export default function OrderStatusView({ publicId, onBackToShop }: OrderStatusV
               className="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-[2px] font-bold text-xs tracking-wider uppercase flex items-center justify-center gap-2 transition-colors shadow-sm"
             >
               <WhatsAppIcon className="w-4 h-4 fill-white" />
-              Inquire via WhatsApp Concierge
+              Inquire via WhatsApp Assistant
             </a>
             <button
               onClick={onBackToShop}

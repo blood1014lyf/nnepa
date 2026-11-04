@@ -297,7 +297,7 @@ export function getSeasonalGreetingPool(currentDate: Date = new Date()): Seasona
   // 3. Everyday Ever-Present Bespoke Greetings (Between special occasions)
   greetings.push({
     id: 'everyday_akwaaba',
-    tag: 'Personal Concierge',
+    tag: 'Shopping Assistant',
     headline: 'Akwaaba! Need assistance?',
     message: 'Foriwaa is here to help with sizing, fabrics, delivery times, or styling recommendations.',
     actionLabel: 'Ask a Question',

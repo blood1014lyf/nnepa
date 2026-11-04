@@ -472,7 +472,7 @@ export default function CheckoutView({
                   Place Order via WhatsApp
                 </h3>
                 <p className="text-xs text-text-muted leading-relaxed mb-6">
-                  All Nnepa Foriwaa orders are completed bespoke through WhatsApp. Submitting this form sends your delivery destination, tailoring notes, and chosen garments directly to our boutique concierge (+233 53 879 5669) to confirm measurements and finalize delivery.
+                  All Nnepa Foriwaa orders are completed bespoke through WhatsApp. Submitting this form sends your delivery destination, tailoring notes, and chosen garments directly to our boutique shopping assistant (+233 53 879 5669) to confirm measurements and finalize delivery.
                 </p>
 
                 {/* Submission CTA */}
