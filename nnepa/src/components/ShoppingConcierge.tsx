@@ -48,6 +48,20 @@ export interface ShoppingConciergeProps {
   onAddToCart?: (product: Product, size?: string) => void;
 }
 
+/**
+ * Real-time seasonal greeting.
+ * Only returns a seasonal greeting when it is due in real time (e.g. holiday season Dec 15 through Jan 6).
+ */
+function getSeasonalGreeting(): string | null {
+  const now = new Date();
+  const month = now.getMonth(); // 0 = Jan, 11 = Dec
+  const date = now.getDate();
+  if ((month === 11 && date >= 15) || (month === 0 && date <= 6)) {
+    return "Season's Greetings";
+  }
+  return null;
+}
+
 interface ChatMessage {
   id: string;
   sender: 'concierge' | 'user';
@@ -124,6 +138,7 @@ export default function ShoppingConcierge({
 
   // Timers ref for clean teardown
   const activeTimersRef = useRef<NodeJS.Timeout[]>([]);
+  const seasonalGreeting = getSeasonalGreeting();
 
   const addTimer = (timer: NodeJS.Timeout) => {
     activeTimersRef.current.push(timer);
@@ -760,13 +775,7 @@ export default function ShoppingConcierge({
           {isOpen ? (
             <X className="w-6 h-6 text-white transition-transform group-hover:rotate-90 duration-200" />
           ) : (
-            <>
-              <MessageSquare className="w-6 h-6 text-white" />
-              {/* Status indicator */}
-              {proactivePrompt && (
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full flex items-center justify-center" />
-              )}
-            </>
+            <MessageSquare className="w-6 h-6 text-white" />
           )}
         </button>
       </div>
@@ -806,13 +815,14 @@ export default function ShoppingConcierge({
                   <h3 className="concierge-brand-title font-serif text-base font-semibold tracking-wide text-white leading-tight">
                     {NNEPA_IDENTITY.name}
                   </h3>
-                  <span className="text-[11px] uppercase tracking-wider bg-white/15 px-2.5 py-0.5 rounded-full text-lavender-light font-medium">
-                    Season's Greetings
-                  </span>
+                  {seasonalGreeting && (
+                    <span className="text-[11px] uppercase tracking-wider bg-white/15 px-2.5 py-0.5 rounded-full text-lavender-light font-medium">
+                      {seasonalGreeting}
+                    </span>
+                  )}
                 </div>
-                <span className="text-xs text-lavender/90 flex items-center gap-1.5 font-normal">
-                  <span className={`w-2 h-2 rounded-full ${isThinking ? 'bg-gold' : 'bg-emerald-400'}`} />
-                  <span>{isThinking ? 'Thinking...' : NNEPA_IDENTITY.title}</span>
+                <span className="text-xs text-lavender/90 font-normal">
+                  {isThinking ? 'Thinking...' : NNEPA_IDENTITY.title}
                 </span>
               </div>
             </div>

@@ -894,8 +894,23 @@ export function classifyCustomerIntent(
     return 'order_assistance';
   }
 
-  // Stock & Availability inquiry (e.g. "is this in stock", "out of stock", "check stock")
-  if (matchesAny(norm, SYNONYM_DICTIONARIES.stockInquiry)) {
+  // Stock & Availability inquiry (e.g. "is this in stock", "out of stock", "available designs", "check stock")
+  if (
+    matchesAny(norm, SYNONYM_DICTIONARIES.stockInquiry) ||
+    norm.includes('available designs') ||
+    norm.includes('designs available') ||
+    norm.includes('what designs do you have') ||
+    norm.includes('what designs are available') ||
+    norm.includes('designs in stock') ||
+    norm.includes('pieces in stock') ||
+    norm.includes('what is in stock') ||
+    norm.includes('whats in stock') ||
+    norm.includes('what do you have in stock') ||
+    norm.includes('is anything in stock') ||
+    norm.includes('what is available') ||
+    norm.includes('whats available') ||
+    norm.includes('what do you have available')
+  ) {
     return 'stock_availability_inquiry';
   }
 
@@ -1728,7 +1743,7 @@ export function processConciergeMessage(
             { label: 'Speak to Stylist for Custom Outfit', action: 'contact_whatsapp' },
             { label: 'Browse Collections', action: 'filter_all' }
           ],
-          products: catalogue.slice(0, 3),
+          products: [],
           intent: 'product_out_of_stock',
           updatedContext
         };
@@ -1898,7 +1913,7 @@ export function processConciergeMessage(
           { label: 'Speak to Stylist for Custom Outfit', action: 'contact_whatsapp' },
           { label: 'Browse Collections', action: 'filter_all' }
         ],
-        products: catalogue.filter((p) => p.inStock !== false).slice(0, 3),
+        products: [],
         intent: 'product_out_of_stock',
         updatedContext
       };
@@ -1984,6 +1999,8 @@ export function processConciergeMessage(
 
   // ─── INTENT: STOCK & AVAILABILITY INQUIRY ────────────────────────────────
   if (classifiedIntent === 'stock_availability_inquiry') {
+    const inStockCatalogue = catalogue.filter((p) => p.inStock !== false);
+
     if (prodKnowledge) {
       if (prodKnowledge.product.inStock === false) {
         return {
@@ -1995,7 +2012,7 @@ export function processConciergeMessage(
             { label: 'Browse Available Collections', action: 'filter_all' },
             { label: 'Book Studio Fitting', action: 'book_fitting' }
           ],
-          products: catalogue.filter((p) => p.inStock !== false).slice(0, 3),
+          products: [],
           intent: 'product_out_of_stock',
           updatedContext
         };
@@ -2017,9 +2034,27 @@ export function processConciergeMessage(
         };
       }
     } else {
+      if (inStockCatalogue.length === 0) {
+        return {
+          text:
+            `All pieces in our collections are currently **out of stock** as each garment is handcrafted in limited artisan batches.\n\n` +
+            `Restocks are underway in our Accra studio. In the meantime, you can speak directly with our stylist on WhatsApp (+233 53 879 5669) to commission a bespoke **custom outfit** tailored to your measurements.`,
+          options: [
+            { label: 'Speak to Stylist for Custom Outfit', action: 'contact_whatsapp' },
+            { label: 'Book Studio Fitting', action: 'book_fitting' },
+            { label: 'Size & Length Guide', action: 'size_guide' }
+          ],
+          products: [],
+          intent: 'stock_availability_inquiry',
+          updatedContext
+        };
+      }
+
+      const namesList = inStockCatalogue.slice(0, 5).map((p) => `• **${p.name}** (GH₵ ${p.price.toLocaleString()})`).join('\n');
       return {
         text:
-          `Our signature garments are tailored to order in limited artisan batches across standard sizes S through XXL.\n\n` +
+          `Here are the designs currently **in stock** and ready for tailoring in our Accra studio (3–7 working days):\n\n` +
+          `${namesList}\n\n` +
           `• **In Stock Items**: Cut and tailored within 3–7 working days upon confirmation.\n` +
           `• **Out of Stock Items**: If a piece or size is not in stock, please check back soon for restocks, or speak directly with our stylist on WhatsApp (+233 53 879 5669) to commission a **custom outfit** tailored to your exact measurements.\n\n` +
           `Which garment would you like to check availability for${customerName}?`,
@@ -2029,7 +2064,7 @@ export function processConciergeMessage(
           { label: 'Womenswear', action: 'filter_women' },
           { label: 'Menswear', action: 'filter_men' }
         ],
-        products: catalogue.filter((p) => p.inStock !== false).slice(0, 3),
+        products: inStockCatalogue.slice(0, 3),
         intent: 'stock_availability_inquiry',
         updatedContext
       };
@@ -2619,7 +2654,8 @@ export function processConciergeMessage(
 
   // ─── INTENT: BESTSELLERS & POPULAR ITEMS ──────────────────────────────────
   if (classifiedIntent === 'bestsellers_inquiry') {
-    const bestsellers = catalogue.filter((p) => /boubou|kente|agbada/i.test(p.name)).slice(0, 3);
+    const inStockCatalogue = catalogue.filter((p) => p.inStock !== false);
+    const bestsellers = inStockCatalogue.filter((p) => /boubou|kente|agbada/i.test(p.name)).slice(0, 3);
     const text =
       `**Signature Bestsellers at Nnepa Foriwaa:**\n\n` +
       `Our most sought-after signature creations showcase authentic West African heritage with couture craftsmanship:\n\n` +
@@ -2636,7 +2672,7 @@ export function processConciergeMessage(
         { label: 'View All Pieces', action: 'filter_all' },
         { label: 'Chat on WhatsApp', action: 'contact_whatsapp' }
       ],
-      products: bestsellers.length > 0 ? bestsellers : catalogue.slice(0, 3),
+      products: bestsellers.length > 0 ? bestsellers : inStockCatalogue.slice(0, 3),
       intent: 'bestsellers_inquiry',
       updatedContext
     };
@@ -2644,7 +2680,7 @@ export function processConciergeMessage(
 
   // ─── INTENT: NEW ARRIVALS & LATEST COLLECTION ─────────────────────────────
   if (classifiedIntent === 'new_arrivals_inquiry') {
-    const newPieces = catalogue.slice(0, 3);
+    const newPieces = catalogue.filter((p) => p.inStock !== false).slice(0, 3);
     const text =
       `**Latest Heritage Collection:**\n\n` +
       `Our latest studio release highlights contemporary West African luxury—featuring rich damask brocades, hand-loomed Asante Kente, and structured organza silhouettes tailored fresh from our Accra studio.\n\n` +
@@ -2690,7 +2726,21 @@ export function processConciergeMessage(
   // ─── INTENT: CATEGORY EXPLORATIONS ───────────────────────────────────────
   if (classifiedIntent === 'explore_women') {
     updatedContext.activeCategory = 'women';
-    const womenProds = catalogue.filter((p) => p.category === 'women').slice(0, 3);
+    const womenProds = catalogue.filter((p) => p.category === 'women' && p.inStock !== false).slice(0, 3);
+    if (womenProds.length === 0) {
+      return {
+        text: `Our **Womenswear** collection is currently out of stock as each piece is handcrafted in limited artisan batches.\n\nRestocks are in progress in our Accra studio. You can speak directly with our stylist on WhatsApp (+233 53 879 5669) to commission a bespoke **custom outfit** tailored to your measurements.`,
+        options: [
+          { label: 'Speak to Stylist for Custom Outfit', action: 'contact_whatsapp' },
+          { label: 'Size & Length Guide', action: 'size_guide' },
+          { label: 'Explore Collections', action: 'explore_collections' }
+        ],
+        products: [],
+        intent: 'explore_women',
+        updatedContext
+      };
+    }
+
     const text =
       `Welcome to our **Womenswear** collection${customerName}. Our pieces merge contemporary silhouettes with authentic Ghanaian textile heritage—featuring handwoven Kente gowns, pure silk-cotton boubous, organza puff dresses, and structured peplum suits.\n\n` +
       `Here are some of our signature womenswear pieces. What would you like to explore?`;
@@ -2711,7 +2761,21 @@ export function processConciergeMessage(
 
   if (classifiedIntent === 'explore_men') {
     updatedContext.activeCategory = 'men';
-    const menProds = catalogue.filter((p) => p.category === 'men').slice(0, 3);
+    const menProds = catalogue.filter((p) => p.category === 'men' && p.inStock !== false).slice(0, 3);
+    if (menProds.length === 0) {
+      return {
+        text: `Our **Menswear** collection is currently out of stock as each piece is handcrafted in limited artisan batches.\n\nRestocks are in progress in our Accra studio. You can speak directly with our stylist on WhatsApp (+233 53 879 5669) to commission a bespoke **custom outfit** tailored to your measurements.`,
+        options: [
+          { label: 'Speak to Stylist for Custom Outfit', action: 'contact_whatsapp' },
+          { label: 'Size & Length Guide', action: 'size_guide' },
+          { label: 'Explore Collections', action: 'explore_collections' }
+        ],
+        products: [],
+        intent: 'explore_men',
+        updatedContext
+      };
+    }
+
     const text =
       `Welcome to our **Menswear** collection${customerName}. Handcrafted in our Accra studio, our pieces feature heavy damask brocade Agbadas, handwoven Kente-yoke linen kaftans, and traditional Northern Fugu smocks.\n\n` +
       `Here are signature menswear pieces from the collection:`;
@@ -2732,7 +2796,20 @@ export function processConciergeMessage(
 
   if (classifiedIntent === 'explore_bags') {
     updatedContext.activeCategory = 'bags';
-    const bagProds = catalogue.filter((p) => p.category === 'bags').slice(0, 3);
+    const bagProds = catalogue.filter((p) => p.category === 'bags' && p.inStock !== false).slice(0, 3);
+    if (bagProds.length === 0) {
+      return {
+        text: `Our **Bags & Accessories** collection is currently out of stock. Please speak directly with our stylist on WhatsApp (+233 53 879 5669) to inquire about made-to-order artisanal pieces.`,
+        options: [
+          { label: 'Speak to Stylist on WhatsApp', action: 'contact_whatsapp' },
+          { label: 'Explore Collections', action: 'explore_collections' }
+        ],
+        products: [],
+        intent: 'explore_bags',
+        updatedContext
+      };
+    }
+
     const text = `Navigating you to our **Bags & Accessories** collection, featuring hand-plaited Bolgatanga leather totes, brass Adinkra velvet clutches, and raffia shoulder pieces.`;
 
     return {
@@ -2787,10 +2864,10 @@ export function processConciergeMessage(
   }
 
   // ─── INTENT: CATALOGUE SEARCH ────────────────────────────────────────────
-  const searchResults = searchCatalogueProducts(userInput, catalogue, 3);
+  const searchResults = searchCatalogueProducts(userInput, catalogue, 3).filter((p) => p.inStock !== false);
   if (searchResults.length > 0) {
     return {
-      text: `I discovered ${searchResults.length} piece${searchResults.length > 1 ? 's' : ''} in our boutique corresponding to your inquiry:`,
+      text: `I discovered ${searchResults.length} in-stock piece${searchResults.length > 1 ? 's' : ''} in our boutique corresponding to your inquiry:`,
       options: [
         { label: 'View Complete Catalog', action: 'filter_all' },
         { label: 'Size Guide', action: 'size_guide' }

@@ -65,16 +65,6 @@ const DRAWER_DEPARTMENTS: { value: 'women' | 'men' | 'bags'; label: string }[] =
   { value: 'bags', label: 'Artisanal Bags' },
 ];
 
-const DRAWER_COLORS = [
-  'Plum & Violet',
-  'Gold & Ochre',
-  'Crimson & Blush',
-  'Emerald & Sage',
-  'Ivory & Pearl',
-  'Indigo & Navy',
-  'Ebony & Charcoal',
-];
-
 const DRAWER_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'One Size'];
 
 const PAGE_STEP = 12;
@@ -139,7 +129,6 @@ export default function CollectionShopView({
   const [sortBy, setSortBy] = useState<SortOption>('featured');
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
   const [selectedSubcategories, setSelectedSubcategories] = useState<string[]>([]);
-  const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [inStockOnly, setInStockOnly] = useState<boolean>(false);
 
@@ -147,7 +136,6 @@ export default function CollectionShopView({
   const [draftSortBy, setDraftSortBy] = useState<SortOption>('featured');
   const [draftDepartments, setDraftDepartments] = useState<string[]>([]);
   const [draftSubcategories, setDraftSubcategories] = useState<string[]>([]);
-  const [draftColors, setDraftColors] = useState<string[]>([]);
   const [draftSizes, setDraftSizes] = useState<string[]>([]);
   const [draftInStockOnly, setDraftInStockOnly] = useState<boolean>(false);
 
@@ -311,7 +299,6 @@ export default function CollectionShopView({
     sort: SortOption;
     depts: string[];
     subcats: string[];
-    colors: string[];
     sizes: string[];
     stockOnly: boolean;
   }) => {
@@ -336,7 +323,6 @@ export default function CollectionShopView({
       // Drawer facets
       if (params.depts.length > 0 && !params.depts.includes(p.category)) return false;
       if (params.subcats.length > 0 && !params.subcats.includes(p.subcategory)) return false;
-      if (params.colors.length > 0 && (!p.color || !params.colors.includes(p.color))) return false;
       if (
         params.sizes.length > 0 &&
         (!p.sizes || !p.sizes.some((sz) => params.sizes.includes(sz)))
@@ -368,7 +354,6 @@ export default function CollectionShopView({
         sort: sortBy,
         depts: selectedDepartments,
         subcats: selectedSubcategories,
-        colors: selectedColors,
         sizes: selectedSizes,
         stockOnly: inStockOnly,
       }),
@@ -379,7 +364,6 @@ export default function CollectionShopView({
       sortBy,
       selectedDepartments,
       selectedSubcategories,
-      selectedColors,
       selectedSizes,
       inStockOnly,
     ]
@@ -392,7 +376,6 @@ export default function CollectionShopView({
         sort: draftSortBy,
         depts: draftDepartments,
         subcats: draftSubcategories,
-        colors: draftColors,
         sizes: draftSizes,
         stockOnly: draftInStockOnly,
       }),
@@ -403,7 +386,6 @@ export default function CollectionShopView({
       draftSortBy,
       draftDepartments,
       draftSubcategories,
-      draftColors,
       draftSizes,
       draftInStockOnly,
     ]
@@ -417,16 +399,14 @@ export default function CollectionShopView({
       if (found) labels.push(found.label);
     });
     draftSubcategories.forEach((s) => labels.push(s));
-    draftColors.forEach((c) => labels.push(c));
     draftSizes.forEach((sz) => labels.push(`Size ${sz}`));
     if (draftInStockOnly) labels.push('In stock');
     return labels;
-  }, [draftDepartments, draftSubcategories, draftColors, draftSizes, draftInStockOnly]);
+  }, [draftDepartments, draftSubcategories, draftSizes, draftInStockOnly]);
 
   const appliedFilterCount =
     selectedDepartments.length +
     selectedSubcategories.length +
-    selectedColors.length +
     selectedSizes.length +
     (inStockOnly ? 1 : 0) +
     (sortBy !== 'featured' ? 1 : 0);
@@ -444,7 +424,6 @@ export default function CollectionShopView({
     setDraftSortBy('featured');
     setDraftDepartments([]);
     setDraftSubcategories([]);
-    setDraftColors([]);
     setDraftSizes([]);
     setDraftInStockOnly(false);
   };
@@ -453,7 +432,6 @@ export default function CollectionShopView({
     setSortBy('featured');
     setSelectedDepartments([]);
     setSelectedSubcategories([]);
-    setSelectedColors([]);
     setSelectedSizes([]);
     setInStockOnly(false);
     setQuickFilter('all');
@@ -464,7 +442,6 @@ export default function CollectionShopView({
     setSortBy(draftSortBy);
     setSelectedDepartments(draftDepartments);
     setSelectedSubcategories(draftSubcategories);
-    setSelectedColors(draftColors);
     setSelectedSizes(draftSizes);
     setInStockOnly(draftInStockOnly);
     setVisibleCount(PAGE_STEP);
@@ -1103,37 +1080,7 @@ export default function CollectionShopView({
                 </ul>
               </div>
 
-              <div className="border-t border-plum-dark/10" />
 
-              {/* Color */}
-              <div className="flex flex-col gap-6 px-5 py-8 md:px-10 md:py-9">
-                <p className="cb-text-body text-plum-dark font-medium">Colour:</p>
-                <ul className="m-0 max-w-[420px] list-none columns-1 md:columns-2 gap-12 p-0">
-                  {DRAWER_COLORS.map((col) => {
-                    const checked = draftColors.includes(col);
-                    return (
-                      <li key={col} className="mb-3.5 break-inside-avoid">
-                        <label className="flex cursor-pointer items-center gap-3">
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() => toggleArrayValue(draftColors, col, setDraftColors)}
-                            className="sr-only"
-                          />
-                          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-plum-dark/30">
-                            <span
-                              className={`h-5 w-5 rounded-full bg-plum-dark transition-transform duration-150 ${
-                                checked ? 'scale-100' : 'scale-0'
-                              }`}
-                            />
-                          </span>
-                          <span className="cb-text-body text-plum-dark">{col}</span>
-                        </label>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
 
               <div className="border-t border-plum-dark/10" />
 

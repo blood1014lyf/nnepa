@@ -98,7 +98,22 @@ export const SYNONYM_DICTIONARIES = {
     'not in stock',
     'custom outfit',
     'custom piece',
-    'speak to stylist'
+    'speak to stylist',
+    'available designs',
+    'designs available',
+    'available pieces',
+    'pieces available',
+    'what designs are available',
+    'what designs do you have',
+    'designs in stock',
+    'pieces in stock',
+    'what is in stock',
+    'whats in stock',
+    'what do you have in stock',
+    'is anything in stock',
+    'what is available',
+    'whats available',
+    'what do you have available'
   ],
   lengthGuide: [
     'length guide',

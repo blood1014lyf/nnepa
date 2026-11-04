@@ -817,6 +817,15 @@ describe('NNEPA Shopping Concierge — Core Knowledge & Intelligence Test Suite'
     assert.equal(inStockRes.intent, 'stock_availability_inquiry');
     assert.ok(inStockRes.text.includes('in stock'), 'Confirms piece is in stock');
     assert.ok(inStockRes.text.includes('check back') || inStockRes.text.includes('custom outfit'), 'Mentions check back or custom outfit policy');
+
+    // Available designs inquiry when zero items are in stock
+    const allOutOfStockCatalogue = CATALOGUE.map((p) => ({ ...p, inStock: false }));
+    const emptyStockCtx = createInitialConciergeContext(null);
+    const emptyStockRes = processConciergeMessage('What designs do you have in stock?', emptyStockCtx, allOutOfStockCatalogue);
+    assert.equal(emptyStockRes.intent, 'stock_availability_inquiry');
+    assert.ok(emptyStockRes.text.includes('out of stock'), 'Accurately determines all pieces are out of stock');
+    assert.equal(emptyStockRes.products?.length ?? 0, 0, 'Does NOT attach product cards when nothing is in stock');
+    assert.ok(emptyStockRes.options.some((o) => o.action === 'contact_whatsapp'), 'Offers WhatsApp custom outfit commission');
   });
 
   // 45. Official Length Guide General Inquiry
