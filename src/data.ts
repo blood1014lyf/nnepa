@@ -5,37 +5,7 @@
 
 import type { Product, HeroSlide, Look, Testimonial } from './types.ts';
 
-const lookbook01 = '/assets/images/lookbook_01_gold_boubou.jpg';
-const lookbook02 = '/assets/images/lookbook_02_plum_emerald_gown.jpg';
-const lookbook03 = '/assets/images/lookbook_03_ivory_wrap_ensemble.jpg';
-const lookbook04 = '/assets/images/lookbook_04_burgundy_corset_cape.jpg';
-const lookbook05 = '/assets/images/lookbook_05_ankara_peplum_suit.jpg';
-const lookbook06 = '/assets/images/lookbook_06_organza_puff_dress.jpg';
-const lookbook07 = '/assets/images/lookbook_07_mens_ivory_gold_agbada.jpg';
-const lookbook08 = '/assets/images/lookbook_08_mens_indigo_kente_kaftan.jpg';
-
-export const HERO_SLIDES: HeroSlide[] = [
-  {
-    id: 1,
-    imageUrl: lookbook01
-  },
-  {
-    id: 2,
-    imageUrl: lookbook04
-  },
-  {
-    id: 3,
-    imageUrl: lookbook02
-  },
-  {
-    id: 4,
-    imageUrl: lookbook05
-  },
-  {
-    id: 5,
-    imageUrl: lookbook03
-  }
-];
+export const HERO_SLIDES: HeroSlide[] = [];
 
 export const PRODUCTS: Product[] = [
   {
@@ -45,8 +15,7 @@ export const PRODUCTS: Product[] = [
     subcategory: 'Dresses & Gowns',
     price: 480,
     rating: 5,
-    imageUrl: lookbook01,
-    hoverImageUrl: lookbook03,
+    imageUrl: '',
     color: 'Gold & Ochre',
     colorCount: 2,
     badge: 'Exclusive',
@@ -61,8 +30,7 @@ export const PRODUCTS: Product[] = [
     subcategory: 'Dresses & Gowns',
     price: 2850,
     rating: 5,
-    imageUrl: lookbook02,
-    hoverImageUrl: lookbook06,
+    imageUrl: '',
     color: 'Plum & Violet',
     colorCount: 3,
     badge: 'Bestseller',
@@ -77,8 +45,7 @@ export const PRODUCTS: Product[] = [
     subcategory: 'Tops & Sets',
     price: 650,
     rating: 5,
-    imageUrl: lookbook05,
-    hoverImageUrl: lookbook04,
+    imageUrl: '',
     color: 'Crimson & Blush',
     colorCount: 2,
     badge: 'New',
@@ -93,8 +60,7 @@ export const PRODUCTS: Product[] = [
     subcategory: 'Dresses & Gowns',
     price: 980,
     rating: 5,
-    imageUrl: lookbook06,
-    hoverImageUrl: lookbook02,
+    imageUrl: '',
     color: 'Emerald & Sage',
     colorCount: 2,
     badge: 'Exclusive',
@@ -109,8 +75,7 @@ export const PRODUCTS: Product[] = [
     subcategory: 'Kaftans & Agbada',
     price: 1200,
     rating: 5,
-    imageUrl: lookbook07,
-    hoverImageUrl: lookbook08,
+    imageUrl: '',
     color: 'Ivory & Pearl',
     colorCount: 3,
     badge: 'Bestseller',
@@ -125,8 +90,7 @@ export const PRODUCTS: Product[] = [
     subcategory: 'Kaftans & Agbada',
     price: 750,
     rating: 5,
-    imageUrl: lookbook08,
-    hoverImageUrl: lookbook07,
+    imageUrl: '',
     color: 'Gold & Ochre',
     colorCount: 2,
     badge: 'New',
@@ -141,8 +105,7 @@ export const PRODUCTS: Product[] = [
     subcategory: 'Outerwear & Smocks',
     price: 580,
     rating: 5,
-    imageUrl: lookbook08,
-    hoverImageUrl: lookbook07,
+    imageUrl: '',
     color: 'Indigo & Navy',
     colorCount: 2,
     badge: 'Exclusive',
@@ -157,8 +120,7 @@ export const PRODUCTS: Product[] = [
     subcategory: 'Bags & Accessories',
     price: 340,
     rating: 5,
-    imageUrl: lookbook01,
-    hoverImageUrl: lookbook03,
+    imageUrl: '',
     color: 'Gold & Ochre',
     colorCount: 3,
     badge: 'Bestseller',
@@ -173,8 +135,7 @@ export const PRODUCTS: Product[] = [
     subcategory: 'Bags & Accessories',
     price: 260,
     rating: 5,
-    imageUrl: lookbook03,
-    hoverImageUrl: lookbook04,
+    imageUrl: '',
     color: 'Ebony & Charcoal',
     colorCount: 2,
     badge: 'New',
@@ -189,8 +150,7 @@ export const PRODUCTS: Product[] = [
     subcategory: 'Bags & Accessories',
     price: 420,
     rating: 5,
-    imageUrl: lookbook02,
-    hoverImageUrl: lookbook01,
+    imageUrl: '',
     color: 'Plum & Violet',
     colorCount: 2,
     badge: 'Exclusive',
@@ -205,8 +165,7 @@ export const PRODUCTS: Product[] = [
     subcategory: 'Dresses & Gowns',
     price: 890,
     rating: 5,
-    imageUrl: lookbook04,
-    hoverImageUrl: lookbook06,
+    imageUrl: '',
     color: 'Plum & Violet',
     colorCount: 2,
     badge: 'New',
@@ -221,8 +180,7 @@ export const PRODUCTS: Product[] = [
     subcategory: 'Tops & Sets',
     price: 760,
     rating: 5,
-    imageUrl: lookbook03,
-    hoverImageUrl: lookbook05,
+    imageUrl: '',
     color: 'Ivory & Pearl',
     colorCount: 3,
     inStock: true,
@@ -237,8 +195,7 @@ export const PRODUCTS: Product[] = [
     price: 1350,
     originalPrice: 1550,
     rating: 5,
-    imageUrl: lookbook02,
-    hoverImageUrl: lookbook01,
+    imageUrl: '',
     color: 'Crimson & Blush',
     colorCount: 2,
     badge: 'Sale',
@@ -253,8 +210,7 @@ export const PRODUCTS: Product[] = [
     subcategory: 'Tops & Sets',
     price: 840,
     rating: 5,
-    imageUrl: lookbook07,
-    hoverImageUrl: lookbook08,
+    imageUrl: '',
     color: 'Ebony & Charcoal',
     colorCount: 2,
     badge: 'Bestseller',
@@ -269,8 +225,7 @@ export const PRODUCTS: Product[] = [
     subcategory: 'Outerwear & Smocks',
     price: 920,
     rating: 5,
-    imageUrl: lookbook05,
-    hoverImageUrl: lookbook04,
+    imageUrl: '',
     color: 'Emerald & Sage',
     colorCount: 2,
     badge: 'New',
@@ -285,8 +240,7 @@ export const PRODUCTS: Product[] = [
     subcategory: 'Bags & Accessories',
     price: 390,
     rating: 5,
-    imageUrl: lookbook04,
-    hoverImageUrl: lookbook03,
+    imageUrl: '',
     color: 'Ivory & Pearl',
     colorCount: 2,
     inStock: false,
@@ -295,50 +249,7 @@ export const PRODUCTS: Product[] = [
   }
 ];
 
-export const LOOKS: Look[] = [
-  {
-    id: 'l1',
-    number: '01',
-    imageUrl: lookbook05,
-    category: 'Women · Look 01',
-    title: 'Heritage Bloom'
-  },
-  {
-    id: 'l2',
-    number: '02',
-    imageUrl: lookbook07,
-    category: 'Men · Look 02',
-    title: 'The Patriarch'
-  },
-  {
-    id: 'l3',
-    number: '03',
-    imageUrl: lookbook03,
-    category: 'Women · Look 03',
-    title: 'Twin Radiance'
-  },
-  {
-    id: 'l4',
-    number: '04',
-    imageUrl: lookbook01,
-    category: 'Women · Look 04',
-    title: 'Flora Royale'
-  },
-  {
-    id: 'l5',
-    number: '05',
-    imageUrl: lookbook02,
-    category: 'Women · Look 05',
-    title: 'Evening Pleats'
-  },
-  {
-    id: 'l6',
-    number: '06',
-    imageUrl: lookbook08,
-    category: 'Men · Look 06',
-    title: 'The Young Noble'
-  }
-];
+export const LOOKS: Look[] = [];
 
 export const TESTIMONIALS: Testimonial[] = [
   {

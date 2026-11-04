@@ -60,15 +60,29 @@ Please confirm tailoring and delivery details.`;
           {/* Left Block: Image Showcase */}
           <div className="lg:col-span-6 flex flex-col gap-4">
             <div className="bg-white rounded-[4px] overflow-hidden shadow-[0_4px_30px_rgba(92,61,110,0.04)] border border-lilac/10 relative group aspect-[3/4]">
-              <img
-                src={product.imageUrl}
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/assets/images/lookbook_01_gold_boubou.jpg';
-                }}
-                alt={product.name}
-                className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
-                loading="lazy"
-              />
+              {product.imageUrl ? (
+                <img
+                  src={product.imageUrl}
+                  alt={product.name}
+                  className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="w-full h-full bg-pearl-2 flex flex-col items-center justify-center p-8 text-center select-none border border-lilac/20">
+                  <div className="w-16 h-16 rounded-full border border-lilac/30 flex items-center justify-center mb-4 text-lavender font-serif italic text-2xl">
+                    NF
+                  </div>
+                  <h3 className="font-serif text-xl sm:text-2xl text-plum-dark font-light mb-1">
+                    {product.name}
+                  </h3>
+                  <span className="text-[0.62rem] font-bold tracking-[0.24em] uppercase text-mauve-deep mb-2">
+                    Nnepa Foriwaa &bull; Atelier Handcrafted
+                  </span>
+                  <p className="text-xs text-text-muted max-w-xs leading-relaxed font-light mt-1">
+                    Individually tailored in Accra, Ghana. Inquire via WhatsApp for custom fittings and textile choices.
+                  </p>
+                </div>
+              )}
               {product.badge && (
                 <span className="absolute top-4 left-4 px-3 py-1.5 bg-gradient-to-r from-lavender to-mauve text-white rounded-full text-[0.52rem] font-bold tracking-[0.18em] uppercase shadow-sm">
                   {product.badge}

@@ -543,7 +543,7 @@ export default function AdminDashboardView({
   };
 
   return (
-    <div className="pt-24 pb-20 bg-zinc-50 min-h-screen text-zinc-900 font-sans">
+    <div className="py-8 pb-20 bg-zinc-50 min-h-screen text-zinc-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Admin Header Bar */}

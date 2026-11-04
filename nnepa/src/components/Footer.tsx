@@ -220,6 +220,16 @@ export default function Footer({ currentPage, onNavigate, onScrollToSection, adm
                   </button>
                 </li>
                 <li>
+                  <a
+                    href={adminToken ? '#/admin-dashboard' : '#/admin-login'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[0.65rem] sm:text-xs text-pearl-2/50 hover:text-lilac cursor-pointer font-light transition-colors text-left block no-underline"
+                  >
+                    Atelier Portal ↗
+                  </a>
+                </li>
+                <li>
                   <button
                     onClick={() => onNavigate('contact')}
                     className="bg-transparent border-none p-0 text-[0.65rem] sm:text-xs text-pearl-2/50 hover:text-lilac cursor-pointer font-light transition-colors text-left block"
@@ -264,14 +274,16 @@ export default function Footer({ currentPage, onNavigate, onScrollToSection, adm
               </>
             )}
             <span>•</span>
-            <button
-              onClick={() => onNavigate(adminToken ? 'admin-dashboard' : 'admin-login')}
-              className="bg-transparent border-none p-0 text-lilac/40 hover:text-lilac cursor-pointer transition-colors text-[0.6rem] lowercase tracking-wider opacity-70 hover:opacity-100"
-              title="Admin"
-              aria-label="Admin"
+            <a
+              href={adminToken ? '#/admin-dashboard' : '#/admin-login'}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-lilac/40 hover:text-lilac cursor-pointer transition-colors text-[0.6rem] lowercase tracking-wider opacity-70 hover:opacity-100 no-underline"
+              title="Atelier Portal"
+              aria-label="Atelier Portal"
             >
               am
-            </button>
+            </a>
           </div>
         </div>
 

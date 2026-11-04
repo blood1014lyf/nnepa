@@ -49,16 +49,23 @@ export default function ProductCard({
       onClick={() => onViewDetails && onViewDetails(product)}
       className="group bg-white rounded-md overflow-hidden relative cursor-pointer transition-all duration-300 shadow-[0_2px_18px_rgba(92,61,110,0.07)] hover:-translate-y-1.5 hover:shadow-[0_16px_48px_rgba(92,61,110,0.16)] flex flex-col justify-between"
     >
-      <div className="relative overflow-hidden aspect-[3/4]">
-        <img
-          src={product.imageUrl}
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = '/assets/images/lookbook_01_gold_boubou.jpg';
-          }}
-          alt={product.name}
-          className="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-105"
-          loading="lazy"
-        />
+      <div className="relative overflow-hidden aspect-[3/4] bg-pearl-2">
+        {product.imageUrl ? (
+          <img
+            src={product.imageUrl}
+            alt={product.name}
+            className="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-105"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center select-none bg-pearl-2">
+            <div className="w-10 h-10 rounded-full border border-lilac/30 flex items-center justify-center mb-2 text-lavender font-serif italic text-sm">
+              NF
+            </div>
+            <span className="font-serif text-xs text-plum-dark font-medium">Nnepa Foriwaa</span>
+            <span className="text-[0.52rem] font-bold tracking-[0.18em] uppercase text-mauve-deep mt-0.5">Atelier</span>
+          </div>
+        )}
 
         {/* Badges Stack */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">

@@ -490,39 +490,59 @@ export default function App() {
   const totalCartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <div className="min-h-screen flex flex-col bg-pearl font-sans text-plum-dark overflow-x-hidden antialiased select-none scroll-smooth">
+    <div className="min-h-screen flex flex-col bg-pearl font-serif text-plum-dark overflow-x-hidden antialiased select-none scroll-smooth">
       {/* ═══ LOADER ═══ */}
       <Loader />
 
-      {/* ═══ NAVIGATION BAR ═══ */}
-      <Navbar
-        onOpenCart={() => setIsCartOpen(true)}
-        onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
-        cartCount={totalCartCount}
-        wishlistCount={wishlist.length}
-        onScrollToSection={handleScrollToSection}
-        onOpenSearch={() => setIsSearchOpen(true)}
-        currentPage={page}
-        onPageChange={(p) => {
-          if (p === 'wishlist') {
-            setShowWishlistOnly(true);
-            setPageWithHash('shop');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          } else {
-            if (p === 'shop') {
-              setActiveCategory('all');
-              setShowWishlistOnly(false);
-            }
-            if (p === 'admin-dashboard' && !adminToken) {
-              setPageWithHash('admin-login');
+      {/* ═══ ADMIN DEDICATED HEADER (Dedicated Standalone Layout) ═══ */}
+      {(page === 'admin-login' || page === 'admin-dashboard') ? (
+        <header className="bg-plum-dark text-white px-6 py-4 flex items-center justify-between border-b border-plum/30 sticky top-0 z-50 shadow-sm">
+          <div className="flex items-center gap-3">
+            <span className="font-serif text-xl tracking-wider font-light">Nnepa Foriwaa</span>
+            <span className="text-[0.6rem] font-bold tracking-[0.25em] uppercase text-lavender bg-white/10 px-2.5 py-0.5 rounded">
+              Atelier Studio
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+            <a
+              href="#/home"
+              onClick={() => setPageWithHash('home')}
+              className="text-xs text-pearl-2/80 hover:text-white transition-colors flex items-center gap-1.5 no-underline cursor-pointer"
+            >
+              <span>← Back to Storefront</span>
+            </a>
+          </div>
+        </header>
+      ) : (
+        <Navbar
+          onOpenCart={() => setIsCartOpen(true)}
+          onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
+          cartCount={totalCartCount}
+          wishlistCount={wishlist.length}
+          onScrollToSection={handleScrollToSection}
+          onOpenSearch={() => setIsSearchOpen(true)}
+          currentPage={page}
+          onPageChange={(p) => {
+            if (p === 'wishlist') {
+              setShowWishlistOnly(true);
+              setPageWithHash('shop');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
             } else {
-              setPageWithHash(p);
+              if (p === 'shop') {
+                setActiveCategory('all');
+                setShowWishlistOnly(false);
+              }
+              if (p === 'admin-dashboard' && !adminToken) {
+                setPageWithHash('admin-login');
+              } else {
+                setPageWithHash(p);
+              }
+              window.scrollTo({ top: 0, behavior: 'smooth' });
             }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }
-        }}
-        adminToken={adminToken}
-      />
+          }}
+          adminToken={adminToken}
+        />
+      )}
 
       {/* ═══ MOBILE MENU ═══ */}
       <MobileMenu
@@ -589,8 +609,7 @@ export default function App() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
           onOpenAdminUpload={() => {
-            setPageWithHash(adminToken ? 'admin-dashboard' : 'admin-login');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.open(adminToken ? '#/admin-dashboard' : '#/admin-login', '_blank');
           }}
         />
       )}
@@ -701,29 +720,31 @@ export default function App() {
       </Suspense>
       </main>
 
-      {/* ═══ COMPREHENSIVE COMPACT FOOTER BAR ═══ */}
-      <Footer
-        currentPage={page}
-        onNavigate={(targetPage, category) => {
-          if (category) {
-            setActiveCategory(category);
-          } else if (targetPage === 'shop') {
-            setActiveCategory('all');
-          }
-          if (targetPage === 'shop') {
-            setShowWishlistOnly(false);
-          }
-          if (targetPage === 'admin-dashboard' && !adminToken) {
-            setPageWithHash('admin-login');
-          } else {
-            setPageWithHash(targetPage);
-          }
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }}
-        onScrollToSection={handleScrollToSection}
-        adminToken={adminToken}
-        onOpenCookieSettings={() => setIsCookieSettingsOpen(true)}
-      />
+      {/* ═══ COMPREHENSIVE COMPACT FOOTER BAR (Hidden on standalone admin portal) ═══ */}
+      {page !== 'admin-login' && page !== 'admin-dashboard' && (
+        <Footer
+          currentPage={page}
+          onNavigate={(targetPage, category) => {
+            if (category) {
+              setActiveCategory(category);
+            } else if (targetPage === 'shop') {
+              setActiveCategory('all');
+            }
+            if (targetPage === 'shop') {
+              setShowWishlistOnly(false);
+            }
+            if (targetPage === 'admin-dashboard' && !adminToken) {
+              setPageWithHash('admin-login');
+            } else {
+              setPageWithHash(targetPage);
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onScrollToSection={handleScrollToSection}
+          adminToken={adminToken}
+          onOpenCookieSettings={() => setIsCookieSettingsOpen(true)}
+        />
+      )}
 
       {/* ═══ UTILITY CART SHOPPING BAG DRAWER ═══ */}
       <CartDrawer

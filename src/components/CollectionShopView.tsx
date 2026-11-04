@@ -695,18 +695,35 @@ export default function CollectionShopView({
                           onViewDetails(product);
                         }}
                         aria-label={product.name}
-                        className="block relative w-full aspect-[2/3] no-underline overflow-hidden"
+                        className="block relative w-full aspect-[2/3] no-underline overflow-hidden bg-pearl-2 border border-lilac/15"
                       >
-                        <img
-                          src={product.imageUrl}
-                          alt={product.name}
-                          loading={isPriorityLcp ? undefined : 'lazy'}
-                          fetchPriority={isPriorityLcp ? 'high' : undefined}
-                          referrerPolicy="no-referrer"
-                          className={`absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover/image:scale-[1.025] ${motionClass}`}
-                        />
+                        {product.imageUrl ? (
+                          <img
+                            src={product.imageUrl}
+                            alt={product.name}
+                            loading={isPriorityLcp ? undefined : 'lazy'}
+                            fetchPriority={isPriorityLcp ? 'high' : undefined}
+                            referrerPolicy="no-referrer"
+                            className={`absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover/image:scale-[1.025] ${motionClass}`}
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center select-none bg-pearl-2 transition-colors group-hover/image:bg-pearl">
+                            <div className="w-12 h-12 rounded-full border border-lilac/30 flex items-center justify-center mb-3 text-lavender font-serif italic text-base">
+                              NF
+                            </div>
+                            <span className="font-serif text-sm text-plum-dark font-medium tracking-wide">
+                              Nnepa Foriwaa
+                            </span>
+                            <span className="text-[0.58rem] font-bold tracking-[0.22em] uppercase text-mauve-deep mt-1">
+                              Atelier Collection
+                            </span>
+                            <span className="text-[0.52rem] tracking-wider text-text-muted mt-2">
+                              Accra, Ghana
+                            </span>
+                          </div>
+                        )}
 
-                        {product.hoverImageUrl && (
+                        {product.hoverImageUrl && product.imageUrl && (
                           <img
                             src={product.hoverImageUrl}
                             alt=""

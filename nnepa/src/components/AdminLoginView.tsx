@@ -68,7 +68,7 @@ export default function AdminLoginView({ onLoginSuccess }: AdminLoginViewProps) 
   };
 
   return (
-    <div className="pt-28 pb-20 min-h-[75vh] flex items-center justify-center bg-pearl px-6" id="admin-login-view">
+    <div className="py-16 min-h-[80vh] flex items-center justify-center bg-pearl px-6" id="admin-login-view">
       <div className="w-full max-w-md bg-white p-8 md:p-10 rounded-md shadow-[0_12px_40px_rgba(92,61,110,0.05)] border border-lilac/15 animate-fade-in text-center">
         
         {/* Header */}

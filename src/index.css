@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Jost", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Cormorant Garamond", Georgia, serif;
   --font-serif: "Cormorant Garamond", Georgia, serif;
   
   --color-lilac: #C9B8E8;
@@ -14,6 +14,23 @@
   --color-pearl: #FFFFFF;
   --color-pearl-2: #F9F7FB;
   --color-dusty: #D4C4E0;
+}
+
+body {
+  font-family: var(--font-serif);
+  color: var(--color-plum-dark);
+  background-color: var(--color-pearl);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Sitewide consistent serif styling based on Chapter 1 About Page */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-serif);
+}
+
+p, span, a, button, input, textarea, select {
+  font-family: var(--font-serif);
 }
 
 @layer utilities {
@@ -162,9 +179,9 @@ html {
 /* ═══ NNEPA FORIWAA — CECILIE BAHNSEN COLLECTION GALLERY ARCHITECTURE ═══ */
 
 .cb-text-body {
-  font-family: var(--font-sans);
-  font-size: 13px;
-  line-height: 1.45;
+  font-family: var(--font-serif);
+  font-size: 14px;
+  line-height: 1.5;
   letter-spacing: 0.01em;
 }
 
