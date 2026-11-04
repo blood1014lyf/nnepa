@@ -427,8 +427,8 @@ export default function ConciergeMessageRenderer({ text, sender, intent }: Conci
           return (
             <div key={bIdx} className="space-y-1.5 my-1.5">
               {block.items.map((item, iIdx) => (
-                <div key={iIdx} className="flex items-start gap-2 text-xs sm:text-[13px] leading-relaxed">
-                  <span className="w-1.5 h-1.5 rounded-full bg-lavender shrink-0 mt-1.5" />
+                <div key={iIdx} className="flex items-start gap-2 text-[15px] sm:text-[16px] leading-relaxed">
+                  <span className="w-1.5 h-1.5 rounded-full bg-lavender shrink-0 mt-2" />
                   <div className="flex-1">
                     {item.key && (
                       <strong className="font-semibold text-plum-dark mr-1">
@@ -447,7 +447,7 @@ export default function ConciergeMessageRenderer({ text, sender, intent }: Conci
 
         // ─── 5. REGULAR PARAGRAPH ────────────────────────────────────────────
         return (
-          <p key={bIdx} className="leading-relaxed text-zinc-900 text-[13px] sm:text-[13.5px]">
+          <p key={bIdx} className="leading-relaxed text-zinc-900 text-[16px]">
             {renderInlineMarkdown(block.paragraphText || '')}
           </p>
         );

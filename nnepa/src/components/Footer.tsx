@@ -29,10 +29,10 @@ export default function Footer({
   ];
 
   return (
-    <footer className="bg-plum-dark text-white py-8 px-5 sm:px-8 md:px-12 mt-auto w-full border-t border-lilac/10">
+    <footer className="bg-plum-dark text-white py-5 sm:py-8 px-4 sm:px-8 md:px-12 mt-auto w-full border-t border-lilac/10">
       <div className="max-w-7xl mx-auto">
-        {/* Main 4-column Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-8 pb-8 border-b border-lilac/10">
+        {/* Main Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-5 sm:gap-8 pb-5 sm:pb-8 border-b border-lilac/10">
           
           {/* Brand Info & Motto Column */}
           <div className="md:col-span-2 flex flex-col justify-between">
@@ -43,25 +43,25 @@ export default function Footer({
                   onNavigate('home');
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
-                className="font-serif text-lg sm:text-xl font-semibold tracking-wider text-lilac bg-transparent border-none p-0 cursor-pointer text-left"
+                className="font-serif text-base sm:text-xl font-semibold tracking-wider text-lilac bg-transparent border-none p-0 cursor-pointer text-left"
               >
                 NNEPA FORIWAA
               </button>
 
-              <p className="text-pearl-2/60 leading-relaxed max-w-sm mt-2 mb-4 font-light">
+              <p className="text-pearl-2/60 leading-relaxed max-w-sm mt-1.5 mb-3 font-light text-xs sm:text-sm">
                 Rooted. Refined. Regal. Premium African fashion brand creating bespoke pieces for women and men since 2015.
               </p>
             </div>
 
             {/* Social Icons */}
-            <div className="flex items-center gap-2.5 mt-2">
+            <div className="flex items-center gap-2 mt-1 mb-2 md:mb-0">
               {socialLinks.map((soc, i) => (
                 <a
                   key={i}
                   href={soc.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-7 h-7 rounded-full border border-lilac/20 text-lilac/60 hover:text-lilac hover:border-lilac hover:bg-lilac/10 duration-200 flex items-center justify-center cursor-pointer no-underline"
+                  className="w-6 h-6 sm:w-7 sm:h-7 rounded-full border border-lilac/20 text-lilac/60 hover:text-lilac hover:border-lilac hover:bg-lilac/10 duration-200 flex items-center justify-center cursor-pointer no-underline"
                   title={soc.title}
                   aria-label={soc.title}
                 >
@@ -71,20 +71,20 @@ export default function Footer({
             </div>
           </div>
 
-          {/* Navigation Links Columns (3 Columns) */}
-          <div className="md:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-6">
+          {/* Navigation Links Columns (3 Columns on all screens for short compact mobile height) */}
+          <div className="md:col-span-3 grid grid-cols-3 gap-3 sm:gap-6 text-xs sm:text-sm">
             
             {/* Column 1: Shop */}
             <div>
-              <div className="footer-heading font-semibold tracking-wider uppercase text-lilac mb-3">
+              <div className="footer-heading font-semibold tracking-wider uppercase text-lilac mb-2 sm:mb-3 text-[11px] sm:text-xs">
                 Shop
               </div>
-              <ul className="list-none m-0 p-0 flex flex-col gap-2">
+              <ul className="list-none m-0 p-0 flex flex-col gap-1.5 sm:gap-2">
                 <li>
                   <button
                     type="button"
                     onClick={() => onNavigate('shop', 'women')}
-                    className="bg-transparent border-none p-0 text-pearl-2/65 hover:text-lilac cursor-pointer font-light transition-colors text-left block"
+                    className="bg-transparent border-none p-0 text-pearl-2/65 hover:text-lilac cursor-pointer font-light transition-colors text-left block text-[11px] sm:text-xs"
                   >
                     Womenswear
                   </button>
@@ -93,7 +93,7 @@ export default function Footer({
                   <button
                     type="button"
                     onClick={() => onNavigate('shop', 'men')}
-                    className="bg-transparent border-none p-0 text-pearl-2/65 hover:text-lilac cursor-pointer font-light transition-colors text-left block"
+                    className="bg-transparent border-none p-0 text-pearl-2/65 hover:text-lilac cursor-pointer font-light transition-colors text-left block text-[11px] sm:text-xs"
                   >
                     Menswear
                   </button>
@@ -102,7 +102,7 @@ export default function Footer({
                   <button
                     type="button"
                     onClick={() => onNavigate('shop', 'bags')}
-                    className="bg-transparent border-none p-0 text-pearl-2/65 hover:text-lilac cursor-pointer font-light transition-colors text-left block"
+                    className="bg-transparent border-none p-0 text-pearl-2/65 hover:text-lilac cursor-pointer font-light transition-colors text-left block text-[11px] sm:text-xs"
                   >
                     Accessories
                   </button>
@@ -111,9 +111,9 @@ export default function Footer({
                   <button
                     type="button"
                     onClick={() => onNavigate('shop', 'all')}
-                    className="bg-transparent border-none p-0 text-pearl-2/65 hover:text-lilac cursor-pointer font-light transition-colors text-left block"
+                    className="bg-transparent border-none p-0 text-pearl-2/65 hover:text-lilac cursor-pointer font-light transition-colors text-left block text-[11px] sm:text-xs"
                   >
-                    All Collections
+                    All Pieces
                   </button>
                 </li>
               </ul>
@@ -121,10 +121,10 @@ export default function Footer({
 
             {/* Column 2: About */}
             <div>
-              <div className="footer-heading font-semibold tracking-wider uppercase text-lilac mb-3">
+              <div className="footer-heading font-semibold tracking-wider uppercase text-lilac mb-2 sm:mb-3 text-[11px] sm:text-xs">
                 About
               </div>
-              <ul className="list-none m-0 p-0 flex flex-col gap-2">
+              <ul className="list-none m-0 p-0 flex flex-col gap-1.5 sm:gap-2">
                 <li>
                   <button
                     type="button"
@@ -132,7 +132,7 @@ export default function Footer({
                       onNavigate('about');
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className="bg-transparent border-none p-0 text-pearl-2/65 hover:text-lilac cursor-pointer font-light transition-colors text-left block"
+                    className="bg-transparent border-none p-0 text-pearl-2/65 hover:text-lilac cursor-pointer font-light transition-colors text-left block text-[11px] sm:text-xs"
                   >
                     Brand Story
                   </button>
@@ -141,18 +141,18 @@ export default function Footer({
                   <button
                     type="button"
                     onClick={() => onScrollToSection('heritage')}
-                    className="bg-transparent border-none p-0 text-pearl-2/65 hover:text-lilac cursor-pointer font-light transition-colors text-left block"
+                    className="bg-transparent border-none p-0 text-pearl-2/65 hover:text-lilac cursor-pointer font-light transition-colors text-left block text-[11px] sm:text-xs"
                   >
-                    Our Heritage
+                    Heritage
                   </button>
                 </li>
                 <li>
                   <button
                     type="button"
                     onClick={() => onScrollToSection('testimonials')}
-                    className="bg-transparent border-none p-0 text-pearl-2/65 hover:text-lilac cursor-pointer font-light transition-colors text-left block"
+                    className="bg-transparent border-none p-0 text-pearl-2/65 hover:text-lilac cursor-pointer font-light transition-colors text-left block text-[11px] sm:text-xs"
                   >
-                    Client Stories
+                    Stories
                   </button>
                 </li>
                 <li>
@@ -162,25 +162,25 @@ export default function Footer({
                       onNavigate('contact');
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className="bg-transparent border-none p-0 text-pearl-2/65 hover:text-lilac cursor-pointer font-light transition-colors text-left block"
+                    className="bg-transparent border-none p-0 text-pearl-2/65 hover:text-lilac cursor-pointer font-light transition-colors text-left block text-[11px] sm:text-xs"
                   >
-                    Contact Support
+                    Contact
                   </button>
                 </li>
               </ul>
             </div>
 
-            {/* Column 3: Policies & Client Care (Unique Links Only) */}
+            {/* Column 3: Policies & Client Care */}
             <div>
-              <div className="footer-heading font-semibold tracking-wider uppercase text-lilac mb-3">
+              <div className="footer-heading font-semibold tracking-wider uppercase text-lilac mb-2 sm:mb-3 text-[11px] sm:text-xs">
                 Client Care
               </div>
-              <ul className="list-none m-0 p-0 flex flex-col gap-2">
+              <ul className="list-none m-0 p-0 flex flex-col gap-1.5 sm:gap-2">
                 <li>
                   <button
                     type="button"
                     onClick={() => onNavigate('size-chart')}
-                    className="bg-transparent border-none p-0 text-pearl-2/65 hover:text-lilac cursor-pointer font-light transition-colors text-left block"
+                    className="bg-transparent border-none p-0 text-pearl-2/65 hover:text-lilac cursor-pointer font-light transition-colors text-left block text-[11px] sm:text-xs"
                   >
                     Size Guide
                   </button>
@@ -189,18 +189,18 @@ export default function Footer({
                   <button
                     type="button"
                     onClick={() => onNavigate('terms')}
-                    className="bg-transparent border-none p-0 text-pearl-2/65 hover:text-lilac cursor-pointer font-light transition-colors text-left block"
+                    className="bg-transparent border-none p-0 text-pearl-2/65 hover:text-lilac cursor-pointer font-light transition-colors text-left block text-[11px] sm:text-xs"
                   >
-                    Terms & Alterations
+                    Terms
                   </button>
                 </li>
                 <li>
                   <button
                     type="button"
                     onClick={() => onNavigate('privacy')}
-                    className="bg-transparent border-none p-0 text-pearl-2/65 hover:text-lilac cursor-pointer font-light transition-colors text-left block"
+                    className="bg-transparent border-none p-0 text-pearl-2/65 hover:text-lilac cursor-pointer font-light transition-colors text-left block text-[11px] sm:text-xs"
                   >
-                    Privacy Policy
+                    Privacy
                   </button>
                 </li>
                 {onOpenCookieSettings && (
@@ -208,9 +208,9 @@ export default function Footer({
                     <button
                       type="button"
                       onClick={onOpenCookieSettings}
-                      className="bg-transparent border-none p-0 text-pearl-2/65 hover:text-lilac cursor-pointer font-light transition-colors text-left block"
+                      className="bg-transparent border-none p-0 text-pearl-2/65 hover:text-lilac cursor-pointer font-light transition-colors text-left block text-[11px] sm:text-xs"
                     >
-                      Cookie Preferences
+                      Cookies
                     </button>
                   </li>
                 )}
@@ -220,8 +220,8 @@ export default function Footer({
           </div>
         </div>
 
-        {/* Clean Bottom Bar (No Duplicate Links) */}
-        <div className="footer-bottom pt-5 flex flex-col sm:flex-row justify-between items-center gap-2 text-lilac/50 font-light">
+        {/* Clean Bottom Bar */}
+        <div className="footer-bottom pt-3 sm:pt-5 flex flex-col sm:flex-row justify-between items-center gap-1 sm:gap-2 text-lilac/50 font-light text-[11px] sm:text-xs">
           <div>
             © {new Date().getFullYear()} Nnepa Foriwaa. All rights reserved.
           </div>

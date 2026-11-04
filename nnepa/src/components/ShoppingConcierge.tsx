@@ -87,8 +87,14 @@ export default function ShoppingConcierge({
   const [inputValue, setInputValue] = useState('');
   const isAddingToCartRef = useRef(false);
   
+  const initContext = () => {
+    const ctx = createInitialConciergeContext(activeProduct ?? null);
+    ctx.profile.onboardingStage = 'onboarded';
+    return ctx;
+  };
+
   // Conversation engine context (in-memory)
-  const contextRef = useRef<ConversationContext>(createInitialConciergeContext(activeProduct ?? null));
+  const contextRef = useRef<ConversationContext>(initContext());
 
   const getTimeString = () => {
     const now = new Date();
@@ -98,14 +104,13 @@ export default function ShoppingConcierge({
   const getInitialWelcomeMessage = (): ChatMessage => ({
     id: 'welcome_init',
     sender: 'concierge',
-    text: `Hello! I’m Foriwaa, your personal shopping assistant. It’s lovely to have you here. What would you like me to call you?`,
+    text: "Akwaaba! I'm Foriwaa, your shopping assistant. How can I help today?",
     timestamp: getTimeString(),
     options: [
       { label: 'Browse Collections', action: 'explore_collections' },
       { label: 'Find My Size', action: 'sizing_path_select' },
       { label: 'Delivery & Shipping', action: 'delivery_info' },
-      { label: 'Chat with Stylist', action: 'connect_human' },
-      { label: 'Skip / Just Browsing', action: 'skip_onboarding' }
+      { label: 'Chat with Stylist', action: 'connect_human' }
     ]
   });
 
@@ -182,7 +187,7 @@ export default function ShoppingConcierge({
       thinkingTimerRef.current = null;
     }
     setIsThinking(false);
-    contextRef.current = createInitialConciergeContext(activeProduct ?? null);
+    contextRef.current = initContext();
     setMessages([getInitialWelcomeMessage()]);
     setInputValue('');
   };
@@ -793,36 +798,29 @@ export default function ShoppingConcierge({
       {isOpen && (
         <div
           role="dialog"
-          aria-label={`${NNEPA_IDENTITY.name} — ${NNEPA_IDENTITY.title}`}
-          className="concierge-root fixed z-[85] bg-white rounded-2xl shadow-2xl border border-zinc-200/90 flex flex-col overflow-hidden transition-all duration-200 animate-in fade-in slide-in-from-bottom-3
-            /* Mobile bottom sheet */
+          aria-label="Nnepa Foriwaa — Shopping Assistant"
+          className="concierge-root fixed z-[85] bg-white rounded-2xl shadow-2xl border border-zinc-200/90 flex flex-col overflow-hidden transition-all duration-300 ease-out animate-in fade-in slide-in-from-bottom-4
+            /* Mobile bottom sheet: keeps top website header clearly visible */
             inset-x-2 bottom-2 max-h-[76dvh] h-[72dvh]
             /* Desktop floating window */
-            sm:inset-x-auto sm:left-auto sm:right-6 sm:bottom-20 sm:w-[380px] sm:h-[560px] sm:max-h-[82vh]
+            sm:inset-x-auto sm:left-auto sm:right-6 sm:bottom-20 sm:w-[380px] sm:h-[580px] sm:max-h-[82vh]
             overscroll-contain"
           style={{
             paddingBottom: 'env(safe-area-inset-bottom, 0px)'
           }}
         >
-          {/* Header */}
+          {/* Header: Nnepa Foriwaa + Shopping Assistant (white / light lavender) + Start Over icon button */}
           <div className="bg-gradient-to-r from-plum-dark via-plum to-plum-dark text-white px-4 py-3 flex items-center justify-between shrink-0 border-b border-plum/40 shadow-xs">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white border border-white/20 shrink-0">
-                <ShoppingBag className="w-4 h-4 text-white" />
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white border border-white/20 shrink-0 font-serif font-bold text-xs">
+                NF
               </div>
               <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="concierge-brand-title font-serif text-base font-semibold tracking-wide text-white leading-tight">
-                    {NNEPA_IDENTITY.name}
-                  </h3>
-                  {seasonalGreeting && (
-                    <span className="text-[11px] uppercase tracking-wider bg-white/15 px-2.5 py-0.5 rounded-full text-lavender-light font-medium">
-                      {seasonalGreeting}
-                    </span>
-                  )}
-                </div>
-                <span className="text-xs text-lavender/90 font-normal">
-                  {isThinking ? 'Thinking...' : NNEPA_IDENTITY.title}
+                <h3 className="concierge-brand-title font-serif text-base font-semibold tracking-wide text-white leading-tight">
+                  Nnepa Foriwaa
+                </h3>
+                <span className="text-xs text-lavender-light/95 font-medium block leading-tight">
+                  {isThinking ? 'Thinking...' : 'Shopping Assistant'}
                 </span>
               </div>
             </div>
@@ -831,18 +829,17 @@ export default function ShoppingConcierge({
                 type="button"
                 onClick={handleStartNewChat}
                 aria-label="Start over with a fresh conversation"
-                title="Start a new conversation"
-                className="px-2.5 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-white flex items-center gap-1.5 border border-white/20 cursor-pointer transition-colors text-xs font-medium"
+                title="Start over"
+                className="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 active:bg-white/35 text-white flex items-center justify-center border border-white/20 cursor-pointer transition-colors"
               >
-                <RotateCcw className="w-3.5 h-3.5 text-lavender" />
-                <span>Start Over</span>
+                <RotateCcw className="w-3.5 h-3.5 text-white" />
               </button>
               <button
                 type="button"
                 onClick={handleCloseConcierge}
                 aria-label="Close shopping assistant"
                 title="Close"
-                className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center border-none cursor-pointer transition-colors"
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 text-white flex items-center justify-center border-none cursor-pointer transition-colors"
               >
                 <X className="w-4 h-4 text-white" />
               </button>
@@ -850,23 +847,31 @@ export default function ShoppingConcierge({
           </div>
 
           {/* Scrollable Conversation History */}
-          <div className="flex-1 p-3.5 sm:p-4 overflow-y-auto space-y-3 text-xs sm:text-sm bg-zinc-50/60 overscroll-contain">
+          <div className="flex-1 p-3.5 sm:p-4 overflow-y-auto space-y-3.5 bg-zinc-50/60 overscroll-contain">
             {messages.map((msg) => (
               <div
                 key={msg.id}
                 className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
               >
-                <div
-                  className={`max-w-[88%] rounded-2xl px-3.5 py-2.5 sm:px-4 sm:py-3 leading-relaxed text-xs sm:text-[13.5px] break-words ${
-                    msg.sender === 'user'
-                      ? 'bg-plum-dark text-white rounded-br-xs shadow-xs'
-                      : 'bg-white text-zinc-900 border border-zinc-200/80 rounded-bl-xs shadow-xs font-normal'
-                  }`}
-                >
-                  <ConciergeMessageRenderer text={msg.text} sender={msg.sender} />
+                <div className={`flex items-end gap-2 max-w-[92%] ${msg.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                  {msg.sender !== 'user' && (
+                    <div className="w-6 h-6 rounded-full bg-plum-dark text-white flex items-center justify-center shrink-0 mb-1 shadow-2xs text-[10px] font-serif font-bold border border-plum/30">
+                      NF
+                    </div>
+                  )}
+
+                  <div
+                    className={`rounded-2xl px-4 py-3 leading-relaxed text-[16px] break-words ${
+                      msg.sender === 'user'
+                        ? 'bg-plum-dark text-white rounded-br-xs shadow-xs'
+                        : 'bg-white text-zinc-900 border border-zinc-200/80 rounded-bl-xs shadow-xs font-normal'
+                    }`}
+                  >
+                    <ConciergeMessageRenderer text={msg.text} sender={msg.sender} />
+                  </div>
                 </div>
 
-                <span className="text-[11px] text-zinc-400 px-1 mt-1 font-mono">
+                <span className={`text-[12px] text-zinc-600 px-1 mt-1 font-mono ${msg.sender === 'user' ? 'text-right' : 'text-left pl-8'}`}>
                   {msg.timestamp}
                 </span>
 
@@ -919,14 +924,14 @@ export default function ShoppingConcierge({
 
                 {/* Predefined Action Options */}
                 {msg.options && msg.options.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-2 w-full">
+                  <div className="flex flex-wrap gap-2 mt-2 w-full">
                     {msg.options.slice(0, 6).map((opt, idx) => (
                       <button
                         key={idx}
                         type="button"
                         disabled={isThinking}
                         onClick={() => handleOptionClick(opt.action, opt.payload, opt.label)}
-                        className="px-2.5 py-1.5 bg-white border border-lilac/35 hover:border-plum-dark hover:bg-lavender/10 text-plum-dark rounded-full text-xs font-medium transition-all cursor-pointer shadow-2xs text-left break-words max-w-full leading-tight flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="min-h-[44px] px-4 py-2.5 bg-white border border-lilac/40 hover:border-plum-dark hover:bg-lavender/10 text-plum-dark rounded-full text-xs sm:text-[13px] font-medium transition-colors cursor-pointer shadow-2xs text-left break-words max-w-full leading-snug flex items-center disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
                       >
                         {opt.label}
                       </button>
@@ -936,18 +941,17 @@ export default function ShoppingConcierge({
               </div>
             ))}
 
-            {/* ═══ NATURAL CONCIERGE THINKING INDICATOR ═══ */}
+            {/* ═══ NATURAL CONCIERGE TYPING INDICATOR ═══ */}
             {isThinking && (
-              <div className="flex flex-col items-start animate-in fade-in duration-200">
-                <div className="bg-white text-zinc-700 border border-zinc-200/90 rounded-2xl rounded-bl-xs px-3 py-2 shadow-xs flex items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-plum-dark animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-1.5 h-1.5 rounded-full bg-plum-dark animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-1.5 h-1.5 rounded-full bg-plum-dark animate-bounce" style={{ animationDelay: '300ms' }} />
-                  </div>
-                  <span className="text-xs text-zinc-600 font-medium">
-                    Foriwaa is thinking...
-                  </span>
+              <div className="flex items-end gap-2 animate-in fade-in duration-200">
+                <div className="w-6 h-6 rounded-full bg-plum-dark text-white flex items-center justify-center shrink-0 mb-1 shadow-2xs text-[10px] font-serif font-bold border border-plum/30">
+                  NF
+                </div>
+                <div className="bg-white text-zinc-700 border border-zinc-200/90 rounded-2xl rounded-bl-xs px-3.5 py-2.5 shadow-xs flex items-center gap-1.5">
+                  <span className="text-[13px] text-zinc-600 font-medium mr-1">typing</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-plum-dark animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-plum-dark animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-plum-dark animate-bounce" style={{ animationDelay: '300ms' }} />
                 </div>
               </div>
             )}
@@ -955,82 +959,69 @@ export default function ShoppingConcierge({
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Quick Shortcuts Bar */}
-          <div className="px-2.5 py-1.5 bg-white border-t border-zinc-100 flex items-center gap-1 overflow-x-auto no-scrollbar shrink-0">
-            <button
-              type="button"
-              disabled={isThinking}
-              onClick={() => handleOptionClick('size_guide')}
-              className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1 transition-colors disabled:opacity-50 text-[11px] font-medium"
-            >
-              <Ruler className="w-3 h-3 text-lavender" />
-              <span>Size Guide</span>
-            </button>
-            <button
-              type="button"
-              disabled={isThinking}
-              onClick={() => handleOptionClick('delivery_info')}
-              className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1 transition-colors disabled:opacity-50 text-[11px] font-medium"
-            >
-              <Truck className="w-3 h-3 text-lavender" />
-              <span>Delivery</span>
-            </button>
-            <button
-              type="button"
-              disabled={isThinking}
-              onClick={() => handleOptionClick('contact_whatsapp')}
-              className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1 transition-colors disabled:opacity-50 text-[11px] font-medium"
-            >
-              <MessageSquare className="w-3 h-3 text-lavender" />
-              <span>WhatsApp</span>
-            </button>
-            <button
-              type="button"
-              disabled={isThinking}
-              onClick={() => handleOptionClick('connect_human')}
-              className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1 transition-colors disabled:opacity-50 text-[11px] font-medium"
-            >
-              <span>Stylist</span>
-            </button>
-            <button
-              type="button"
-              onClick={handleStartNewChat}
-              title="Start a new conversation"
-              className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full whitespace-nowrap border-none cursor-pointer flex items-center gap-1 transition-colors text-[11px] font-medium"
-            >
-              <RotateCcw className="w-3 h-3 text-lavender" />
-              <span>Reset</span>
-            </button>
-          </div>
+          {/* Quick Shortcuts Bar — only shown after first message, with at most 3 chips (>= 44px tall, no reset) */}
+          {messages.length > 1 && (
+            <div className="relative px-3 py-2 bg-white border-t border-zinc-100 shrink-0">
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth pr-6">
+                <button
+                  type="button"
+                  disabled={isThinking}
+                  onClick={() => handleOptionClick('size_guide')}
+                  className="h-11 min-h-[44px] px-4 bg-zinc-100 hover:bg-zinc-200 active:bg-zinc-300 text-zinc-800 rounded-full whitespace-nowrap border border-zinc-200/80 cursor-pointer flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 text-[13px] font-medium shrink-0 active:scale-95"
+                >
+                  <Ruler className="w-3.5 h-3.5 text-lavender" />
+                  <span>Size Guide</span>
+                </button>
+                <button
+                  type="button"
+                  disabled={isThinking}
+                  onClick={() => handleOptionClick('delivery_info')}
+                  className="h-11 min-h-[44px] px-4 bg-zinc-100 hover:bg-zinc-200 active:bg-zinc-300 text-zinc-800 rounded-full whitespace-nowrap border border-zinc-200/80 cursor-pointer flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 text-[13px] font-medium shrink-0 active:scale-95"
+                >
+                  <Truck className="w-3.5 h-3.5 text-lavender" />
+                  <span>Delivery</span>
+                </button>
+                <button
+                  type="button"
+                  disabled={isThinking}
+                  onClick={() => handleOptionClick('contact_whatsapp')}
+                  className="h-11 min-h-[44px] px-4 bg-zinc-100 hover:bg-zinc-200 active:bg-zinc-300 text-zinc-800 rounded-full whitespace-nowrap border border-zinc-200/80 cursor-pointer flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 text-[13px] font-medium shrink-0 active:scale-95"
+                >
+                  <MessageSquare className="w-3.5 h-3.5 text-lavender" />
+                  <span>WhatsApp</span>
+                </button>
+              </div>
+              <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent" />
+            </div>
+          )}
 
           {/* User Input Field */}
           <form
             onSubmit={handleSendMessage}
-            className="p-2 sm:p-2.5 bg-white border-t border-zinc-200 flex items-center gap-1.5 shrink-0"
+            className="p-2.5 sm:p-3 bg-white border-t border-zinc-200 flex items-center gap-2 shrink-0"
+            style={{
+              paddingBottom: 'max(0.625rem, env(safe-area-inset-bottom, 0px))'
+            }}
           >
             <input
               type="text"
               value={inputValue}
               disabled={isThinking}
               onChange={(e) => setInputValue(e.target.value)}
-              placeholder={
-                isThinking
-                  ? 'Foriwaa is thinking...'
-                  : contextRef.current.profile.onboardingStage === 'awaiting_name'
-                  ? 'Ask a question or enter your name...'
-                  : contextRef.current.profile.onboardingStage === 'sizing_label_inquiry'
-                  ? 'Enter label size (e.g. M, UK 12, or US 8)...'
-                  : 'Ask Foriwaa about sizes, fabrics, delivery...'
-              }
-              className="flex-1 px-3 py-2 bg-zinc-100 border border-zinc-200 rounded-full text-xs sm:text-sm text-zinc-900 placeholder-zinc-400 outline-none focus:border-plum-dark focus:bg-white transition-all disabled:opacity-60 disabled:cursor-not-allowed font-normal"
+              placeholder={isThinking ? 'Foriwaa is typing...' : 'Ask a question...'}
+              className="flex-1 px-4 py-2.5 bg-zinc-100 border border-zinc-200 rounded-full text-base text-zinc-900 placeholder-zinc-500 outline-none focus:border-plum-dark focus:bg-white transition-all disabled:opacity-60 disabled:cursor-not-allowed font-normal"
             />
             <button
               type="submit"
               disabled={!inputValue.trim() || isThinking}
               aria-label="Send question to Foriwaa"
-              className="w-8 h-8 rounded-full bg-plum-dark text-white flex items-center justify-center shrink-0 border-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-plum transition-colors shadow-xs"
+              className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 border-none transition-all shadow-xs ${
+                inputValue.trim() && !isThinking
+                  ? 'bg-plum-dark hover:bg-plum text-white cursor-pointer active:scale-95'
+                  : 'bg-zinc-200 text-zinc-400 cursor-not-allowed opacity-50'
+              }`}
             >
-              <Send className="w-3.5 h-3.5" />
+              <Send className="w-4 h-4" />
             </button>
           </form>
         </div>
