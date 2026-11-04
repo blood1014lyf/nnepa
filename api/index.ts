@@ -7,16 +7,6 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
-import { lookupProductPrice, registerProductPrice, removeProductPrice } from '../server/priceList.ts';
-import {
-  createOrder,
-  getOrderByPublicId,
-  listAllOrders,
-  updateOrderStatus,
-  StoredOrder,
-  OrderItem,
-  OrderStatus
-} from '../server/ordersDb.ts';
 
 export interface Product {
   id: string;
@@ -36,263 +26,55 @@ export interface Product {
   sizes?: string[];
 }
 
-const FALLBACK_PRODUCTS: Product[] = [
-  {
-    id: "prod_1789572165350",
-    name: "Royal Gold Kente Boubou",
-    category: "women",
-    subcategory: "Dresses & Gowns",
-    price: 480,
-    rating: 5,
-    imageUrl: "/assets/images/lookbook_01_gold_boubou.jpg",
-    hoverImageUrl: "/assets/images/lookbook_03_ivory_wrap_ensemble.jpg",
-    color: "Gold & Ochre",
-    colorCount: 2,
-    badge: "Exclusive",
-    inStock: true,
-    description: "Generously draped silk-cotton boubou finished in Accra with handwoven Asante Kente strip inlays along the neckline and cuffs.",
-    sizes: ["S", "M", "L", "XL"]
-  },
-  {
-    id: "prod_1789572165351",
-    name: "Queen Mother Royal Kente Gown",
-    category: "women",
-    subcategory: "Dresses & Gowns",
-    price: 2850,
-    rating: 5,
-    imageUrl: "/assets/images/lookbook_02_plum_emerald_gown.jpg",
-    hoverImageUrl: "/assets/images/lookbook_06_organza_puff_dress.jpg",
-    color: "Plum & Violet",
-    colorCount: 3,
-    badge: "Bestseller",
-    inStock: true,
-    description: "Full-length evening gown cut from handwoven Ghanaian silk Kente and weighty brocade, tailored for weddings and formal celebrations.",
-    sizes: ["S", "M", "L", "XL", "XXL"]
-  },
-  {
-    id: "prod_1789572165352",
-    name: "Ankara Peplum Two-Piece",
-    category: "women",
-    subcategory: "Tops & Sets",
-    price: 650,
-    rating: 5,
-    imageUrl: "/assets/images/lookbook_05_ankara_peplum_suit.jpg",
-    hoverImageUrl: "/assets/images/lookbook_04_burgundy_corset_cape.jpg",
-    color: "Crimson & Blush",
-    colorCount: 2,
-    badge: "New",
-    inStock: true,
-    description: "Structured cotton wax-print peplum bodice paired with an ankle-grazing column skirt for unhurried ease from morning to evening.",
-    sizes: ["XS", "S", "M", "L", "XL"]
-  },
-  {
-    id: "prod_1789572165353",
-    name: "Pleated Silk Evening Dress",
-    category: "women",
-    subcategory: "Dresses & Gowns",
-    price: 980,
-    rating: 5,
-    imageUrl: "/assets/images/lookbook_06_organza_puff_dress.jpg",
-    hoverImageUrl: "/assets/images/lookbook_02_plum_emerald_gown.jpg",
-    color: "Emerald & Sage",
-    colorCount: 2,
-    badge: "Exclusive",
-    inStock: true,
-    description: "Fluid flared silhouette woven with fine silk threads and soft micro-pleats that move lightly with every step.",
-    sizes: ["XS", "S", "M", "L", "XL"]
-  },
-  {
-    id: "prod_1789572165354",
-    name: "The Patriarch Brocade Agbada",
-    category: "men",
-    subcategory: "Kaftans & Agbada",
-    price: 1200,
-    rating: 5,
-    imageUrl: "/assets/images/lookbook_07_mens_ivory_gold_agbada.jpg",
-    hoverImageUrl: "/assets/images/lookbook_08_mens_indigo_kente_kaftan.jpg",
-    color: "Ivory & Pearl",
-    colorCount: 3,
-    badge: "Bestseller",
-    inStock: true,
-    description: "Three-piece ceremonial Agbada cut from breathable damask brocade with tonal hand embroidery at the chest and matching trousers.",
-    sizes: ["M", "L", "XL", "XXL"]
-  },
-  {
-    id: "prod_1789572165355",
-    name: "Asante Yoke Linen Kaftan",
-    category: "men",
-    subcategory: "Kaftans & Agbada",
-    price: 750,
-    rating: 5,
-    imageUrl: "/assets/images/lookbook_08_mens_indigo_kente_kaftan.jpg",
-    hoverImageUrl: "/assets/images/lookbook_07_mens_ivory_gold_agbada.jpg",
-    color: "Gold & Ochre",
-    colorCount: 2,
-    badge: "New",
-    inStock: true,
-    description: "Crisp washed-linen kaftan accented with a handwoven Kente shoulder yoke and deep side-seam pockets.",
-    sizes: ["S", "M", "L", "XL", "XXL"]
-  },
-  {
-    id: "prod_1789572165356",
-    name: "Northern Fugu Woven Smock",
-    category: "men",
-    subcategory: "Outerwear & Smocks",
-    price: 580,
-    rating: 5,
-    imageUrl: "/assets/images/lookbook_08_mens_indigo_kente_kaftan.jpg",
-    hoverImageUrl: "/assets/images/lookbook_07_mens_ivory_gold_agbada.jpg",
-    color: "Indigo & Navy",
-    colorCount: 2,
-    badge: "Exclusive",
-    inStock: true,
-    description: "Authentic Northern Ghanaian strip-woven cotton smock with a traditional pleated hem and hand-worked neckline.",
-    sizes: ["M", "L", "XL"]
-  },
-  {
-    id: "prod_1789572165357",
-    name: "Bolga Woven Leather Tote",
-    category: "bags",
-    subcategory: "Bags & Accessories",
-    price: 340,
-    rating: 5,
-    imageUrl: "/assets/images/lookbook_01_gold_boubou.jpg",
-    hoverImageUrl: "/assets/images/lookbook_03_ivory_wrap_ensemble.jpg",
-    color: "Gold & Ochre",
-    colorCount: 3,
-    badge: "Bestseller",
-    inStock: true,
-    description: "Hand-plaited elephant grass carryall woven in Bolgatanga and finished with vegetable-tanned Ghanaian leather handles.",
-    sizes: ["One Size"]
-  },
-  {
-    id: "prod_1789572165358",
-    name: "Asante Brass Adinkra Clutch",
-    category: "bags",
-    subcategory: "Bags & Accessories",
-    price: 260,
-    rating: 5,
-    imageUrl: "/assets/images/lookbook_03_ivory_wrap_ensemble.jpg",
-    hoverImageUrl: "/assets/images/lookbook_04_burgundy_corset_cape.jpg",
-    color: "Ebony & Charcoal",
-    colorCount: 2,
-    badge: "New",
-    inStock: true,
-    description: "Plush velvet evening clutch set with cast-brass Adinkra hardware and a removable fine chain strap.",
-    sizes: ["One Size"]
-  },
-  {
-    id: "prod_1789572165359",
-    name: "Silk Kente Box Minaudière",
-    category: "bags",
-    subcategory: "Bags & Accessories",
-    price: 420,
-    rating: 5,
-    imageUrl: "/assets/images/lookbook_02_plum_emerald_gown.jpg",
-    hoverImageUrl: "/assets/images/lookbook_01_gold_boubou.jpg",
-    color: "Plum & Violet",
-    colorCount: 2,
-    badge: "Exclusive",
-    inStock: true,
-    description: "Structured evening minaudière wrapped in handwoven silk Kente with a satin interior and concealed clasp.",
-    sizes: ["One Size"]
-  },
-  {
-    id: "prod_1789572165360",
-    name: "Foriwaa Organza Puff-Sleeve Midi",
-    category: "women",
-    subcategory: "Dresses & Gowns",
-    price: 890,
-    rating: 5,
-    imageUrl: "/assets/images/lookbook_04_burgundy_corset_cape.jpg",
-    hoverImageUrl: "/assets/images/lookbook_06_organza_puff_dress.jpg",
-    color: "Plum & Violet",
-    colorCount: 2,
-    badge: "New",
-    inStock: true,
-    description: "Airy silk-organza midi dress gathered softly at the waist with sculpted lantern sleeves and delicate back ties.",
-    sizes: ["XS", "S", "M", "L"]
-  },
-  {
-    id: "prod_1789572165361",
-    name: "Osu Matelassé Wrap Blouse & Skirt",
-    category: "women",
-    subcategory: "Tops & Sets",
-    price: 760,
-    rating: 5,
-    imageUrl: "/assets/images/lookbook_03_ivory_wrap_ensemble.jpg",
-    hoverImageUrl: "/assets/images/lookbook_05_ankara_peplum_suit.jpg",
-    color: "Ivory & Pearl",
-    colorCount: 3,
-    inStock: true,
-    description: "Textured cotton-jacquard wrap blouse with side ribbon ties paired with a softly gathered A-line midi skirt.",
-    sizes: ["XS", "S", "M", "L", "XL"]
-  },
-  {
-    id: "prod_1789572165362",
-    name: "Aburi Silk-Cotton Tiered Gown",
-    category: "women",
-    subcategory: "Dresses & Gowns",
-    price: 1350,
-    originalPrice: 1550,
-    rating: 5,
-    imageUrl: "/assets/images/lookbook_02_plum_emerald_gown.jpg",
-    hoverImageUrl: "/assets/images/lookbook_01_gold_boubou.jpg",
-    color: "Crimson & Blush",
-    colorCount: 2,
-    badge: "Sale",
-    inStock: true,
-    description: "Voluminous three-tier gown cut from breathable Ghanaian cotton-silk with hand-rolled hems and deep concealed pockets.",
-    sizes: ["S", "M", "L", "XL"]
-  },
-  {
-    id: "prod_1789572165363",
-    name: "Kumasi Tailored Senator Two-Piece",
-    category: "men",
-    subcategory: "Tops & Sets",
-    price: 840,
-    rating: 5,
-    imageUrl: "/assets/images/lookbook_07_mens_ivory_gold_agbada.jpg",
-    hoverImageUrl: "/assets/images/lookbook_08_mens_indigo_kente_kaftan.jpg",
-    color: "Ebony & Charcoal",
-    colorCount: 2,
-    badge: "Bestseller",
-    inStock: true,
-    description: "Clean-lined Senator tunic and tapered trouser set tailored in superfine wool-cotton suiting with subtle Kente piping.",
-    sizes: ["S", "M", "L", "XL", "XXL"]
-  },
-  {
-    id: "prod_1789572165364",
-    name: "Labone Quilted Aso-Oke Jacket",
-    category: "women",
-    subcategory: "Outerwear & Smocks",
-    price: 920,
-    rating: 5,
-    imageUrl: "/assets/images/lookbook_05_ankara_peplum_suit.jpg",
-    hoverImageUrl: "/assets/images/lookbook_04_burgundy_corset_cape.jpg",
-    color: "Emerald & Sage",
-    colorCount: 2,
-    badge: "New",
-    inStock: true,
-    description: "Cropped boxy jacket quilted from hand-loomed Aso-Oke cloth with tied ribbon closures and a smooth cotton voile lining.",
-    sizes: ["XS", "S", "M", "L"]
-  },
-  {
-    id: "prod_1789572165365",
-    name: "Cape Coast Raffia & Calfskin Shoulder Bag",
-    category: "bags",
-    subcategory: "Bags & Accessories",
-    price: 390,
-    rating: 5,
-    imageUrl: "/assets/images/lookbook_04_burgundy_corset_cape.jpg",
-    hoverImageUrl: "/assets/images/lookbook_03_ivory_wrap_ensemble.jpg",
-    color: "Ivory & Pearl",
-    colorCount: 2,
-    inStock: false,
-    description: "Softly curved shoulder bag hand-crocheted in natural raffia and trimmed in supple plum-dyed calfskin. Made to order in Accra.",
-    sizes: ["One Size"]
-  }
-];
+export type OrderStatus = 'new' | 'confirmed' | 'shipped' | 'cancelled';
+
+export interface OrderItem {
+  productId: string;
+  name: string;
+  size?: string;
+  quantity: number;
+  unitPrice: number;
+  lineTotal: number;
+}
+
+export interface CustomerDetails {
+  name: string;
+  phone: string;
+  address: string;
+  notes?: string;
+}
+
+export interface StoredOrder {
+  orderNumber: number;
+  publicId: string;
+  customer: CustomerDetails;
+  items: OrderItem[];
+  subtotal: number;
+  deliveryFee: number;
+  total: number;
+  status: OrderStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+const LEGACY_MOCK_IDS = new Set([
+  'prod_1789572165350',
+  'prod_1789572165351',
+  'prod_1789572165352',
+  'prod_1789572165353',
+  'prod_1789572165354',
+  'prod_1789572165355',
+  'prod_1789572165356',
+  'prod_1789572165357',
+  'prod_1789572165358',
+  'prod_1789572165359',
+  'prod_1789572165360',
+  'prod_1789572165361',
+  'prod_1789572165362',
+  'prod_1789572165363',
+  'prod_1789572165364',
+  'prod_1789572165365'
+]);
 
 const app = express();
 
@@ -317,36 +99,170 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 const TMP_DB_FILE = path.join('/tmp', 'database.json');
 
 function loadProducts(): Product[] {
+  let list: Product[] = [];
   try {
     if (fs.existsSync(TMP_DB_FILE)) {
       const contents = fs.readFileSync(TMP_DB_FILE, 'utf-8');
       const parsed = JSON.parse(contents);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) list = parsed;
+    } else {
+      const rootPath = path.join(process.cwd(), 'database.json');
+      if (fs.existsSync(rootPath)) {
+        const contents = fs.readFileSync(rootPath, 'utf-8');
+        const parsed = JSON.parse(contents);
+        if (Array.isArray(parsed)) list = parsed;
+      }
     }
   } catch (err) {
     // fallback
   }
 
-  try {
-    const rootPath = path.join(process.cwd(), 'database.json');
-    if (fs.existsSync(rootPath)) {
-      const contents = fs.readFileSync(rootPath, 'utf-8');
-      const parsed = JSON.parse(contents);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    }
-  } catch (err) {
-    // fallback
-  }
-
-  return FALLBACK_PRODUCTS;
+  return list.filter((p) => p && p.id && !LEGACY_MOCK_IDS.has(p.id));
 }
 
 function saveProducts(products: Product[]): void {
+  const clean = products.filter((p) => p && p.id && !LEGACY_MOCK_IDS.has(p.id));
   try {
-    fs.writeFileSync(TMP_DB_FILE, JSON.stringify(products, null, 2), 'utf-8');
+    fs.writeFileSync(TMP_DB_FILE, JSON.stringify(clean, null, 2), 'utf-8');
   } catch (e) {
     // serverless disk read-only
   }
+  try {
+    const rootPath = path.join(process.cwd(), 'database.json');
+    if (fs.existsSync(rootPath)) {
+      fs.writeFileSync(rootPath, JSON.stringify(clean, null, 2), 'utf-8');
+    }
+  } catch (e) {
+    // ignore
+  }
+}
+
+// Authoritative Price List
+const priceOverrideMap = new Map<string, { name: string; price: number }>();
+
+function lookupProductPrice(productId: string): { name: string; price: number } | null {
+  if (priceOverrideMap.has(productId)) {
+    return priceOverrideMap.get(productId)!;
+  }
+  const products = loadProducts();
+  const found = products.find((p) => p.id === productId);
+  if (found) {
+    return { name: found.name, price: found.price };
+  }
+  return null;
+}
+
+function registerProductPrice(productId: string, name: string, price: number): void {
+  priceOverrideMap.set(productId, { name, price });
+}
+
+function removeProductPrice(productId: string): void {
+  priceOverrideMap.delete(productId);
+}
+
+// Authoritative Orders Store
+const TMP_ORDERS_FILE = path.join('/tmp', 'orders.json');
+const memoryOrders: StoredOrder[] = [];
+let memoryNextOrderNumber = 1001;
+
+interface OrderStoragePayload {
+  nextOrderNumber: number;
+  orders: StoredOrder[];
+}
+
+function readOrderStorage(): OrderStoragePayload {
+  try {
+    if (fs.existsSync(TMP_ORDERS_FILE)) {
+      const raw = fs.readFileSync(TMP_ORDERS_FILE, 'utf-8');
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed.nextOrderNumber === 'number' && Array.isArray(parsed.orders)) {
+        return parsed;
+      }
+    }
+  } catch (err) {
+    // memory fallback
+  }
+  return { nextOrderNumber: memoryNextOrderNumber, orders: memoryOrders };
+}
+
+function writeOrderStorage(payload: OrderStoragePayload): void {
+  memoryNextOrderNumber = payload.nextOrderNumber;
+  memoryOrders.length = 0;
+  memoryOrders.push(...payload.orders);
+  try {
+    fs.writeFileSync(TMP_ORDERS_FILE, JSON.stringify(payload, null, 2), 'utf-8');
+  } catch (err) {
+    // ignore serverless write errors
+  }
+}
+
+async function createOrder(data: {
+  customer: CustomerDetails;
+  items: OrderItem[];
+  subtotal: number;
+  deliveryFee: number;
+  total: number;
+}): Promise<StoredOrder> {
+  const store = readOrderStorage();
+  const orderNumber = store.nextOrderNumber;
+  store.nextOrderNumber += 1;
+
+  const publicId = `ord_${crypto.randomBytes(8).toString('hex')}`;
+  const now = new Date().toISOString();
+
+  const newOrder: StoredOrder = {
+    orderNumber,
+    publicId,
+    customer: {
+      name: data.customer.name.trim(),
+      phone: data.customer.phone.trim(),
+      address: data.customer.address.trim(),
+      notes: data.customer.notes ? data.customer.notes.trim() : ''
+    },
+    items: data.items,
+    subtotal: data.subtotal,
+    deliveryFee: data.deliveryFee,
+    total: data.total,
+    status: 'new',
+    createdAt: now,
+    updatedAt: now
+  };
+
+  store.orders.unshift(newOrder);
+  writeOrderStorage(store);
+  return newOrder;
+}
+
+async function getOrderByPublicId(publicId: string): Promise<StoredOrder | null> {
+  const store = readOrderStorage();
+  return store.orders.find((o) => o.publicId === publicId) || null;
+}
+
+async function listAllOrders(): Promise<StoredOrder[]> {
+  const store = readOrderStorage();
+  return store.orders;
+}
+
+async function updateOrderStatus(
+  orderIdentifier: string | number,
+  status: OrderStatus
+): Promise<StoredOrder | null> {
+  const store = readOrderStorage();
+  const orderIndex = store.orders.findIndex((o) => {
+    if (typeof orderIdentifier === 'number') {
+      return o.orderNumber === orderIdentifier;
+    }
+    return o.publicId === orderIdentifier || String(o.orderNumber) === orderIdentifier;
+  });
+
+  if (orderIndex === -1) {
+    return null;
+  }
+
+  store.orders[orderIndex].status = status;
+  store.orders[orderIndex].updatedAt = new Date().toISOString();
+  writeOrderStorage(store);
+  return store.orders[orderIndex];
 }
 
 // Admin Auth Configuration
@@ -375,13 +291,9 @@ function requireAdmin(req: express.Request, res: express.Response, next: express
 
 function isValidImageBuffer(buffer: Buffer): boolean {
   if (buffer.length < 4) return false;
-  // JPEG: FF D8 FF
   if (buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF) return true;
-  // PNG: 89 50 4E 47
   if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47) return true;
-  // GIF: 47 49 46 38
   if (buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x38) return true;
-  // WEBP: RIFF .... WEBP
   if (buffer.length >= 12) {
     const isRiff = buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46;
     const isWebp = buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50;
@@ -406,7 +318,7 @@ app.post(['/api/products/sync', '/products/sync'], requireAdmin, (req, res) => {
   const currentProducts = loadProducts();
   let updated = false;
   for (const syncProd of syncList) {
-    if (syncProd && typeof syncProd === 'object' && syncProd.id && syncProd.id.startsWith('prod_')) {
+    if (syncProd && typeof syncProd === 'object' && syncProd.id && !LEGACY_MOCK_IDS.has(syncProd.id)) {
       if (!currentProducts.some((p) => p.id === syncProd.id)) {
         currentProducts.push(syncProd);
         updated = true;
@@ -433,7 +345,7 @@ app.post(['/api/products', '/products'], requireAdmin, (req, res) => {
     price: Number(price),
     originalPrice: originalPrice ? Number(originalPrice) : undefined,
     rating: Number(rating) || 5,
-    imageUrl: imageUrl || 'https://images.pexels.com/photos/20799228/pexels-photo-20799228.jpeg',
+    imageUrl: imageUrl || '',
     badge: badge || undefined,
     inStock: inStock !== false,
     description: description || 'Handcrafted African designer apparel tailored with premium fabrics.',
@@ -553,10 +465,7 @@ app.get(['/api/auth/verify', '/auth/verify'], (req, res) => {
   res.json({ authenticated: isValidSession(token) });
 });
 
-// ────────────────────────────────────────────────────────
-// ORDERS & CHECKOUT ENDPOINTS
-// ────────────────────────────────────────────────────────
-
+// Guest Checkout & WhatsApp Order Generation
 const orderRateLimits = new Map<string, { count: number; resetAt: number }>();
 function checkOrderRateLimit(ip: string): boolean {
   const now = Date.now();
@@ -608,43 +517,33 @@ function buildWhatsAppOrderUrl(order: StoredOrder): string {
   ].filter(Boolean);
 
   const whatsappPhone = process.env.WHATSAPP_NUMBER || '233538795669';
-  return `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(orderLines.join('\n'))}`;
+  const encodedMessage = encodeURIComponent(orderLines.join('\n'));
+  return `https://wa.me/${whatsappPhone}?text=${encodedMessage}`;
 }
 
-// Create guest order
 app.post(['/api/orders', '/orders'], async (req, res) => {
-  const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+  const clientIp = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
   if (!checkOrderRateLimit(clientIp)) {
-    res.status(429).json({ error: 'Too many order attempts. Please wait a few minutes before trying again.' });
+    res.status(429).json({ error: 'Too many order requests. Please wait a few moments or contact concierge directly.' });
     return;
   }
 
-  const { customer, items, idempotencyKey } = req.body || {};
+  const { name, phone, address, notes, items, idempotencyKey } = req.body || {};
 
-  if (!customer || typeof customer !== 'object') {
-    res.status(400).json({ error: 'Customer information is required.' });
+  if (!name || typeof name !== 'string' || name.trim().length < 2) {
+    res.status(400).json({ error: 'Customer full name is required.' });
     return;
   }
-  const name = String(customer.name || '').trim();
-  const phone = String(customer.phone || '').trim();
-  const address = String(customer.address || '').trim();
-  const notes = customer.notes ? String(customer.notes).trim() : '';
-
-  if (!name || name.length < 2) {
-    res.status(400).json({ error: 'Please enter a valid full name.' });
+  if (!phone || typeof phone !== 'string' || phone.trim().length < 7) {
+    res.status(400).json({ error: 'Valid customer phone / WhatsApp number is required.' });
     return;
   }
-  if (!phone || phone.length < 7) {
-    res.status(400).json({ error: 'Please enter a valid phone number.' });
+  if (!address || typeof address !== 'string' || address.trim().length < 5) {
+    res.status(400).json({ error: 'Detailed delivery address in Ghana or international destination is required.' });
     return;
   }
-  if (!address || address.length < 5) {
-    res.status(400).json({ error: 'Please enter a complete delivery address.' });
-    return;
-  }
-
-  if (!Array.isArray(items) || items.length === 0) {
-    res.status(400).json({ error: 'Cart is empty. Please add garments before checking out.' });
+  if (!items || !Array.isArray(items) || items.length === 0) {
+    res.status(400).json({ error: 'Cart must contain at least one bespoke garment.' });
     return;
   }
 

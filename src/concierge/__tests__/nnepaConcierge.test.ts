@@ -11,7 +11,6 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { PRODUCTS as CATALOGUE } from '../../data.ts';
 import type { Product } from '../../types.ts';
 import {
   processConciergeMessage,
@@ -23,6 +22,69 @@ import {
   PROACTIVE_PROMPTS,
   buildProductKnowledge
 } from '../knowledge/index.ts';
+
+const CATALOGUE: Product[] = [
+  {
+    id: 'prod_test_01',
+    name: 'Queen Mother Royal Kente Gown',
+    category: 'women',
+    subcategory: 'Dresses & Gowns',
+    price: 2850,
+    rating: 5,
+    imageUrl: '',
+    color: 'Plum & Violet',
+    colorCount: 3,
+    badge: 'Bestseller',
+    inStock: true,
+    description: 'Full-length evening gown cut from handwoven Ghanaian silk Kente and weighty brocade, tailored for weddings and formal celebrations.',
+    sizes: ['S', 'M', 'L', 'XL', 'XXL']
+  },
+  {
+    id: 'prod_test_02',
+    name: 'Royal Gold Kente Boubou',
+    category: 'women',
+    subcategory: 'Dresses & Gowns',
+    price: 480,
+    rating: 5,
+    imageUrl: '',
+    color: 'Gold & Ochre',
+    colorCount: 2,
+    badge: 'Exclusive',
+    inStock: true,
+    description: 'Generously draped silk-cotton boubou finished in Accra with handwoven Asante Kente strip inlays along the neckline and cuffs.',
+    sizes: ['S', 'M', 'L', 'XL']
+  },
+  {
+    id: 'prod_test_03',
+    name: 'The Patriarch Brocade Agbada',
+    category: 'men',
+    subcategory: 'Kaftans & Agbada',
+    price: 1200,
+    rating: 5,
+    imageUrl: '',
+    color: 'Ivory & Pearl',
+    colorCount: 3,
+    badge: 'Bestseller',
+    inStock: true,
+    description: 'Three-piece ceremonial Agbada cut from breathable damask brocade with tonal hand embroidery at the chest and matching trousers.',
+    sizes: ['M', 'L', 'XL', 'XXL']
+  },
+  {
+    id: 'prod_test_04',
+    name: 'Bolga Woven Leather Tote',
+    category: 'bags',
+    subcategory: 'Bags & Accessories',
+    price: 340,
+    rating: 5,
+    imageUrl: '',
+    color: 'Gold & Ochre',
+    colorCount: 3,
+    badge: 'Bestseller',
+    inStock: true,
+    description: 'Hand-plaited elephant grass carryall woven in Bolgatanga and finished with vegetable-tanned Ghanaian leather handles.',
+    sizes: ['One Size']
+  }
+];
 
 describe('NNEPA Shopping Concierge — Core Knowledge & Intelligence Test Suite', () => {
   // Grab real products for testing

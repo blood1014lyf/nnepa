@@ -64,28 +64,54 @@ app.use('/uploads', express.static(UPLOADS_DIR));
 const ROOT_DB_FILE = path.join(process.cwd(), 'database.json');
 const TMP_DB_FILE = path.join('/tmp', 'database.json');
 
+const LEGACY_MOCK_IDS = new Set([
+  'prod_1789572165350',
+  'prod_1789572165351',
+  'prod_1789572165352',
+  'prod_1789572165353',
+  'prod_1789572165354',
+  'prod_1789572165355',
+  'prod_1789572165356',
+  'prod_1789572165357',
+  'prod_1789572165358',
+  'prod_1789572165359',
+  'prod_1789572165360',
+  'prod_1789572165361',
+  'prod_1789572165362',
+  'prod_1789572165363',
+  'prod_1789572165364',
+  'prod_1789572165365'
+]);
+
 function loadProducts(): Product[] {
+  let list: Product[] = [];
   try {
     if (fs.existsSync(ROOT_DB_FILE)) {
       const contents = fs.readFileSync(ROOT_DB_FILE, 'utf-8');
       const parsed = JSON.parse(contents);
-      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed)) list = parsed;
     }
   } catch (err) {
     console.error('Failed reading ROOT_DB_FILE, attempting tmp fallback...', err);
   }
 
-  try {
-    if (fs.existsSync(TMP_DB_FILE)) {
-      const contents = fs.readFileSync(TMP_DB_FILE, 'utf-8');
-      const parsed = JSON.parse(contents);
-      if (Array.isArray(parsed)) return parsed;
+  if (list.length === 0) {
+    try {
+      if (fs.existsSync(TMP_DB_FILE)) {
+        const contents = fs.readFileSync(TMP_DB_FILE, 'utf-8');
+        const parsed = JSON.parse(contents);
+        if (Array.isArray(parsed)) list = parsed;
+      }
+    } catch (err) {
+      console.error('Failed reading TMP_DB_FILE database file', err);
     }
-  } catch (err) {
-    console.error('Failed reading TMP_DB_FILE database file', err);
   }
 
-  return INITIAL_PRODUCTS;
+  if (list.length === 0 && Array.isArray(INITIAL_PRODUCTS)) {
+    list = INITIAL_PRODUCTS;
+  }
+
+  return list.filter((p) => p && p.id && !LEGACY_MOCK_IDS.has(p.id));
 }
 
 function saveProducts(products: Product[]): void {
@@ -287,8 +313,8 @@ app.post('/api/products/sync', requireAdmin, (req, res) => {
   let updated = false;
 
   for (const syncProd of syncList) {
-    // Only accept elements starting with "prod_" to prevent overriding default fixtures
-    if (syncProd && typeof syncProd === 'object' && syncProd.id && syncProd.id.startsWith('prod_')) {
+    // Only accept elements starting with "prod_" to prevent overriding default fixtures, and reject legacy mock IDs
+    if (syncProd && typeof syncProd === 'object' && syncProd.id && !LEGACY_MOCK_IDS.has(syncProd.id)) {
       if (!currentProducts.some((p) => p.id === syncProd.id)) {
         currentProducts.push(syncProd);
         updated = true;

@@ -30,49 +30,33 @@ const SizeChartView = React.lazy(() => import('./components/SizeChartView.tsx'))
 const CheckoutView = React.lazy(() => import('./components/CheckoutView.tsx'));
 const OrderStatusView = React.lazy(() => import('./components/OrderStatusView.tsx'));
 
-import { PRODUCTS as DEFAULT_PRODUCTS } from './data.ts';
 import { Product, CartItem, Order } from './types.ts';
 
-function enrichCatalogWithDefaults(source: Product[]): Product[] {
-  if (!source || source.length === 0) return DEFAULT_PRODUCTS;
-  const defaultsById = new Map(DEFAULT_PRODUCTS.map((d) => [d.id, d]));
+export const LEGACY_MOCK_IDS = new Set([
+  'prod_1789572165350',
+  'prod_1789572165351',
+  'prod_1789572165352',
+  'prod_1789572165353',
+  'prod_1789572165354',
+  'prod_1789572165355',
+  'prod_1789572165356',
+  'prod_1789572165357',
+  'prod_1789572165358',
+  'prod_1789572165359',
+  'prod_1789572165360',
+  'prod_1789572165361',
+  'prod_1789572165362',
+  'prod_1789572165363',
+  'prod_1789572165364',
+  'prod_1789572165365'
+]);
 
-  const enriched = source.map((item) => {
-    const def = defaultsById.get(item.id);
-    if (!def) return item;
-    const isPexels = typeof item.imageUrl === 'string' && item.imageUrl.includes('pexels.com');
-    const isHoverPexels = typeof item.hoverImageUrl === 'string' && item.hoverImageUrl.includes('pexels.com');
-    return {
-      ...def,
-      ...item,
-      imageUrl: isPexels ? def.imageUrl : (item.imageUrl || def.imageUrl),
-      hoverImageUrl: isHoverPexels ? def.hoverImageUrl : (item.hoverImageUrl || def.hoverImageUrl),
-      subcategory: def.subcategory || item.subcategory,
-      color: item.color || def.color,
-      colorCount: item.colorCount ?? def.colorCount,
-    };
-  });
-
-  const missingDefaults = DEFAULT_PRODUCTS.filter(
-    (def) => !enriched.some((existing) => existing.id === def.id)
-  );
-
-  return [...enriched, ...missingDefaults];
+export function isLegacyMock(p: Product | null | undefined): boolean {
+  if (!p || !p.id) return true;
+  if (LEGACY_MOCK_IDS.has(p.id)) return true;
+  if (typeof p.imageUrl === 'string' && p.imageUrl.startsWith('/assets/images/lookbook_')) return true;
+  return false;
 }
-
-const DEFAULT_TOP_OUTFIT: Product = {
-  id: 'prod_1789572165351',
-  name: 'Queen Mother Royal Kente Gown',
-  category: 'women',
-  subcategory: 'Dresses & Gowns',
-  price: 2850,
-  rating: 5,
-  imageUrl: DEFAULT_PRODUCTS[1]?.imageUrl || '/assets/images/lookbook_02_plum_emerald_gown.jpg',
-  badge: 'Bestseller',
-  inStock: true,
-  description: 'Full-length evening gown cut from handwoven Ghanaian silk Kente and weighty brocade, tailored for weddings and formal celebrations.',
-  sizes: ['S', 'M', 'L', 'XL', 'XXL']
-};
 
 export default function App() {
   // Virtual State-Based Routing
@@ -85,14 +69,12 @@ export default function App() {
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed)) {
-          const defaultsById = new Map(DEFAULT_PRODUCTS.map((d) => [d.id, d]));
           return parsed
             .map((item: any) => {
-              const pId = item.productId || (item.product && item.product.id);
-              const foundProduct = defaultsById.get(pId) || item.product;
-              if (!foundProduct) return null;
+              const prod = item.product;
+              if (!prod || isLegacyMock(prod)) return null;
               return {
-                product: foundProduct,
+                product: prod,
                 quantity: Math.max(1, Number(item.quantity) || 1),
                 size: item.size
               };
@@ -124,11 +106,13 @@ export default function App() {
   // Sync cart (only productId, size, quantity — never client prices) and wishlist to localStorage
   useEffect(() => {
     try {
-      const storageSafeCart = cartItems.map((item) => ({
-        productId: item.product.id,
-        size: item.size,
-        quantity: item.quantity
-      }));
+      const storageSafeCart = cartItems
+        .filter((item) => item.product && !isLegacyMock(item.product))
+        .map((item) => ({
+          productId: item.product.id,
+          size: item.size,
+          quantity: item.quantity
+        }));
       localStorage.setItem('nnepa_foriwaa_cart', JSON.stringify(storageSafeCart));
     } catch {}
   }, [cartItems]);
@@ -145,14 +129,12 @@ export default function App() {
         if (e.key === 'nnepa_foriwaa_cart' && e.newValue) {
           const parsed = JSON.parse(e.newValue);
           if (Array.isArray(parsed)) {
-            const defaultsById = new Map(DEFAULT_PRODUCTS.map((d) => [d.id, d]));
             const restored = parsed
               .map((item: any) => {
-                const pId = item.productId || (item.product && item.product.id);
-                const foundProduct = defaultsById.get(pId) || item.product;
-                if (!foundProduct) return null;
+                const prod = item.product;
+                if (!prod || isLegacyMock(prod)) return null;
                 return {
-                  product: foundProduct,
+                  product: prod,
                   quantity: Math.max(1, Number(item.quantity) || 1),
                   size: item.size
                 };
@@ -178,7 +160,14 @@ export default function App() {
     try {
       const cached = localStorage.getItem('nnepa_foriwaa_products');
       if (cached) {
-        return JSON.parse(cached);
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed)) {
+          const clean = parsed.filter((p: Product) => !isLegacyMock(p));
+          if (clean.length !== parsed.length) {
+            localStorage.setItem('nnepa_foriwaa_products', JSON.stringify(clean));
+          }
+          return clean;
+        }
       }
     } catch {}
     return [];
@@ -193,7 +182,7 @@ export default function App() {
   });
 
   const [activeOrderPublicId, setActiveOrderPublicId] = useState<string>('');
-  const topOutfit = products.find((p) => p.id === 'prod_1789572165351') || products[0] || DEFAULT_TOP_OUTFIT;
+  const topOutfit = products.length > 0 ? (products.find((p) => p.badge === 'Bestseller') || products[0]) : null;
 
   // Pull products dynamically on startup and verify admin session
   useEffect(() => {
@@ -234,8 +223,7 @@ export default function App() {
 
       if (hashPath.startsWith('product/')) {
         const prodId = decodeURIComponent(hashPath.replace('product/', ''));
-        const combined = enrichCatalogWithDefaults(products);
-        const found = combined.find((p) => p.id === prodId);
+        const found = products.find((p) => p.id === prodId);
         if (found) {
           setActiveProduct(found);
           setPage('details');
@@ -308,7 +296,7 @@ export default function App() {
       if (res.ok) {
         const data = await res.json();
         if (data.products && Array.isArray(data.products)) {
-          serverProducts = data.products;
+          serverProducts = data.products.filter((p: Product) => !isLegacyMock(p));
           fetchSuccess = true;
         }
       }
@@ -323,7 +311,7 @@ export default function App() {
       if (cached) {
         const parsed: Product[] = JSON.parse(cached);
         if (Array.isArray(parsed)) {
-          localCustomProducts = parsed.filter(p => p && p.id && (p.id.startsWith('prod_') || p.id.startsWith('product_')));
+          localCustomProducts = parsed.filter((p) => !isLegacyMock(p));
         }
       }
     } catch (cachedErr) {
@@ -359,9 +347,10 @@ export default function App() {
                   .then((r) => r.json())
                   .then((data) => {
                     if (data.products && Array.isArray(data.products)) {
-                      setProducts(data.products);
+                      const cleanServer = data.products.filter((p: Product) => !isLegacyMock(p));
+                      setProducts(cleanServer);
                       try {
-                        localStorage.setItem('nnepa_foriwaa_products', JSON.stringify(data.products));
+                        localStorage.setItem('nnepa_foriwaa_products', JSON.stringify(cleanServer));
                       } catch {}
                     }
                   })
@@ -372,9 +361,10 @@ export default function App() {
         }
       }
 
-      setProducts(resolvedProducts);
+      const cleanResolved = resolvedProducts.filter((p) => !isLegacyMock(p));
+      setProducts(cleanResolved);
       try {
-        localStorage.setItem('nnepa_foriwaa_products', JSON.stringify(resolvedProducts));
+        localStorage.setItem('nnepa_foriwaa_products', JSON.stringify(cleanResolved));
       } catch {}
       return;
     }
@@ -384,8 +374,12 @@ export default function App() {
       const cached = localStorage.getItem('nnepa_foriwaa_products');
       if (cached) {
         const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setProducts(parsed);
+        if (Array.isArray(parsed)) {
+          const cleanCached = parsed.filter((p: Product) => !isLegacyMock(p));
+          setProducts(cleanCached);
+          try {
+            localStorage.setItem('nnepa_foriwaa_products', JSON.stringify(cleanCached));
+          } catch {}
           return;
         }
       }
@@ -485,7 +479,7 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const allCatalogProducts: Product[] = enrichCatalogWithDefaults(products);
+  const allCatalogProducts: Product[] = products;
 
   const totalCartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -579,10 +573,12 @@ export default function App() {
           <Hero />
 
           {/* ═══ FEATURED TOP OUTFIT SHOWCASE ═══ */}
-          <FeaturedOutfit
-            outfit={topOutfit}
-            onViewDetails={handleViewDetails}
-          />
+          {topOutfit && (
+            <FeaturedOutfit
+              outfit={topOutfit}
+              onViewDetails={handleViewDetails}
+            />
+          )}
 
           {/* ═══ BRAND ETHOS & CRAFT STORIES ═══ */}
           <Heritage />
