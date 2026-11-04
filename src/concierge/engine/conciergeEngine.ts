@@ -1281,7 +1281,8 @@ export function processConciergeMessage(
 
   if (isLabelSizeAction || isLabelInquiryStage) {
     const rawSize = isLabelSizeAction ? userInput.replace('label_size_', '').toUpperCase() : userInput;
-    const resolved = resolveLabelSize(rawSize, updatedContext.activeCategory ?? 'women');
+    const catLabel = updatedContext.activeCategory === 'men' ? 'men' : updatedContext.activeCategory === 'bags' ? 'bags' : 'women';
+    const resolved = resolveLabelSize(rawSize, catLabel);
 
     if (resolved && resolved.isCertain) {
       const targetSize = resolved.targetSize;
@@ -1295,7 +1296,8 @@ export function processConciergeMessage(
           ? 'shirt'
           : 'dress';
 
-      const spec = getGarmentSpec(targetSize, profile.garmentType || 'dress', updatedContext.activeCategory ?? 'women');
+      const specCat = updatedContext.activeCategory === 'men' ? 'men' : 'women';
+      const spec = getGarmentSpec(targetSize, profile.garmentType || 'dress', specCat);
       const productNote = activeProd
         ? ` For the **${activeProd.name}**, Size ${targetSize} offers a graceful, balanced silhouette.`
         : '';
@@ -1472,7 +1474,8 @@ export function processConciergeMessage(
       };
     }
 
-    const requestedSize = parseRequestedSizeFromText(userInput, updatedContext.activeCategory ?? 'women');
+    const requestedSizeCat = updatedContext.activeCategory === 'men' ? 'men' : updatedContext.activeCategory === 'bags' ? 'bags' : 'women';
+    const requestedSize = parseRequestedSizeFromText(userInput, requestedSizeCat);
     if (requestedSize) {
       profile.usualSize = requestedSize.alpha;
       profile.onboardingStage = 'onboarded';
@@ -2308,13 +2311,14 @@ export function processConciergeMessage(
 
   // ─── INTENT: CUSTOMER SIZE DECLARATION ────────────────────────────────────
   if (classifiedIntent === 'customer_size_declaration') {
-    const resolved = resolveLabelSize(userInput, updatedContext.activeCategory || 'women');
+    const activeCat = updatedContext.activeCategory === 'men' ? 'men' : updatedContext.activeCategory === 'bags' ? 'bags' : 'women';
+    const resolved = resolveLabelSize(userInput, activeCat);
     if (resolved && resolved.targetSize) {
       profile.usualSize = resolved.targetSize;
       profile.selectedSize = resolved.targetSize;
       profile.onboardingStage = 'onboarded';
 
-      const spec = getSizeSpecificationSummary(resolved.targetSize, updatedContext.activeCategory || 'women');
+      const spec = getSizeSpecificationSummary(resolved.targetSize, activeCat);
       const text =
         `I’ve recorded your size as **Size ${resolved.targetSize}** (referenced from ${resolved.matchedLabel}).\n\n` +
         (spec ? `• Calibrated measurements: ${spec}\n\n` : '') +

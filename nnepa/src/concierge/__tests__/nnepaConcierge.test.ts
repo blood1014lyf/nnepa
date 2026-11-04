@@ -12,6 +12,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { PRODUCTS as CATALOGUE } from '../../data.ts';
+import type { Product } from '../../types.ts';
 import {
   processConciergeMessage,
   createInitialConciergeContext,

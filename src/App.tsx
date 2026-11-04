@@ -62,16 +62,16 @@ function enrichCatalogWithDefaults(source: Product[]): Product[] {
 }
 
 const DEFAULT_TOP_OUTFIT: Product = {
-  id: 'featured_top_outfit',
+  id: 'prod_1789572165351',
   name: 'Queen Mother Royal Kente Gown',
   category: 'women',
-  subcategory: 'Couture Evening Wear',
+  subcategory: 'Dresses & Gowns',
   price: 2850,
   rating: 5,
   imageUrl: DEFAULT_PRODUCTS[1]?.imageUrl || '/assets/images/lookbook_02_plum_emerald_gown.jpg',
-  badge: 'Exclusive',
+  badge: 'Bestseller',
   inStock: true,
-  description: 'Full-length evening gown cut from handwoven Ghanaian silk Kente and weighty brocade, tailored for weddings and celebrations.',
+  description: 'Full-length evening gown cut from handwoven Ghanaian silk Kente and weighty brocade, tailored for weddings and formal celebrations.',
   sizes: ['S', 'M', 'L', 'XL', 'XXL']
 };
 
@@ -194,7 +194,7 @@ export default function App() {
   });
 
   const [activeOrderPublicId, setActiveOrderPublicId] = useState<string>('');
-  const topOutfit = products.length > 0 ? products[0] : DEFAULT_TOP_OUTFIT;
+  const topOutfit = products.find((p) => p.id === 'prod_1789572165351') || products[0] || DEFAULT_TOP_OUTFIT;
 
   // Pull products dynamically on startup and verify admin session
   useEffect(() => {
